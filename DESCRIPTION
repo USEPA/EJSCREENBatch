@@ -1,0 +1,19 @@
+Package: EJSCREENbatch
+Type: Package
+Title: EJSCREEN batch tool
+Version: 0.1.0
+Authors@R: c(
+    person("Ahmed Rachid", "El-Khattabi", email = "elkhattabi.ahmedrachid@epa.gov", role = c("aut", "cre")),
+    person("Morgan", "Teachey", email = "teachey.morgan@epa.gov", role = c("aut")),
+    person("Adam", "Theising", email = "theising.adam@epa.gov", role = c("aut")))
+Maintainer: Ahmed Rachid El-Khattabi <elkhattabi.ahmedrachid@epa.gov>
+Description: This package is a wrapper for EJSCREEN cfeated to allows users to 
+             perform batch screening for water-related environmental justice purposes.
+             Users can perform either a land-based screening to screen locations 
+             with circular buffers around those locations. Users can also 
+             perform explicit water-based screening, examining areas within a buffer area 
+             of known waterbody features (e.g., stream, river, etc...).
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
