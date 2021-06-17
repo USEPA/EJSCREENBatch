@@ -44,7 +44,7 @@
     #if data exist in local directory, load data for the latest year available
     #if user does not want to use data already in directory and wants to re-download
     ##newer data, user should remove existing data from local directory.
-    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/",calendaryear," dataset EJSCREEN"), pattern="StatePctile.gdb"))))
+    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/"), pattern="StatePctile.gdb"))))
     gdb_stpctile <- sf::st_read(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",calendar_year,"_StatePct")) %>%
       filter_state(state=state_filter) %>%
       st_transform("ESRI:102005") %>%
@@ -63,7 +63,7 @@
     #if data exist in local directory, load data for the latest year available
     #if user does not want to use data already in directory and wants to re-download
     ##newer data, user should remove existing data from local directory.
-    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/",calendaryear," dataset EJSCREEN"), pattern="USPR.csv"))))
+    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/"), pattern="USPR.csv"))))
     csv_uspr <- read_csv(paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_USPR.csv"), col_types=cols(.default = "c")) %>%
       dplyr::select(ID, starts_with("P_")) %>%
       rename_at(vars(-ID), ~ paste0(., '_US')) %>%
