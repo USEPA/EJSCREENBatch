@@ -56,9 +56,9 @@
 
 
   #national percentiles
-  if(identical(list.files(path=paste0("EJSCREEN data/",calendaryear," dataset EJSCREEN"), pattern="USPR.csv"), character(0)) ){
+  if(identical(list.files(path=paste0("EJSCREEN data"), pattern="USPR.csv"), character(0)) ){
     #If data not downloaded, download most recent data
-    csv_uspr <- ejscreen.download.local(folder=paste0("EJSCREEN data/", calendaryear," dataset EJSCREEN"), file="USPR")
+    csv_uspr <- ejscreen.download.local(folder=paste0("EJSCREEN data"), file="USPR")
   } else {
     #if data exist in local directory, load data for the latest year available
     #if user does not want to use data already in directory and wants to re-download
