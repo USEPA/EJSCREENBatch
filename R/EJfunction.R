@@ -92,14 +92,16 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
     } else {
       in.type <- input.type
     }
+
+    # Convert list to data.frame if catchmentIDs provided.
+    if (in.type == 'catchment'){
+      facility_data <- as.data.frame(facility_data)
+      names(facility_data) <- 'V1'
+    }
   }
 
 
-  # Convert list to data.frame if catchmentIDs provided.
-  if (in.type == 'catchment'){
-    facility_data <- as.data.frame(facility_data)
-    names(facility_data) <- 'V1'
-  }
+
 
   # Create internal function facility ID (in case user doesn't)
   facility_data <- facility_data %>%
