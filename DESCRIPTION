@@ -15,5 +15,9 @@ Description: This package is a wrapper for EJSCREEN cfeated to allows users to
              of known waterbody features (e.g., stream, river, etc...).
 License: MIT
 Encoding: UTF-8
+Imports:
+  tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot, 
+  RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
+  leaflet, leafpop, flextable, mapview, stringr, stringi, forcats
 LazyData: true
 RoxygenNote: 7.1.1

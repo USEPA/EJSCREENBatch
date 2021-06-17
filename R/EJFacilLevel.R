@@ -35,8 +35,8 @@ EJFacilLevel <- function(list.data, facil.data) {
 
 
   df.var.wm <- melt(df.var.wm, id = 'shape_ID'
-    )[, variable := stri_replace_last_fixed(variable,'_','|')
-      ][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)]
+    )[, variable <- stri_replace_last_fixed(variable,'_','|')
+      ][, c('variable','geography') <- tstrsplit(variable, '|', fixed = T)]
 
   df.var.wm <- dcast(df.var.wm, shape_ID + geography ~ variable, value.var = "value") %>%
     rename(Lead                = P_LDPNT,

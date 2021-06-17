@@ -87,7 +87,7 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       cat("This normally takes a few minutes. \n")
 
       getOption('timeout')
-      options(timeout=1800) #set timeout at 30mins, tweak for slower connections
+      options(timeout=3600) #set timeout at 1hour for slower connections
 
       x <- utils::download.file(url = mypathfileRemote,
                                 destfile = mypathfileLocal)
