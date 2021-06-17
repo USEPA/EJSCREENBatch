@@ -1,7 +1,8 @@
 #' Fetch data from EJSCREEN
 #'
-#' This function checks if the most recent data from EJSCREEN is already
-#' part of the package.
+#' This function looks for data from EJSCREEN. First checks if from EJSCREEN is
+#' in working directory. If not, it creates a directory and downloads most recent
+#' data.
 #'
 #' @param state_filter Users may restrict screening to a particular state in the
 #' contiguous US. If so, users can specify a state. Default is to conduct
@@ -13,7 +14,7 @@
 #' @examples
  fetch_data_ej <- function(state_filter){
   #first check if data folder exists
-  ifelse(!dir.exists("data"), dir.create("data"), FALSE)
+  ifelse(!dir.exists("EJSCREEN data"), dir.create("EJSCREEN data"), FALSE)
 
   #edited function to download gdb
   options(download.file.method="libcurl")
@@ -21,7 +22,6 @@
   # NOTE: REMOVE HI, AK, and islands for projection purposes
   #if files do not exist, go get most recent. If files do exist, open most recent.
   calendaryear <- as.numeric(format(Sys.time(), "%Y"))
-  ifelse(!dir.exists(paste0("data/",calendaryear," dataset EJSCREEN/")), dir.create(paste0("data/",calendaryear," dataset EJSCREEN/")), FALSE)
 
   # Option to filter states--only used if user specifies this
   filter_state <- function(data, state_filter){
@@ -37,11 +37,15 @@
   }
 
   #Block group level data and state percentiles
-  if(identical(list.files(path=paste0("data/",calendaryear," dataset EJSCREEN"), pattern="StatePctile.gdb"), character(0)) ){
-    gdb_stpctile <- ejscreen.download.local(folder=paste0("data/",calendaryear," dataset EJSCREEN"), file="StatePctile")
+  if(identical(list.files(path=paste0("EJSCREEN data"), pattern="StatePctile.gdb"), character(0)) ){
+    #If data not downloaded, download most recent data
+    gdb_stpctile <- ejscreen.download.local(folder=paste0("EJSCREEN data"), file="StatePctile")
   } else {
-    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("data/",calendaryear," dataset EJSCREEN"), pattern="StatePctile.gdb"))))
-    gdb_stpctile <- sf::st_read(dsn = paste0("data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",calendar_year,"_StatePct")) %>%
+    #if data exist in local directory, load data for the latest year available
+    #if user does not want to use data already in directory and wants to re-download
+    ##newer data, user should remove existing data from local directory.
+    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/",calendaryear," dataset EJSCREEN"), pattern="StatePctile.gdb"))))
+    gdb_stpctile <- sf::st_read(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",calendar_year,"_StatePct")) %>%
       filter_state(state=state_filter) %>%
       st_transform("ESRI:102005") %>%
       mutate(area_bg = st_area(Shape)) %>%
@@ -52,11 +56,15 @@
 
 
   #national percentiles
-  if(identical(list.files(path=paste0("data/",calendaryear," dataset EJSCREEN"), pattern="USPR.csv"), character(0)) ){
-    csv_uspr <- ejscreen.download.local(folder=paste0("data/", calendaryear," dataset EJSCREEN"), file="USPR")
+  if(identical(list.files(path=paste0("EJSCREEN data/",calendaryear," dataset EJSCREEN"), pattern="USPR.csv"), character(0)) ){
+    #If data not downloaded, download most recent data
+    csv_uspr <- ejscreen.download.local(folder=paste0("EJSCREEN data/", calendaryear," dataset EJSCREEN"), file="USPR")
   } else {
-    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("data/",calendaryear," dataset EJSCREEN"), pattern="USPR.csv"))))
-    csv_uspr <- read_csv(paste0("data/EJSCREEN_",calendar_year,"_USPR.csv"), col_types=cols(.default = "c")) %>%
+    #if data exist in local directory, load data for the latest year available
+    #if user does not want to use data already in directory and wants to re-download
+    ##newer data, user should remove existing data from local directory.
+    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/",calendaryear," dataset EJSCREEN"), pattern="USPR.csv"))))
+    csv_uspr <- read_csv(paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_USPR.csv"), col_types=cols(.default = "c")) %>%
       dplyr::select(ID, starts_with("P_")) %>%
       rename_at(vars(-ID), ~ paste0(., '_US')) %>%
       na_if("None") %>%
