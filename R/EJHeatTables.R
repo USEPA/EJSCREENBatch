@@ -107,7 +107,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
                'Ling. Isol.'       = P_LNGISPCT,
                'Age Under 5'       = P_UNDR5PCT,
                'Age Over 64'       = P_OVR64PCT) %>%
-        select(-c(ACSTOTPOP, shape_ID, 'Demo. Index')) %>%
+        dplyr::select(-c(ACSTOTPOP, shape_ID, 'Demo. Index')) %>%
         as.data.table()
 
       # Keep list of relevant varnames
@@ -166,13 +166,13 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
 
     # Keep list of relevant varnames
     keepnames <- as.data.table(input.data$EJ.facil.data[[1]]
-    )[,select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
+    )[,dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
 
     ## This draws from facility level data (median CBG value for that facil)
     for (i in 1:length(input.data$EJ.facil.data)){
       dt[[i]] <- as.data.table(input.data$EJ.facil.data[[i]]
       )[geography == geog & shape_ID == shape.keep,
-        select(.SD, `Low Income`:`Resp. Hazard`)
+        dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
       ][, lapply(.SD, round)]
       dt[[i]] <- melt(dt[[i]])[,2]
       names(dt[[i]]) <- paste0(str_sub(labels(input.data$EJ.facil.data)[[i]],-3,-3),
@@ -247,7 +247,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
             as.vector(facilities$`NPDES Permit Number`)
         ][order(-`Total indicators above 80th %ile`)
         ][1:n_rank,
-        ][, select(.SD, c(`Low Income`:`Resp. Hazard`, `NPDES Permit Number`))]
+        ][, dplyr::select(.SD, c(`Low Income`:`Resp. Hazard`, `NPDES Permit Number`))]
         setcolorder(dt, neworder = 'NPDES Permit Number')
       }
     } else {
@@ -258,7 +258,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
           as.numeric(as.character(`Demo. indicators above 80th %ile`))
       ][order(-`Total indicators above 80th %ile`)
       ][1:n_rank,
-      ][, select(.SD, c(shape_ID, `Low Income`:`Resp. Hazard`))]
+      ][, dplyr::select(.SD, c(shape_ID, `Low Income`:`Resp. Hazard`))]
       setcolorder(dt, neworder = 'shape_ID')
     }
     # Reshape/transpose data

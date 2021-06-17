@@ -10,30 +10,6 @@
 EJFacilLevel <- function(list.data, facil.data) {
 
   # Extract key variables, take ***pop-weighted*** average
-  # df.var.wm <- list.data %>%
-  #   as.data.frame() %>%
-  #   dplyr::select(P_MINORPCT_US, P_LWINCPCT_US, P_LESHSPCT_US, P_LNGISPCT_US,
-  #          P_UNDR5PCT_US, P_OVR64PCT_US, P_LDPNT_US, P_VULEOPCT_US,
-  #          P_DSLPM_US, P_CANCR_US, P_RESP_US, P_PTRAF_US, P_PWDIS_US,
-  #          P_PNPL_US, P_PRMP_US, P_PTSDF_US, P_OZONE_US,
-  #          P_PM25_US, P_MINORPCT_state, P_LWINCPCT_state, P_LESHSPCT_state, P_LNGISPCT_state,
-  #          P_UNDR5PCT_state, P_OVR64PCT_state, P_LDPNT_state, P_VULEOPCT_state,
-  #          P_DSLPM_state, P_CANCR_state, P_RESP_state, P_PTRAF_state, P_PWDIS_state,
-  #          P_PNPL_state, P_PRMP_state, P_PTSDF_state, P_OZONE_state,
-  #          P_PM25_state, ACSTOTPOP, shape_ID
-  #          # Below are EJ "indices" rather than environmental indicators
-  #          #P_LDPNT_D2_US, P_DSLPM_D2_US, P_CANCR_D2_US,
-  #          #P_RESP_D2_US, P_PTRAF_D2_US, P_PWDIS_D2_US, P_PNPL_D2_US,
-  #          #P_PRMP_D2_US, P_PTSDF_D2_US, P_OZONE_D2_US, P_PM25_D2_US,
-  #          #P_LDPNT_D2_state, P_DSLPM_D2_state, P_CANCR_D2_state,
-  #          #P_RESP_D2_state, P_PTRAF_D2_state, P_PWDIS_D2_state, P_PNPL_D2_state,
-  #          #P_PRMP_D2_state, P_PTSDF_D2_state, P_OZONE_D2_state, P_PM25_D2_state,
-  #   ) %>%
-  #   group_by(shape_ID) %>%
-  #   summarize_at(vars(-ACSTOTPOP), funs(median(., na.rm = T))) %>%
-  #   as.data.table()
-
-
   df.var.wm <-list.data %>%
     as.data.frame() %>%
     dplyr::select(P_MINORPCT_US, P_LWINCPCT_US, P_LESHSPCT_US, P_LNGISPCT_US,

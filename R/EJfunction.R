@@ -84,6 +84,22 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
   }
 
 
+  #If conducting waterbased analysis, need to know input type
+  if(data_type=="waterbased"){
+    if(input.type %notin% c("sf", "catchment")){
+      stop("Input type not supported. Please specify one of the following data types:
+         sf OR catchment.")
+    } else {
+      in.type <- input.type
+    }
+  }
+
+
+  # Convert list to data.frame if catchmentIDs provided.
+  if (in.type == 'catchment'){
+    facility_data <- as.data.frame(facility_data)
+    names(facility_data) <- 'V1'
+  }
 
   # Create internal function facility ID (in case user doesn't)
   facility_data <- facility_data %>%
@@ -110,6 +126,11 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
     if(gis_option %notin% c("all", "intersect", "centroid", "intersection")){
       stop("Please provide one of the following buffer options: all, intersect, centroid, intersection")
     }
+
+    # Determine most common geometry type in the input sf dataframe
+    facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
+    facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(facility_data), facil.geom.type)))]
+
 
     #set radii to draw around areas/points of interest
     if(is.null(buff_dist) &
@@ -219,19 +240,27 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.CorrPlots.data[[paste0("CorrPlots_intersection_radius",i,"mi")]] <-
           EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
 
-        # areal apportionment using circular buffers around facilities
+        ### Areal apportionment using circular buffers around facilities
+        # Extract the state associated with each facility
+        state.shapes <- spData::us_states %>% st_as_sf() %>%
+          st_transform(crs="ESRI:102005") %>%
+          dplyr::select('NAME') %>%
+          rename(facility_state = NAME)
+        facility_buff <- st_join(facilities, state.shapes, join=st_intersects) %>%
+          st_buffer(dist = set_units(i,"mi")) %>%
+          tibble::rowid_to_column("shape_ID")
+        rm(state.shapes)
+
         EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
           areal_apportionment(ejscreen.bgs.data = data.state.uspr,
                               facility_buff = facility_buff,
-                              path.raster.layer = SEDAC)
+                              facil.data = facility_data,
+                              path.raster.layer = raster.data)
         }
         j=j+1
       }
 
 
-
-    # rm(list=ls(pattern= "^area"))
-    # rm(list=ls(pattern= "^test"))
     EJ.list.data <- Filter(Negate(is.null), EJ.list.data)
     EJ.facil.data <- Filter(Negate(is.null), EJ.facil.data)
 
@@ -244,6 +273,11 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
     #--------------------------------------------------------------------------#
     #--------------------------------------------------------------------------#
     } else if(data_type=="waterbased") {
+
+      ## Can come back and add all option later if demand exists.
+      if(gis_option == 'all'){
+        stop('Please choose ONLY ONE of (centroid, intersect, intersection) for water-based analysis.')
+      }
 
       # Set Upstream/downstream option
       if(is.null(ds_mode)){
@@ -267,13 +301,6 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         buffer <-  buff_dist  #user inputted values that overrides default
       }
 
-      # Data type
-      if(is.null(input.type)){
-        in.type <- 'sf'
-      } else {
-        in.type <- input.type
-      }
-
       #ATTAINS
       if(is.null(attains)){
         attains.check <- F  #default value
@@ -281,51 +308,157 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         attains.check <-  attains  #user inputted values that overrides default
       }
 
+      EJ.demographics.data <- list()
+      EJ.demoOverlap.data <- list()
+      EJ.facil.data <- list()
+      EJ.list.data <- list()
+      EJ.index.data <- list()
+      EJ.buffer.shapes <- list()
+      EJ.attains.data <- list()
+
+
       for (i in buffer){
+        ## This returns:
+        #(1) shape of downstream buffered area
+        #(2) full return from attains API
+        #(3) summary of attains data
+        #(4) if input is catchment#, the lat/lon coords of segment centroid
         print(paste0('Calculating for buffer distance: ', i))
         catchment.polygons <- EJWaterReturnCatchmentBuffers(facility_data, ds.us.mode, ds.us.dist,
                                                             i, in.type, attains.check)
 
-        catch.facil.data <- catchment.polygons[[1]] %>%
-          st_join(facility_data)
-
-        ############
-        ## Return list.data objects 1:3
-        ## Use intersection to extract **MEDIAN** data.objects
-        area_intersect <- data.state.uspr %>%
-          st_join(catchment.polygons[[1]], join=st_intersects) %>%
-          filter(!is.na(catchment.id))
-
-        EJ.list.data <- list()
-        EJ.list.data[[paste0("Indexes_intersect_buffer",i,"mi")]] <-
-          EJIndexes(area_intersect, gis_method="intersect" , buffer=i)
-
-        EJ.list.data[[paste0("demographics_intersect_buffer",i,"mi")]] <-
-          EJdemographics(area_intersect, gis_method="intersect" , buffer=i)
-
-        EJ.list.data[[paste0("CorrPlots_intersect_buffer",i,"mi")]] <-
-          EJCorrPlots(area_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
-        #############
+        if (in.type == 'sf') {
+          catch.facil.data <- catchment.polygons[[1]] %>%
+            as.data.frame() %>%
+            inner_join(dplyr::select(as.data.frame(facility_data), -geometry),
+                       by = 'shape_ID') %>%
+            st_as_sf()
+        } else {
+          catch.facil.data <- catchment.polygons[[1]] %>%
+            st_as_sf()
+        }
 
         #############
-        ## Return list.data object 4
-        ## AREAL APPORTIONMENT for 1 mi buffer around stream from facility
-        ## This yields pop-weighted average data for a given facility
-        EJ.list.data[[paste0('catchment_intersect_buffer',i,'mi')]] <-
-          areal_apportionment(ejscreen.bgs.data = data.state.uspr,
-                              facility_buff = catch.facil.data,
-                              raster.pop.data = SEDAC)
+        ## This section intersects/contains facility buffered areas and CBGs
+        if (gis_option %in% c('intersect', 'intersection')){
+          area <- catchment.polygons[[1]] %>%
+            st_join(data.state.uspr, join = st_intersects) %>%
+            filter(!is.na(shape_ID)) %>%
+            st_drop_geometry()
+          #            dplyr::select(-starts_with('Shape', ignore.case = F))
+        } else if (gis_option %in% c('centroid')){
+          area <- catchment.polygons[[1]] %>%
+            st_join(st_centroid(data.state.uspr), join=st_contains) %>%
+            st_drop_geometry()
+        }
+
+        EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- area
+
+        EJ.index.data[[paste0("Indexes_",gis_option,"_buffer",i,"mi")]] <-
+          EJIndexes(area, gis_method = gis_option, buffer=i)
+
+        EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
+          EJdemographics(area, gis_method = gis_option, buffer=i)
+
+        EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
+          EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
+
+
+        #############
+        ## This returns facility level summaries for
+        if(gis_option %in% c('intersect','centroid')){
+          if (in.type == 'sf'){
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJFacilLevel(list.data = area,
+                           facil.data = st_transform(facility_data, crs = 4326))
+          } else if (in.type == 'catchment'){
+            temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
+              mutate(comid = as.numeric(comid)) %>%
+              inner_join(facility_data, by = c('comid' = 'V1')) %>%
+              st_as_sf()
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJFacilLevel(list.data = area,
+                           facil.data = st_transform(temp.mat, crs = 4326))
+            rm(temp.mat)
+          }
+
+          ## AREAL APPORTIONMENT for user-selected buffer around stream from facility
+          ## This yields pop-weighted average data for a given facility
+        } else if(gis_option == 'intersection'){
+
+          state.shapes <- spData::us_states %>% st_as_sf() %>%
+            st_transform(crs="ESRI:102005") %>%
+            dplyr::select('NAME') %>%
+            rename(facility_state = NAME)
+          if(in.type == 'sf'){
+            facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
+              #tibble::rowid_to_column("shape_ID") %>%
+              dplyr::select(shape_ID, facility_state) %>%
+              st_drop_geometry() %>%
+              inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
+              st_as_sf()
+
+            EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+              areal_apportionment(ejscreen.bgs.data = data.state.uspr,
+                                  facility_buff = facility_buff,
+                                  facil.data = facility_data,
+                                  path.raster.layer = raster.data)
+          } else if (in.type == 'catchment') {
+
+            ## Shapefile for downstream (/upstream?) buffer
+            facility_buff <- catchment.polygons[[4]] %>%
+              mutate(comid = as.numeric(comid)) %>%
+              inner_join(facility_data, by = c('comid' = 'V1')) %>%
+              dplyr::select(shape_ID, facility_state) %>%
+              st_drop_geometry() %>%
+              inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
+              st_as_sf()
+
+            ## Shapefile with lat/lon of catchmentID waterbody centroid
+            temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
+              mutate(comid = as.numeric(comid)) %>%
+              inner_join(facility_data, by = c('comid' = 'V1')) %>%
+              st_as_sf() %>%
+              st_transform(crs = 4326)
+
+            EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+              areal_apportionment(ejscreen.bgs.data = data.state.uspr,
+                                  facility_buff = facility_buff,
+                                  facil.data = temp.mat,
+                                  path.raster.layer = raster.data)
+          }
+          rm(state.shapes)
+
+
+        }
+
+        if (attains.check == T){
+          EJ.buffer.shapes[[paste0('buffer_shape_radius',i,'mi')]] <-
+            inner_join(catchment.polygons[[1]], catchment.polygons[[3]],
+                       by = c('shape_ID' = '.id'))
+          EJ.attains.data[[paste0('attains_raw_radius', i, 'mi')]] <-
+            catchment.polygons[[2]]
+        } else {
+          EJ.buffer.shapes[[paste0('buffer_shape_radius',i,'mi')]] <-
+            catchment.polygons[[1]]
+        }
       }
 
       if(attains.check == F){
-        return.me <- list(EJ.list.data,  catchment.polygons[[1]])
-        names(return.me) <- c('EJ.list.data', 'EJ.buffer.summary')
+        return.me <- list(EJ.demographics.data, EJ.demoOverlap.data,
+                          EJ.facil.data, EJ.list.data,
+                          EJ.index.data, EJ.buffer.shapes)
+        names(return.me) <- c('EJ.demographics.data', 'EJ.demoOverlap.data',
+                              'EJ.facil.data', 'EJ.list.data',
+                              'EJ.index.data', 'EJ.buffer.summary')
       } else {
-        feature.summary <- inner_join(catchment.polygons[[1]], catchment.polygons[[3]],
-                                      by = c('catchment.id' = '.id'))
-        return.me <- list(EJ.list.data, feature.summary,
-                          catchment.polygons[[2]])
-        names(return.me) <- c('EJ.list.data', 'EJ.buffer.summary',
+        return.me <- list(EJ.demographics.data, EJ.demoOverlap.data,
+                          EJ.facil.data, EJ.list.data,
+                          EJ.index.data, EJ.buffer.shapes,
+                          EJ.attains.data)
+        names(return.me) <- c('EJ.demographics.data', 'EJ.demoOverlap.data',
+                              'EJ.facil.data', 'EJ.list.data',
+                              'EJ.index.data', 'EJ.buffer.summary',
                               'EJ.attainsdata.raw')
       }
       return(return.me)
