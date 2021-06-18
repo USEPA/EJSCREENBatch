@@ -72,8 +72,6 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
          landbased OR waterbased.")
   }
 
-  #SOME MORE DATA CHECKS NEEDED HERE
-  #does input type need to be specified if water-based analysis?
 
   # Bring in EJ Screen Data
   if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
@@ -94,12 +92,20 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
     }
 
     # Convert list to data.frame if catchmentIDs provided.
-    if (in.type == 'catchment'){
+    if(in.type == 'catchment'){
       facility_data <- as.data.frame(facility_data)
       names(facility_data) <- 'V1'
     }
   }
 
+  #Check for raster data. Only needed if running intersection method. This data
+  #needs to be pre-downloaded.
+  if(is.null(gis_option) || gis_option=="intersection" || gis_option=="all"){
+    if(is.null(raster.data)){
+      stop("Buffering using intersection method requires raster data for areal
+           apportionment. Please provide path to raster data.")
+    }
+  }
 
 
 
