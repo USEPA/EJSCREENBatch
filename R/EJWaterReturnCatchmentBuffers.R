@@ -25,7 +25,7 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds.us.mode, ds.us.dist, b
     for (i in 1:dim(input.data)[1]){
       feature.id[[i]] <- tryCatch(
         {
-        get_nhdplus(AOI = input.data[i,],
+        nhdplusTools::get_nhdplus(AOI = input.data[i,],
                                      realization = 'catchment')$featureid
         },
         error=function(cond) {
