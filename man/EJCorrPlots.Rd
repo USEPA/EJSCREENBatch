@@ -11,7 +11,7 @@ EJCorrPlots(data, gis_method, buffer, threshold)
 
 \item{buffer}{Distance(s) used to create buffers.}
 
-\item{threshold}{User specified threshold to represent potential concern. Default is 80%.}
+\item{threshold}{User specified threshold to represent potential concern. Default is 80\%.}
 }
 \value{
 

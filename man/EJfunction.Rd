@@ -23,7 +23,7 @@ EJfunction(
 
 \item{buff_dist}{Distance(s) used to create buffers. Default is 1, 3, and 5 miles.}
 
-\item{threshold}{User specified threshold to represent potential concern. Default is 80%.}
+\item{threshold}{User specified threshold to represent potential concern. Default is 80\%.}
 
 \item{state}{User can restrict screening to particular states. Default is to screen for entire contiguous US.}
 
