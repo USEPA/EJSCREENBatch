@@ -7,7 +7,7 @@
 #' @param facility_data Required. 
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
 #' @param buff_dist Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
-#' @param threshold User specified threshold to represent potential concern. Default is 80%.
+#' @param threshold User specified threshold to represent potential concern. Default is 80\%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
 #' @param ds_mode Set Upstream/downstream option for water-based screening. Default is downstream.
 #' @param ds_dist Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.
@@ -21,11 +21,6 @@
 #' @export
 #'
 #' @examples
-#' #read in data
-#' facilities <- fread("dmr_mpp_facilities_2019.csv") %>%
-#'  unique() %>%
-#'  st_as_sf(coords = c("Facility Longitude", "Facility Latitude"), crs = 4326)  %>%
-#'  st_transform("ESRI:102005")
 #'
 #' #===============================================================================
 #' #=====================FEATURE 1: LAND-BASED ANALYSIS============================
