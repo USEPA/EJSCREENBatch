@@ -3,10 +3,10 @@
 #' Main function that performs screening (land and water-based).
 #' Input must be an SF object! User must make this transformation.
 #'
-#' @param data_type
-#' @param facility_data
+#' @param data_type Required. Either "landbased" or "waterbased"
+#' @param facility_data Required. 
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
-#' @param buff_dist Distance(s) used to create buffers. Default is 1, 3, and 5 miles.
+#' @param buff_dist Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
 #' @param ds_mode Set Upstream/downstream option for water-based screening. Default is downstream.
