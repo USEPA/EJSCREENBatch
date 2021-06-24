@@ -67,17 +67,17 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
       EJ.maps[[names(input.data$EJ.facil.data)[i]]] <-
         leaflet::leaflet(data = sf::st_as_sf(dplyr::filter(na.omit(map.data), geography == 'US'),
                                 crs = 4326)) %>% addTiles() %>%
-        fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(map.data))[,1]),
+        leaflet::fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(map.data))[,1]),
                   lat1 = min(sf::st_coordinates(sf::st_as_sf(map.data))[,2]),
                   lng2 = max(sf::st_coordinates(sf::st_as_sf(map.data))[,1]),
                   lat2 = max(sf::st_coordinates(sf::st_as_sf(map.data))[,2])) %>%
-        addCircleMarkers(radius = 5,
+        leaflet::addCircleMarkers(radius = 5,
                          color = ~ pal(`Total indicators above 80th %ile`),
                          opacity = 0.75,
                          popup = popupTable(dplyr::filter(na.omit(map.data), geography == geog.ind),
                                             feature.id = F, row.numbers = F,
                                             zcol = names(na.omit(map.data))[1:20])) %>%
-        addLegend(pal = pal, values = ~`Total indicators above 80th %ile`, position = "bottomright")
+        leaflet::addLegend(pal = pal, values = ~`Total indicators above 80th %ile`, position = "bottomright")
     }
 
     if (ind.option == 'environmental'){
@@ -104,18 +104,18 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
       EJ.maps[[names(input.data$EJ.facil.data)[i]]] <-
         leaflet::leaflet(data = sf::st_as_sf(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == 'US'),
                                 crs = 4326)) %>% addTiles() %>%
-        fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,1]),
+        leaflet::fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,1]),
                   lat1 = min(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,2]),
                   lng2 = max(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,1]),
                   lat2 = max(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,2])) %>%
-        addCircleMarkers(radius = 5,
+        leaflet::addCircleMarkers(radius = 5,
                          color = ~ pal(`Env. indicators above 80th %ile`),
                          opacity = 0.75,
                          #clusterOptions = markerClusterOptions(),
                          popup = popupTable(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == geog.ind),
                                             feature.id = F, row.numbers = F,
                                             zcol = names(na.omit(input.data$EJ.facil.data[[i]]))[1:20])) %>%
-        addLegend(pal = pal, values = ~`Env. indicators above 80th %ile`, position = "bottomright")
+        leaflet::addLegend(pal = pal, values = ~`Env. indicators above 80th %ile`, position = "bottomright")
     }
 
     if (ind.option == 'demographic'){
@@ -142,18 +142,18 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
       EJ.maps[[names(input.data$EJ.facil.data)[i]]] <-
         leaflet::leaflet(data = sf::st_as_sf(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == 'US'),
                                 crs = 4326)) %>% addTiles() %>%
-        fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,1]),
+        leaflet::fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,1]),
                   lat1 = min(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,2]),
                   lng2 = max(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,1]),
                   lat2 = max(sf::st_coordinates(sf::st_as_sf(input.data$EJ.facil.data[[i]]))[,2])) %>%
-        addCircleMarkers(radius = 5,
+        leaflet::addCircleMarkers(radius = 5,
                          opacity = 0.75,
                          color = ~ pal(`Demo. indicators above 80th %ile`),
                          #clusterOptions = markerClusterOptions(),
                          popup = popupTable(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == geog.ind),
                                             feature.id = F, row.numbers = F,
                                             zcol = names(na.omit(input.data$EJ.facil.data[[i]]))[1:20])) %>%
-        addLegend(pal = pal, values = ~`Demo. indicators above 80th %ile`, position = "bottomright")
+        leaflet::addLegend(pal = pal, values = ~`Demo. indicators above 80th %ile`, position = "bottomright")
     }
 
     # Save me
