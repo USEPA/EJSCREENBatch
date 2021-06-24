@@ -41,7 +41,7 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
     # Colors:
     if (ind.option == 'total'){
       map.data <- input.data$EJ.facil.data[[i]] %>%
-        tidyverse::mutate(`Total indicators above 80th %ile` = as.factor(
+        dplyr::mutate(`Total indicators above 80th %ile` = as.factor(
           as.numeric(as.character(`Env. indicators above 80th %ile`)) +
             as.numeric(as.character(`Demo. indicators above 80th %ile`))
         )
