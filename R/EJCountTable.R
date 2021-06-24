@@ -20,7 +20,7 @@ EJCountTable <- function(input.data, save.option = F){
                 include.table_percent = T, include.row_percent = F,
                 include.column_percent = F, include.row_total = F,
                 include.column_total = F) %>%
-      flextable::compose(j = 2, value = as_paragraph(''), part = 'head')
+      flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head')
 
     if (save.option == T){
       ifelse(!dir.exists(file.path(getwd(),"counttables/")),

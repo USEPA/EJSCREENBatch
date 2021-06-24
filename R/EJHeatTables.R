@@ -124,7 +124,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     }
 
     ## Shape into data.table
-    dt <- as.data.table(cbind(keepnames,list.cbind(dt))
+    dt <- as.data.table(cbind(keepnames,rlist::list.cbind(dt))
     )[1:6, ind.type := 'Demographic'
     ][7:17, ind.type := 'Environmental']
 
@@ -180,7 +180,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     }
 
     ## Shape into data.table
-    dt <- as.data.table(cbind(keepnames,list.cbind(dt))
+    dt <- as.data.table(cbind(keepnames,rlist::list.cbind(dt))
     )[1:6, ind.type := 'Demographic'
     ][7:17, ind.type := 'Environmental']
 
@@ -209,7 +209,6 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     }
 
   } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
-    # Note: This draws data from ONLY the 1st dist buffer and buffer type!
 
     # How many facilities included in table?
     if(is.null(topN)){
