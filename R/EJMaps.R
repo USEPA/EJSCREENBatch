@@ -66,7 +66,8 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
       # Leaflet object
       EJ.maps[[names(input.data$EJ.facil.data)[i]]] <-
         leaflet::leaflet(data = sf::st_as_sf(dplyr::filter(na.omit(map.data), geography == 'US'),
-                                crs = 4326)) %>% addTiles() %>%
+                                crs = 4326)) %>% 
+        leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(sf::st_as_sf(map.data))[,1]),
                   lat1 = min(sf::st_coordinates(sf::st_as_sf(map.data))[,2]),
                   lng2 = max(sf::st_coordinates(sf::st_as_sf(map.data))[,1]),
