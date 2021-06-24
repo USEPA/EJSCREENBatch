@@ -4,7 +4,7 @@
 #' defined) are displayed for each facility. Use national or state percentiles (default: US)
 #'
 #' @param input.data
-#' @param indic.option Options are 'total', 'environmental','demographic'. 'Total' is default.
+#' @param indic.option Options are 'total', 'environmental','demographic'. 'total' is default.
 #' @param perc.geog
 #' @param save.options
 #'
