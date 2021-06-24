@@ -75,7 +75,7 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
         leaflet::addCircleMarkers(radius = 5,
                          color = ~ pal(`Total indicators above 80th %ile`),
                          opacity = 0.75,
-                         popup = popupTable(dplyr::filter(na.omit(map.data), geography == geog.ind),
+                         popup = mapview::popupTable(dplyr::filter(na.omit(map.data), geography == geog.ind),
                                             feature.id = F, row.numbers = F,
                                             zcol = names(na.omit(map.data))[1:20])) %>%
         leaflet::addLegend(pal = pal, values = ~`Total indicators above 80th %ile`, position = "bottomright")
@@ -114,7 +114,7 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
                          color = ~ pal(`Env. indicators above 80th %ile`),
                          opacity = 0.75,
                          #clusterOptions = markerClusterOptions(),
-                         popup = popupTable(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == geog.ind),
+                         popup = mapview::popupTable(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == geog.ind),
                                             feature.id = F, row.numbers = F,
                                             zcol = names(na.omit(input.data$EJ.facil.data[[i]]))[1:20])) %>%
         leaflet::addLegend(pal = pal, values = ~`Env. indicators above 80th %ile`, position = "bottomright")
@@ -153,7 +153,7 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
                          opacity = 0.75,
                          color = ~ pal(`Demo. indicators above 80th %ile`),
                          #clusterOptions = markerClusterOptions(),
-                         popup = popupTable(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == geog.ind),
+                         popup = mapview::popupTable(dplyr::filter(na.omit(input.data$EJ.facil.data[[i]]), geography == geog.ind),
                                             feature.id = F, row.numbers = F,
                                             zcol = names(na.omit(input.data$EJ.facil.data[[i]]))[1:20])) %>%
         leaflet::addLegend(pal = pal, values = ~`Demo. indicators above 80th %ile`, position = "bottomright")
