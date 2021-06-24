@@ -4,9 +4,9 @@
 #' of indicators that exceed the 80th percentile.
 #'
 #' @param input_data
-#' @param rank_type
+#' @param rank_type Required. Either 'location' or 'CBG'
 #' @param geography_type
-#' @param rank_count
+#' @param rank_count Required. 
 #' @param save.option
 #'
 #' @return
