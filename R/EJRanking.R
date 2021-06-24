@@ -35,31 +35,31 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
         stop('Ranking list length can be no longer than location list.')
       } else {
         locay <- input_data$EJ.facil.data[[i]] %>%
-          filter(geography == geography_type) %>%
-          mutate(`Total indicators above 80th %ile` =
+          dplyr::filter(geography == geography_type) %>%
+          dplyr::mutate(`Total indicators above 80th %ile` =
                    as.numeric(as.character(`Env. indicators above 80th %ile`)) +
                    as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
-          arrange(desc(`Total indicators above 80th %ile`),
+          dplyr::arrange(desc(`Total indicators above 80th %ile`),
                   desc(`Env. indicators above 80th %ile`)) %>%
           dplyr::select(shape_ID,
                  `Total indicators above 80th %ile`,
                  `Env. indicators above 80th %ile`,
                  `Demo. indicators above 80th %ile`) %>%
-          mutate(`Env. indicators above 80th %ile` =
+          dplyr::mutate(`Env. indicators above 80th %ile` =
                    as.numeric(as.character(`Env. indicators above 80th %ile`))) %>%
-          mutate(`Demo. indicators above 80th %ile` =
+          dplyr::mutate(`Demo. indicators above 80th %ile` =
                    as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
-          rename(`location ID` = shape_ID) %>%
-          slice_head(n = rank_count)
+          dplyr::rename(`location ID` = shape_ID) %>%
+          dplyr::slice_head(n = rank_count)
 
-        data_transf[[names(input_data$EJ.facil.data)[i]]] <- flextable(locay) %>%
-          theme_zebra() %>%
-          set_table_properties(layout='autofit', width = .3)
+        data_transf[[names(input_data$EJ.facil.data)[i]]] <- flextable::flextable(locay) %>%
+          flextable::theme_zebra() %>%
+          flextable::set_table_properties(layout='autofit', width = .3)
 
         if (save.option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                  dir.create(file.path(getwd(),"ranktables/")), FALSE)
-          save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
+          flextable::save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
                         path = paste0('ranktables/loca_',names(input_data$EJ.facil.data)[i], ".png"))
         }
       }
@@ -86,13 +86,13 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
                  P_PM25_state, ID) %>%
           as.data.table()
 
-        cbg <- melt(unique(cbg), id = 'ID'
+        cbg <- data.table::melt(unique(cbg), id = 'ID'
         )[, variable := stri_replace_last_fixed(variable,'_','|')
         ][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)
         ][!is.na(ID)]
 
-        cbg <- dcast(cbg, ID + geography ~ variable, value.var = "value") %>%
-          rename(Lead                = P_LDPNT,
+        cbg <- data.table::dcast(cbg, ID + geography ~ variable, value.var = "value") %>%
+          dplyr::rename(Lead                = P_LDPNT,
                  'Diesel PM'         = P_DSLPM,
                  'Air, Cancer'       = P_CANCR,
                  'Resp. Hazard'      = P_RESP,
@@ -110,39 +110,39 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
                  'Ling. Isol.'       = P_LNGISPCT,
                  'Age Under 5'       = P_UNDR5PCT,
                  'Age Over 64'       = P_OVR64PCT) %>%
-          relocate(ID, `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
+          dplyr::relocate(ID, `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
                    `Age Under 5`, `Age Over 64`, `Air, Cancer`, `Diesel PM`,
                    Lead, Ozone, PM, NPL, `RMP Facility`, Traffic, `TSD Facility`,
                    `WW Discharge`, `Resp. Hazard` )
 
          cbg <- cbg %>%
-          mutate(`Env. indicators above 80th %ile` = rowSums(dplyr::select(as.data.frame(cbg),
+          dplyr::mutate(`Env. indicators above 80th %ile` = rowSums(dplyr::select(as.data.frame(cbg),
                                                                     `Air, Cancer`:`Resp. Hazard`) > 80)) %>%
-          mutate(`Demo. indicators above 80th %ile` = rowSums(dplyr::select(as.data.frame(cbg),
+          dplyr::mutate(`Demo. indicators above 80th %ile` = rowSums(dplyr::select(as.data.frame(cbg),
                                                                      `Low Income`:`Age Over 64`) > 80)) %>%
-          mutate_if(is.numeric, round) %>%
-          mutate(`Total indicators above 80th %ile` =
+          dplyr::mutate_if(is.numeric, round) %>%
+          dplyr::mutate(`Total indicators above 80th %ile` =
                    `Env. indicators above 80th %ile` +
                    `Demo. indicators above 80th %ile`) %>%
-          arrange(desc(`Total indicators above 80th %ile`)) %>%
-          filter(geography == geography_type) %>%
-          arrange(desc(`Total indicators above 80th %ile`),
+          dplyr::arrange(desc(`Total indicators above 80th %ile`)) %>%
+          dplyr::filter(geography == geography_type) %>%
+          dplyr::arrange(desc(`Total indicators above 80th %ile`),
                   desc(`Env. indicators above 80th %ile`)) %>%
           dplyr::select(ID,
                  `Total indicators above 80th %ile`,
                  `Env. indicators above 80th %ile`,
                  `Demo. indicators above 80th %ile`) %>%
-          rename(`CBG code` = ID) %>%
-          slice_head(n = rank_count)
+          dplyr::rename(`CBG code` = ID) %>%
+          dplyr::slice_head(n = rank_count)
 
-        data_transf[[names(input_data$EJ.list.data)[i]]] <- flextable(cbg) %>%
-          theme_zebra() %>%
-          set_table_properties(layout='autofit', width = .3)
+        data_transf[[names(input_data$EJ.list.data)[i]]] <- flextable::flextable(cbg) %>%
+          flextable::theme_zebra() %>%
+          flextable::set_table_properties(layout='autofit', width = .3)
 
         if (save.option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                  dir.create(file.path(getwd(),"ranktables/")), FALSE)
-          save_as_image(x = data_transf[[names(input_data$EJ.list.data)[i]]],
+          flextable::save_as_image(x = data_transf[[names(input_data$EJ.list.data)[i]]],
                         path = paste0('ranktables/cbg_',names(input_data$EJ.list.data)[i], ".png"))
         }
       }

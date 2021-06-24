@@ -89,7 +89,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
       }
 
       df.var.wm <- df.var.wm %>%
-        rename(Lead                = P_LDPNT,
+        dplyr::rename(Lead                = P_LDPNT,
                'Diesel PM'         = P_DSLPM,
                'Air, Cancer'       = P_CANCR,
                'Resp. Hazard'      = P_RESP,
@@ -118,7 +118,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
       ][, lapply(.SD, round)]
 
       # Write to dt.list
-      dt[[i]] <- melt(df.var.wm)[,2]
+      dt[[i]] <- data.table::melt(df.var.wm)[,2]
       names(dt[[i]]) <- paste0(str_sub(labels(input.data$EJ.facil.data)[[i]],-3,-3),
                                ' mile radius')
     }
@@ -129,12 +129,12 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     ][7:17, ind.type := 'Environmental']
 
     ## Create the heat table
-    heat.table <- as_grouped_data(dt, groups = 'ind.type') %>%
-      flextable() %>%
-      compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
-      autofit() %>%
-      align_nottext_col(align = 'center') %>%
-      align_text_col(align = 'left') %>%
+    heat.table <- flextable::as_grouped_data(dt, groups = 'ind.type') %>%
+      flextable::flextable() %>%
+      flextable::compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
+      flextable::autofit() %>%
+      flextable::align_nottext_col(align = 'center') %>%
+      flextable::align_text_col(align = 'left') %>%
       bg(bg = function(x){
         out <- rep("transparent", length(x))
         out[is.numeric(x) & x >= 95] <- "red1"
@@ -142,14 +142,14 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
         out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
         out
       }) %>%
-      compose(j = 2, value = as_paragraph(''), part = 'head') %>%
-      bold(bold = T, part = 'header') %>%
-      bold(i = 1, j = 1, bold = T, part = "body") %>%
-      bold(i = 8, j = 1, bold = T, part = 'body')
+      flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
+      flextable::bold(bold = T, part = 'header') %>%
+      flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
+      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
 
     ## Save if option selected.
     if (save.option == T){
-      save_as_image(x = heat.table, path = "heat_table_all.png")
+      flextable::save_as_image(x = heat.table, path = "heat_table_all.png")
     }
 
   } else if (type == 'single') { #This returns HeatTable for user-specified facil
@@ -166,7 +166,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
 
     # Keep list of relevant varnames
     keepnames <- as.data.table(input.data$EJ.facil.data[[1]]
-    )[,dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
+    )[, dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
 
     ## This draws from facility level data (median CBG value for that facil)
     for (i in 1:length(input.data$EJ.facil.data)){
@@ -174,7 +174,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
       )[geography == geog & shape_ID == shape.keep,
         dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
       ][, lapply(.SD, round)]
-      dt[[i]] <- melt(dt[[i]])[,2]
+      dt[[i]] <- dplyr::melt(dt[[i]])[,2]
       names(dt[[i]]) <- paste0(str_sub(labels(input.data$EJ.facil.data)[[i]],-3,-3),
                                ' mile radius')
     }
@@ -185,12 +185,12 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     ][7:17, ind.type := 'Environmental']
 
     ## Create the heat table
-    heat.table <- as_grouped_data(dt, groups = 'ind.type') %>%
-      flextable() %>%
-      compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
-      autofit() %>%
-      align_nottext_col(align = 'center') %>%
-      align_text_col(align = 'left') %>%
+    heat.table <- flextable::as_grouped_data(dt, groups = 'ind.type') %>%
+      flextable::flextable() %>%
+      flextable::compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
+      flextable::autofit() %>%
+      flextable::align_nottext_col(align = 'center') %>%
+      flextable::align_text_col(align = 'left') %>%
       bg(bg = function(x){
         out <- rep("transparent", length(x))
         out[is.numeric(x) & x >= 95] <- "red1"
@@ -198,14 +198,14 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
         out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
         out
       }) %>%
-      compose(j = 2, value = as_paragraph(''), part = 'head') %>%
-      bold(bold = T, part = 'header') %>%
-      bold(i = 1, j = 1, bold = T, part = "body") %>%
-      bold(i = 8, j = 1, bold = T, part = 'body')
+      flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
+      flextable::bold(bold = T, part = 'header') %>%
+      flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
+      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
 
     ## Save if option selected.
     if (save.option == T){
-      save_as_image(x = heat.table, path = "heat_table_single.png")
+      flextable::save_as_image(x = heat.table, path = "heat_table_single.png")
     }
 
   } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
@@ -271,13 +271,13 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
                           ]
 
     # Create the final table
-    heat.table <- as_grouped_data(new.dt, groups = 'ind.type') %>%
-      flextable() %>%
-      compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
-      compose(i = 1, j = 2, value = as_paragraph(""), part = "header") %>%
-      autofit() %>%
-      align_nottext_col(align = 'center') %>%
-      align_text_col(align = 'left') %>%
+    heat.table <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
+      flextable::flextable() %>%
+      flextable::compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
+      flextable::compose(i = 1, j = 2, value = as_paragraph(""), part = "header") %>%
+      flextable::autofit() %>%
+      flextable::align_nottext_col(align = 'center') %>%
+      flextable::align_text_col(align = 'left') %>%
       bg(bg = function(x){
         out <- rep("transparent", length(x))
         out[is.numeric(x) & x >= 95] <- "red1"
@@ -285,14 +285,14 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
         out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
         out
       }) %>%
-      compose(j = 2, value = as_paragraph(''), part = 'head') %>%
-      bold(bold = T, part = 'header') %>%
-      bold(i = 1, j = 1, bold = T, part = "body") %>%
-      bold(i = 8, j = 1, bold = T, part = 'body')
+      flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
+      flextable::bold(bold = T, part = 'header') %>%
+      flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
+      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
 
     ## Save if option selected.
     if (save.option == T){
-      save_as_image(x = heat.table, path = "heat_table_top10.png")
+      flextable::save_as_image(x = heat.table, path = "heat_table_top10.png")
     }
 
   } else {
