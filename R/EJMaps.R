@@ -61,7 +61,7 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
       # Color palette
       pal <- leaflet::colorFactor(
         rev(RColorBrewer::brewer.pal(n=11, "Spectral")),
-        domain = na.omit(map.data)$`Indexes above 80th %ile`)
+        domain = na.omit(map.data)$`Total indicators above 80th %ile`)
 
       # Leaflet object
       EJ.maps[[names(input.data$EJ.facil.data)[i]]] <-
