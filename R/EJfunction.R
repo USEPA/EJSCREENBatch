@@ -4,7 +4,7 @@
 #' Input must be an SF object! User must make this transformation.
 #'
 #' @param data_type Required. Either "landbased" or "waterbased"
-#' @param facility_data Required. 
+#' @param facility_data Required.
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
 #' @param buff_dist Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
 #' @param threshold User specified threshold to represent potential concern. Default is 80\%.
@@ -165,14 +165,16 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       if(facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
         #For each buffer radius, calculate intersection several different ways
         if (i > 0){
-          facility_buff <- st_buffer(facility_data, dist = units::set_units(i,"mi"))
+          facility_buff <- st_buffer(facility_data  %>%
+                                       st_transform("ESRI:102005"), dist = units::set_units(i,"mi"))
         } else {
           stop('Buffer around points required.')
         }
       } else if(facil.geom.type %in% c('POLYGON', 'MULTIPOLYGON')){
         #For each buffer radius, calculate intersection several different ways
         if (i > 0){
-          facility_buff <- st_buffer(facility_data, dist = units::set_units(i,"mi"))
+          facility_buff <- st_buffer(facility_data %>%
+                                       st_transform("ESRI:102005"), dist = units::set_units(i,"mi"))
         } else if (i == 0) {
           facility_buff <- facility_data
         } else {
