@@ -160,7 +160,7 @@ together.sf <- together.sf %>%
                                                   `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
   dplyr::mutate(`Demo. indicators above 80th %ile` = 
                   as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                  Low Income`:`Age Over 64`) > 80))) %>%
+                                                  `Low Income`:`Age Over 64`) > 80))) %>%
   dplyr::mutate_if(is.numeric, round)
 
 return(together.sf)
