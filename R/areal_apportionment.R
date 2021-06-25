@@ -119,15 +119,14 @@ facility_level_estimates <- do.call(rbind,lapply(states, function(x){
 })) %>%
   dplyr::select(shape_ID, starts_with("P_")) %>%
   dplyr::rename(shapeID = shape_ID) %>%
-  data.table::as.data.table()
-
-print('Recasting data.frame to long...')
-facility_level_estimates <- data.table::melt(facility_level_estimates, id = 'shapeID'
-)[, variable := stringi::stri_replace_last_fixed(variable,'_','|')
-][, c('variable','geography') := data.table::tstrsplit(variable, '|', fixed = T)]
-
-df.var.wm <- data.table::dcast(facility_level_estimates, shapeID + geography ~ variable, value.var = "value") %>%
-  rename(Lead                = P_PRE1960PCT,
+  tidyr::pivot_longer(cols=starts_with("P_"),
+               names_to="variable",
+               values_to = "value") %>%
+  dplyr::mutate(variable = stringi::stri_replace_last_fixed(variable,'_','.')) %>%
+  tidyr::separate(variable, into = c("variable","geography"), sep = "\\.",
+           extra = "merge", fill = "left")   %>%
+  tidyr::pivot_wider(names_from = c(variable)) %>%
+  dplyr::rename(Lead                = P_PRE1960PCT,
          'Diesel PM'         = P_DSLPM,
          'Air, Cancer'       = P_CANCER,
          'Resp. Hazard'      = P_RESP,
@@ -158,16 +157,15 @@ together.sf <- dplyr::inner_join(df.var.wm, df.latlon, by = "shape_ID") %>%
            `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
            `Age Under 5`, `Age Over 64`, `Air, Cancer`, `Diesel PM`,                       
            Lead, Ozone, PM, NPL, `RMP Facility`, Traffic, `TSD Facility`,
-           `WW Discharge`, `Resp. Hazard` ) 
-
-together.sf <- together.sf %>% 
+           `WW Discharge`, `Resp. Hazard` ) %>%
   dplyr::mutate(`Env. indicators above 80th %ile` = 
                   as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
                                                   `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
   dplyr::mutate(`Demo. indicators above 80th %ile` = 
                   as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
                                                   `Low Income`:`Age Over 64`) > 80))) %>%
-  dplyr::mutate_if(is.numeric, round)
+  dplyr::mutate_if(is.numeric, round) %>%
+  st_as_sf(crs = 4326)
 
 return(together.sf)
 }
