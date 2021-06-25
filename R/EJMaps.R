@@ -48,8 +48,7 @@ EJMaps <- function(input.data, indic.option = NULL, perc.geog = NULL,
         )
 
       # Add facility name if given by user.
-      if(!is.null(input.name) &
-         (length(input.name) == dim(input.data$EJ.facil.data[[i]])[1]/2)){
+      if(!is.null(input.name)){
         name.id <- as.data.frame(input.name) %>%
           tibble::rowid_to_column('shape_ID')
         names(name.id)[2] <- 'LocationID'
