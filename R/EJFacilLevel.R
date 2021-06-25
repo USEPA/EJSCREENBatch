@@ -65,7 +65,8 @@ EJFacilLevel <- function(list.data, facil.data) {
 
   # Need lat/lon, (previously: URL to the facility's DFR)
   df.latlon <- facil.data %>%
-    dplyr::select(shape_ID, geometry)
+    dplyr::select(shape_ID, geometry) %>%
+    st_transform(crs = 4326)
 
   # Merge all together
   together.sf <- inner_join(df.var.wm, df.pop.sum, by = "shape_ID") %>%

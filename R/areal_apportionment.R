@@ -45,7 +45,7 @@ for(method in methods){
                         include_xy=F, 
                         stack_apply=T,
                         full_colnames=T)) %>% 
-    dplyr::rename(sum.uspop10.tif=starts_with('exact_'))
+    dplyr::rename(sum.uspop10.tif=starts_with('exact'))
   assign(paste0("bgs.",method), intermediate)
 }
 
@@ -123,8 +123,8 @@ facility_level_estimates <- do.call(rbind,lapply(states, function(x){
 
 print('Recasting data.frame to long...')
 facility_level_estimates <- data.table::melt(facility_level_estimates, id = 'shapeID'
-)[, variable := stri_replace_last_fixed(variable,'_','|')
-][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)]
+)[, variable := stringi::stri_replace_last_fixed(variable,'_','|')
+][, c('variable','geography') := data.table::tstrsplit(variable, '|', fixed = T)]
 
 df.var.wm <- data.table::dcast(facility_level_estimates, shapeID + geography ~ variable, value.var = "value") %>%
   rename(Lead                = P_PRE1960PCT,
@@ -148,7 +148,8 @@ df.var.wm <- data.table::dcast(facility_level_estimates, shapeID + geography ~ v
          shape_ID            = shapeID) 
 
 df.latlon <- facil.data %>%
-  dplyr::select(shape_ID, geometry)
+  dplyr::select(shape_ID, geometry) %>%
+  st_transform(crs = 4326)
 
 # Merge all together
 together.sf <- dplyr::inner_join(df.var.wm, df.latlon, by = "shape_ID") %>%

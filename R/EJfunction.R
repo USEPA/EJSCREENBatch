@@ -163,18 +163,16 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       #if lat-lons provided, draw buffers around points
       #if polygon provided, default is to use polygon without buffer but can add buffer if desired
       if(facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
-        #For each buffer radius, calculate intersection several different ways
         if (i > 0){
-          facility_buff <- st_buffer(facility_data  %>%
-                                       st_transform("ESRI:102005"), dist = units::set_units(i,"mi"))
+          facility_buff <- st_buffer(facility_data %>% st_transform("ESRI:102005"), 
+                                     dist = units::set_units(i,"mi"))
         } else {
           stop('Buffer around points required.')
         }
       } else if(facil.geom.type %in% c('POLYGON', 'MULTIPOLYGON')){
-        #For each buffer radius, calculate intersection several different ways
         if (i > 0){
-          facility_buff <- st_buffer(facility_data %>%
-                                       st_transform("ESRI:102005"), dist = units::set_units(i,"mi"))
+          facility_buff <- st_buffer(facility_data %>% st_transform("ESRI:102005"), 
+                                     dist = units::set_units(i,"mi"))
         } else if (i == 0) {
           facility_buff <- facility_data
         } else {
