@@ -151,7 +151,7 @@ df.latlon <- facil.data %>%
   st_transform(crs = 4326)
 
 # Merge all together
-together.sf <- dplyr::inner_join(df.var.wm, df.latlon, by = "shape_ID") %>%
+together.sf <- dplyr::inner_join(facility_level_estimates, df.latlon, by = "shape_ID") %>%
   #inner_join(df.pop.sum, by = 'shape_ID') %>% come back later to add population?
   dplyr::relocate(shape_ID, #`Pop. Count`,
            `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
