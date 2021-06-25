@@ -217,7 +217,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.index.data[[paste0("Indexes_centroid_radius",i,"mi")]] <-
           EJIndexes(area2_centroid, gis_method="centroid" , buffer=i)
         EJ.demographics.data[[paste0("demographics_centroid_radius",i,"mi")]] <-
-          EJdemographics(area2_centroid, gis_method="centroid" , buffer=i)
+          EJdemographics(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
         EJ.CorrPlots.data[[paste0("CorrPlots_centroid_radius",i,"mi")]] <-
           EJCorrPlots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
@@ -241,7 +241,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.index.data[[paste0("Indexes_intersection_radius",i,"mi")]] <-
           EJIndexes(area3_intersection, gis_method="intersection" , buffer=i)
         EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
-          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i)
+          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
         EJ.CorrPlots.data[[paste0("CorrPlots_intersection_radius",i,"mi")]] <-
           EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
 
