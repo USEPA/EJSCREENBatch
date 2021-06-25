@@ -11,7 +11,7 @@
 #' @export
 #'
 #' @examples
-EJdemographics <- function(data, gis_method, buffer){
+EJdemographics <- function(data, gis_method, buffer, threshold){
   ifelse(!dir.exists(file.path(getwd(),"plots")), dir.create(file.path(getwd(),"plots")), FALSE)
 
   data.list <- list()
@@ -37,7 +37,7 @@ EJdemographics <- function(data, gis_method, buffer){
               names = c("% Minority","Low Income", "< HS Edu.","Ling. Isolation",  "< Age 5", "> Age 64"),
               ylab="State Percentile",
               main=paste0("Demographics relative to ", percentile," \n GIS Method: ",gis_method," \n Buffer: ",buffer," mile Distance"), las=2, cex.axis=.75)
-    abline(h=50, col="Red", lty=5)
+    abline(h=threshold, col="Red", lty=5)
     dev.off()
 
     assign(paste0("demographics.",percentile),demo.df)

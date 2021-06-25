@@ -363,7 +363,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
           EJIndexes(area, gis_method = gis_option, buffer=i)
 
         EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
-          EJdemographics(area, gis_method = gis_option, buffer=i)
+          EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
         EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
           EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
