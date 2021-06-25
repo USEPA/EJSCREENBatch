@@ -8,130 +8,172 @@
 #'
 #' @param ejscreen.bgs.data EJSCREEN data
 #' @param facility_buff Polygons representing buffered areas of interest
+#' @param facil.data Original facility-level data (for non-buffered shapes)
+#' @param path.raster.layer
 #'
 #' @return
 #' @export
 #'
 #' @examples
-areal_apportionment <- function(ejscreen.bgs.data, facility_buff, raster.pop.data){
+areal_apportionment <- function(ejscreen.bgs.data, facility_buff, facil.data, path.raster.layer){
 
+layers <- list.files(path=path.raster.layer, pattern= "((pop)).*\\.tif$", full.names = TRUE )
+raster_extract <- raster(layers) %>% 
+  projectRaster(crs="ESRI:102005")
 
-
-
-
-  layers <- list.files(path="data/US Census Grid_SF2010_TIFF/", pattern= "((pop)).*\\.tif$", full.names = TRUE )
-  raster_extract <- raster(layers) %>%
-    projectRaster(crs="ESRI:102005")
-
-  #Decennial Census Data from NASA's SEDAC
-  #get pop for block group (intersect) and area covered by buffer (intersection)
-  #Used to compute fraction necessary to weight EJ Indices
-  methods=c("intersect", "intersection")
-  for(method in methods){
-    intermediate <- data.state.uspr %>%
-        dplyr::select(ID, Shape) %>%
-        {if(method=="intersection"){
-            st_intersection(.,facility_buff) %>%
-            group_by(Facility.Name) %>%
-            mutate(count_bgs_radius = n_distinct(ID)) %>%
-            group_by(ID) %>%
-            mutate(count_fac_radius = n_distinct(Facility.Name))
-        } else if(method=="intersect"){
-            st_join(.,facility_buff, join=st_intersects) %>%
-            filter(!is.na(shape_ID))
-        }} %>%
-        cbind(exact_extract(raster_extract, .,
-                            c('sum'),
-                            include_xy=F,
-                            stack_apply=T,
-                            full_colnames=T)) %>%
+#Decennial Census Data from NASA's SEDAC 
+#get pop for block group (intersect) and area covered by buffer (intersection) 
+#Used to compute fraction necessary to weight EJ Indices
+methods=c("intersect", "intersection")
+for(method in methods){
+  intermediate <- data.state.uspr %>% 
+    intermediate <- ejscreen.bgs.data %>% 
+      dplyr::select(ID, Shape) %>% 
+      {if(method=="intersection"){
+        st_intersection(.,facility_buff) %>% 
+          group_by(shape_ID) %>% 
+          mutate(count_bgs_radius = n_distinct(ID)) %>% 
+          group_by(ID) %>% 
+          mutate(count_fac_radius = n_distinct(shape_ID))
+      } else if(method=="intersect"){
+        st_join(.,facility_buff, join=st_intersects) %>% 
+          filter(!is.na(shape_ID))
+      }} %>% 
+      cbind(exact_extract(raster_extract, .,
+                          c('sum'),
+                          include_xy=F, 
+                          stack_apply=T,
+                          full_colnames=T)) %>% 
       rename(sum.uspop10.tif=starts_with('exact_'))
-      assign(paste0("bgs.",method), intermediate)
-  }
+    assign(paste0("bgs.",method), intermediate)
+}
 
-  #Summarizes EJ Indices for buffer, computes state and national averages, and national percentiles
-  facility_level <- bgs.intersect %>%
-    as.data.frame() %>%
-    dplyr::select(shape_ID, ID, NPDES.Permit.Number, Facility.Name, starts_with("sum")) %>%
-    left_join(bgs.intersection %>%
-                as.data.frame() %>%
-                dplyr::select(-c(starts_with("Shape"))) %>%
-                dplyr::select(ID, NPDES.Permit.Number, Facility.Name, starts_with("sum"),starts_with("count_")) %>%
-                rename(sum.uspop10.intersection = sum.uspop10.tif)) %>%
-    mutate(fraction = as.numeric(sum.uspop10.intersection/sum.uspop10.tif*100, options(scipen=999))) %>%
-    right_join(data.state.uspr, by=c("ID"="ID")) %>%
-    group_by(shape_ID, Facility.Name)  %>%
-    mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
-                    PTSDF, PWDIS, VULEOPCT),
-                  list(~ifelse(!is.na(ID) & is.na(Facility.Name), ., (sum(fraction*ACSTOTPOP*., na.rm=T)/sum(fraction*ACSTOTPOP,na.rm=T)))  )  ,
-                  .names="raw_E_{.col}"),
-           across(c(MINORPCT, LOWINCPCT, UNDER5PCT,
-                    LESSHSPCT, OVER64PCT, LINGISOPCT),
-                  list(~ifelse(!is.na(ID) & is.na(Facility.Name), ., (sum(fraction*ACSTOTPOP*., na.rm=T)/sum(fraction*ACSTOTPOP,na.rm=T)))  )  ,
-                  .names="raw_D_{.col}")) %>%
-    group_by(STATE_NAME) %>%
-    mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
-                       PTSDF, PWDIS, VULEOPCT),
-                     list(~mean(., na.rm=T)),
-                     .names="S_E_{.col}"),
+#Summarizes EJ Indices for buffer, computes state and national averages, and national percentiles
+facility_level <- bgs.intersect %>% 
+  as.data.frame() %>% 
+  dplyr::select(shape_ID, ID, starts_with("sum")) %>% 
+  left_join(bgs.intersection %>% 
+              as.data.frame() %>% 
+              dplyr::select(-c(starts_with("Shape", ignore.case = FALSE))) %>% 
+              dplyr::select(ID, shape_ID, facility_state, starts_with("sum"),starts_with("count_")) %>% 
+              rename(sum.uspop10.intersection = sum.uspop10.tif),
+            by = c("ID", "shape_ID")) %>% 
+  mutate(fraction = as.numeric(sum.uspop10.intersection/sum.uspop10.tif*100, options(scipen=999))) %>% 
+  right_join(data.state.uspr, by=c("ID"="ID")) %>% 
+  dplyr::select(ID, shape_ID, sum.uspop10.tif, sum.uspop10.intersection,
+                fraction, count_bgs_radius, #count_fac_radius, 
+                facility_state, STATE_NAME, ACSTOTPOP,
+                PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
+                PTSDF, PWDIS, VULEOPCT,
+                MINORPCT, LOWINCPCT, UNDER5PCT, 
+                LESSHSPCT, OVER64PCT, LINGISOPCT) %>%
+  group_by(shape_ID)  %>% 
+  mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
+                  PTSDF, PWDIS, VULEOPCT,
+                  MINORPCT, LOWINCPCT, UNDER5PCT, 
+                  LESSHSPCT, OVER64PCT, LINGISOPCT),
+                list(~ifelse(!is.na(ID) & is.na(shape_ID), ., (sum(fraction*ACSTOTPOP*., na.rm=T)/sum(fraction*ACSTOTPOP,na.rm=T)))  )  ,
+                .names="raw_{.col}")) %>% 
+  #group_by(STATE_NAME) %>% 
+  #mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
+  #                PTSDF, PWDIS, VULEOPCT,
+  #                MINORPCT, LOWINCPCT, UNDER5PCT, 
+  #                LESSHSPCT, OVER64PCT, LINGISOPCT), 
+  #                 list(~mean(., na.rm=T)),
+  #                 .names="{.col}_state")) %>% 
+  #ungroup() %>% 
+  #mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
+  #                PTSDF, PWDIS, VULEOPCT,
+  #                MINORPCT, LOWINCPCT, UNDER5PCT, 
+#                LESSHSPCT, OVER64PCT, LINGISOPCT), 
+#                 list(~(mean(., na.rm=T))),
+#                 .names="{.col}_US"))  %>% 
+dplyr::select(shape_ID, ID, facility_state, STATE_NAME, starts_with("raw_"), ends_with("state"), ends_with("US")) %>%
+  mutate(ID = ifelse(!is.na(shape_ID),"1",ID)) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  mutate(across(c(starts_with("raw_")), 
+                list(~round(ecdf(data.state.uspr %>% 
+                                   as.data.frame() %>% 
+                                   dplyr::select(as.name(str_replace(cur_column(), c("raw_") ,""))) %>%
+                                   unlist() %>% 
+                                   as.numeric())(.)*100
+                            ,0)),
+                # list(~ntile(., 100)),
+                .names="P_{.col}_US"))  %>% 
+  #rename_with(~ sub("raw_", "", .x), everything()) %>% 
+  filter(!is.na(shape_ID) & facility_state == STATE_NAME)
 
-           across(c(MINORPCT, LOWINCPCT, UNDER5PCT,
-                    LESSHSPCT, OVER64PCT, LINGISOPCT),
-                  list(~mean(., na.rm=T)),
-                  .names="S_D_{.col}")) %>%
-    ungroup() %>%
-    mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
-                       PTSDF, PWDIS, VULEOPCT),
-                     list(~(mean(., na.rm=T))),
-                     .names="N_E_{.col}"),
+states <- facility_level %>% 
+  dplyr::select(STATE_NAME) %>% 
+  filter(!(STATE_NAME=="Puerto Rico")) %>% 
+  unique() %>% 
+  unlist() %>% 
+  as.list()
 
-
-           across(c(MINORPCT, LOWINCPCT, UNDER5PCT,
-                    LESSHSPCT, OVER64PCT, LINGISOPCT),
-                  list(~(mean(., na.rm=T))),
-                  .names="N_D_{.col}"))  %>%
-    dplyr::select(shape_ID, ID, STATE_NAME,Facility.Name, starts_with("raw_"), starts_with("S_E_"), starts_with("N_E_")) %>%
-    mutate(ID = ifelse(!is.na(Facility.Name),"1",ID)) %>%
-    distinct() %>%
-    ungroup() %>%
-    mutate(across(c(starts_with("raw_")),
-                  list(~round(ecdf(data.state.uspr %>%
-                                     as.data.frame() %>%
-                                     dplyr::select(as.name(str_replace(cur_column(), c("raw_E_|raw_D_") ,""))) %>%
-                                     unlist() %>%
-                                     as.numeric())(.)*100
+#computes state percentiles--looping to make sure distribution used to get percentile is by state
+#Can parallelize for speed
+facility_level_estimates <- do.call(rbind,lapply(states, function(x){
+  iterm <- facility_level %>% 
+    filter(STATE_NAME==x) %>%
+    filter(!is.na(shape_ID))  %>% 
+    mutate(across(c(starts_with("raw_")), 
+                  list(~round(ecdf(na.omit(data.state.uspr %>% 
+                                             as.data.frame() %>% 
+                                             filter(STATE_NAME==x) %>%
+                                             dplyr::select(as.name(str_replace(cur_column(), c("raw_"),""))) %>%
+                                             unlist() %>% 
+                                             as.numeric()))(.)*100
                               ,0)),
-                  # list(~ntile(., 100)),
-                  .names="N_{.col}_per"))  %>%
-    rename_with(~ sub("N_raw_", "N_", .x), everything()) %>%
-    filter(!is.na(Facility.Name))
+                  .names="P_{.col}_state"))  %>% 
+    rename_with(~ sub("raw_", "", .x), everything())
+})) %>%
+  dplyr::select(shape_ID, starts_with("P_")) %>%
+  rename(shapeID = shape_ID) %>%
+  as.data.table()
 
+facility_level_estimates <- melt(facility_level_estimates, id = 'shapeID'
+)[, variable := stri_replace_last_fixed(variable,'_','|')
+][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)]
 
+df.var.wm <- dcast(facility_level_estimates, shapeID + geography ~ variable, value.var = "value") %>%
+  rename(Lead                = P_PRE1960PCT,
+         'Diesel PM'         = P_DSLPM,
+         'Air, Cancer'       = P_CANCER,
+         'Resp. Hazard'      = P_RESP,
+         'Traffic'           = P_PTRAF,
+         'WW Discharge'      = P_PWDIS,
+         'NPL'               = P_PNPL,
+         'RMP Facility'      = P_PRMP,
+         'TSD Facility'      = P_PTSDF,
+         'Ozone'             = P_OZONE,
+         'PM'                = P_PM25,
+         'Demo. Index'       = P_VULEOPCT,
+         Minority            = P_MINORPCT,
+         'Low Income'        = P_LOWINCPCT,
+         'Less HS Educ'      = P_LESSHSPCT,
+         'Ling. Isol.'       = P_LINGISOPCT,
+         'Age Under 5'       = P_UNDER5PCT,
+         'Age Over 64'       = P_OVER64PCT,
+         shape_ID            = shapeID) 
 
-  states <- facility_level %>%
-    dplyr::select(STATE_NAME) %>%
-    filter(!(STATE_NAME=="Puerto Rico")) %>%
-    unique() %>%
-    unlist() %>%
-    as.list()
+df.latlon <- facil.data %>%
+  dplyr::select(shape_ID, geometry)
 
+# Merge all together
+together.sf <- inner_join(df.var.wm, df.latlon, by = "shape_ID") %>%
+  #inner_join(df.pop.sum, by = 'shape_ID') %>% come back later to add population?
+  relocate(shape_ID, #`Pop. Count`,
+           `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
+           `Age Under 5`, `Age Over 64`, `Air, Cancer`, `Diesel PM`,                       
+           Lead, Ozone, PM, NPL, `RMP Facility`, Traffic, `TSD Facility`,
+           `WW Discharge`, `Resp. Hazard` ) 
 
-  #computes state percentiles--looping to make sure distribution used to get percentile is by state
-  #Can parallelize for speed
-  facility_level_estimates <- do.call(rbind,lapply(states, function(x){
-    iterm <- facility_level %>%
-      filter(STATE_NAME==x) %>%
-      filter(!is.na(Facility.Name))  %>%
-      mutate(across(c(starts_with("raw_")),
-                    list(~round(ecdf(na.omit(data.state.uspr %>%
-                                       as.data.frame() %>%
-                                       filter(STATE_NAME==x) %>%
-                                       dplyr::select(as.name(str_replace(cur_column(), c("raw_E_|raw_D_"),""))) %>%
-                                       unlist() %>%
-                                       as.numeric()))(.)*100
-                                ,0)),
-                    .names="S_{.col}_per"))  %>%
-      rename_with(~ sub("S_raw_", "S_", .x), everything())
-  }))
+together.sf <- together.sf %>% mutate(`Env. indicators above 80th %ile` = as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
+                                                                                                          `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
+  mutate(`Demo. indicators above 80th %ile` = as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
+                                                                              `Low Income`:`Age Over 64`) > 80))) %>%
+  mutate_if(is.numeric, round)
 
+return(together.sf)
 }
