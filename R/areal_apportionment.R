@@ -157,7 +157,8 @@ together.sf <- dplyr::inner_join(facility_level_estimates, df.latlon, by = "shap
            `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
            `Age Under 5`, `Age Over 64`, `Air, Cancer`, `Diesel PM`,                       
            Lead, Ozone, PM, NPL, `RMP Facility`, Traffic, `TSD Facility`,
-           `WW Discharge`, `Resp. Hazard` ) %>%
+           `WW Discharge`, `Resp. Hazard` ) 
+together.sf <- together.sf %>%
   dplyr::mutate(`Env. indicators above 80th %ile` = 
                   as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
                                                   `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
