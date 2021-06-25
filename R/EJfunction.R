@@ -314,7 +314,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       }
 
       EJ.demographics.data <- list()
-      EJ.demoOverlap.data <- list()
+      # EJ.demoOverlap.data <- list()
       EJ.facil.data <- list()
       EJ.list.data <- list()
       EJ.index.data <- list()
@@ -365,8 +365,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
           EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
-        EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
-          EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
+        # EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
+        #   EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
 
         #############
@@ -450,10 +450,10 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       }
 
       if(attains.check == F){
-        return.me <- list(EJ.demographics.data, EJ.demoOverlap.data,
+        return.me <- list(EJ.demographics.data, # EJ.demoOverlap.data
                           EJ.facil.data, EJ.list.data,
                           EJ.index.data, EJ.buffer.shapes)
-        names(return.me) <- c('EJ.demographics.data', 'EJ.demoOverlap.data',
+        names(return.me) <- c('EJ.demographics.data', #'EJ.demoOverlap.data',
                               'EJ.facil.data', 'EJ.list.data',
                               'EJ.index.data', 'EJ.buffer.summary')
       } else {
@@ -461,7 +461,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
                           EJ.facil.data, EJ.list.data,
                           EJ.index.data, EJ.buffer.shapes,
                           EJ.attains.data)
-        names(return.me) <- c('EJ.demographics.data', 'EJ.demoOverlap.data',
+        names(return.me) <- c('EJ.demographics.data', #'EJ.demoOverlap.data',
                               'EJ.facil.data', 'EJ.list.data',
                               'EJ.index.data', 'EJ.buffer.summary',
                               'EJ.attainsdata.raw')
