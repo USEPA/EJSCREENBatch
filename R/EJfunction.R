@@ -252,7 +252,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
         facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
-          st_buffer(dist = set_units(i,"mi")) %>%
+          st_buffer(dist = units::set_units(i,"mi")) %>%
           tibble::rowid_to_column("shape_ID")
         rm(state.shapes)
 
