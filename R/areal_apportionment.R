@@ -157,7 +157,7 @@ together.sf <- dplyr::inner_join(df.var.wm, df.latlon, by = "shape_ID") %>%
 together.sf <- together.sf %>% 
   dplyr::mutate(`Env. indicators above 80th %ile` = 
                   as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                  Air, Cancer`:`Resp. Hazard`) > 80))) %>%
+                                                  `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
   dplyr::mutate(`Demo. indicators above 80th %ile` = 
                   as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
                                                   Low Income`:`Age Over 64`) > 80))) %>%
