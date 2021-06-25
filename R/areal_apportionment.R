@@ -17,6 +17,7 @@
 #' @examples
 areal_apportionment <- function(ejscreen.bgs.data, facility_buff, facil.data, path.raster.layer){
 
+print('Importing rasters for spatial weighting...')
 layers <- list.files(path=path.raster.layer, pattern= "((pop)).*\\.tif$", full.names = TRUE )
 raster_extract <- raster::raster(layers) %>% 
   raster::projectRaster(crs="ESRI:102005")
@@ -24,6 +25,7 @@ raster_extract <- raster::raster(layers) %>%
 #Decennial Census Data from NASA's SEDAC 
 #get pop for block group (intersect) and area covered by buffer (intersection) 
 #Used to compute fraction necessary to weight EJ Indices
+print('Computing weights by areal apportionment...')
 methods=c("intersect", "intersection")
 for(method in methods){
   intermediate <- ejscreen.bgs.data %>% 
@@ -48,6 +50,7 @@ for(method in methods){
 }
 
 #Summarizes EJ Indices for buffer, computes state and national averages, and national percentiles
+print('Reshaping data')
 facility_level <- bgs.intersect %>% 
   as.data.frame() %>% 
   dplyr::select(shape_ID, ID, starts_with("sum")) %>% 
@@ -98,6 +101,7 @@ states <- facility_level %>%
 
 #computes state percentiles--looping to make sure distribution used to get percentile is by state
 #Can parallelize for speed
+print('Computing state percentiles...')
 facility_level_estimates <- do.call(rbind,lapply(states, function(x){
   iterm <- facility_level %>% 
     dplyr::filter(STATE_NAME==x) %>%
@@ -117,6 +121,7 @@ facility_level_estimates <- do.call(rbind,lapply(states, function(x){
   dplyr::rename(shapeID = shape_ID) %>%
   data.table::as.data.table()
 
+print('Recasting data.frame to long...')
 facility_level_estimates <- data.table::melt(facility_level_estimates, id = 'shapeID'
 )[, variable := stri_replace_last_fixed(variable,'_','|')
 ][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)]
