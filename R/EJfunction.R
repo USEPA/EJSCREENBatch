@@ -106,7 +106,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
 
   # Create internal function facility ID (in case user doesn't)
   facility_data <- facility_data %>%
-    mutate(shape_ID = 1:n())
+    tibble::rowid_to_column("shape_ID")
 
   # Determine most common geometry type in the input sf dataframe
   facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
@@ -252,8 +252,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
         facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
-          st_buffer(dist = units::set_units(i,"mi")) %>%
-          tibble::rowid_to_column("shape_ID")
+          st_buffer(dist = units::set_units(i,"mi"))
+
         rm(state.shapes)
 
         EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
@@ -397,7 +397,6 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
             rename(facility_state = NAME)
           if(in.type == 'sf'){
             facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
-              #tibble::rowid_to_column("shape_ID") %>%
               dplyr::select(shape_ID, facility_state) %>%
               st_drop_geometry() %>%
               inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
