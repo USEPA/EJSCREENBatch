@@ -1,0 +1,204 @@
+---
+title: "EJScreen batch tool"
+author: "A.R. El-Khattabi, Morgan Teachey, Adam Theising"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = TRUE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+##Intro to R Screening tool 
+
+Environmental justice (EJ) analyses summarize demographics of local populations and environmental burden in order to study the impacts policy decisions may have on different communities. While impacts are often localized, it is helpful for decision makers to be able to assess impacts across many areas at once, allowing for comparison between communities and across regulatory actions. To streamline initial screening-level EJ analysis efforts, this package was developed to leverage nation demographic and environmental datasets made available through the U.S. Environmental Protection Agency. 
+
+The EJSCREENbatch R package primarily relies on data provided by EJSCREEN [link to main page], a mapping and screening tool maintained by EPA that provides demographic and environmental impact data on the Census Block Group (CBG) level for the United States. For information on how these data were prepared, refer to the EJSCREEN Technical Information Guidance [link].
+
+The EJSCREENbatch R package allows users to analyze EJ summary statistics for unlimited number of locations (coordinates or water features) and produces customized figures and maps based on user specifications.
+
+```{r}
+library(devtools)
+install_github(repo = "arelkhattabi/EJSCREENbatch", auth_token = "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")
+library(EJSCREENbatch)
+setwd("~/ejscreentool/")
+```
+  
+
+  
+  
+##Functions
+
+First, the user supplies input location data. This can be in the form of coordinates with metadata (i.e. .csv file) or a list of COMIDs, which are stream catchment areas, and their use will be discussed later on. 
+
+
+##Analysis with coordinate locations
+
+```{r}
+library(tidyverse)
+library(sf)
+library(data.table)
+
+facilities <- fread("dmr_mpp_facilities_2019.csv") %>%
+  unique() %>%
+  st_as_sf(coords = c("Facility Longitude", "Facility Latitude"), crs = 4326)  %>%
+  st_transform("ESRI:102005")
+
+path.raster.layer <- "~/ejscreentool/US Census Grid_SF2010_TIFF/"
+```
+
+Then, the locations of interest are supplied to the EJfunction, which prepares the data for use in all other functions. As providing a comparison group is essential in all EJ analyses, the data population is reported in percentiles, either within the state a CBG is located in or on the national level, based on user input. The user is able to specify additional preferences, such as:
+
+1.	Buffer distance from which to select proximal CBGs and buffering method using the buff_dist input. 
+2.	Buffer GIS option to use to pull data from selected CBGs via the gis_option input. The default is “intersection”. 
+3.	Threshold for identifying elevated indicated and potential populations of concern. The default is the 80th percentile, as recommended by EJSCREEN [cite documentation]. 
+4.	State, if the user wants to run an analysis for a single state. 
+
+This function also creates some initial plots for examination of trends in environmental and demographic indicators: 
+
+```{r}
+my.EJ.data <- EJfunction(data_type = "landbased",
+           facility_data = facilities, 
+           gis_option = "centroid", 
+           buff_dist = 1,
+           threshold = 80,   
+           state = NULL,
+           raster.data = path.raster.layer)
+```
+
+    ##I want to display a box plot and a correlation plot above in 2 panels, how? would          ##probably need to change the script to print them directly
+
+Boxplots displaying the range of percentiles across all CBGs are automatically generated for demographic and environmental indices, as well as two-way correlation plots, helping users get an idea of which indices might overlap with one another. 
+
+
+##Comparing index percentiles
+
+It may be useful to know locations of interest or CBGs with multiple indicators above the 80th percentile threshold for follow up analysis. This can be done using the EJRankings function, where the user selects how many results to return.
+
+```{r}
+EJRanking(input_data = my.EJ.data,
+          rank_type = 'location',
+          geography_type = 'US',
+          rank_count = 10)
+```
+
+These rankings can be used to inform later outputs, such as heat tables. Heat tables reporting the median values for each index can be produced to summarize either all areas of interest, areas with the highest cumulative index values, or a single area. To allow users to visually assess percentiles, values over the 80th, 90th, and 95th percentiles are highlighted in yellow, orange, and red, respectively. 
+
+
+```{r, fig.show='hold'}
+industry.htable <- EJHeatTables(input.data = my.EJ.data,
+                                type = "all")
+  ##Notes:
+    ## Error in .subset(x, j) : invalid subscript type 'list' 
+
+top10.htable <- EJHeatTables(input.data = my.EJ.data,
+                             type = "topn",
+                             topN = 10,
+                             save.option = T)
+  ##Notes:
+    ##Error in `[.data.frame`(x, i) : object 'geography' not found
+
+facility.htable <- EJHeatTables(input.data = my.EJ.data,
+                                type = "single",
+                                keepid = 1)
+    ##Error: " no applicable method for 'select' applied to an object of class "NULL" "
+
+```
+
+The package also allows users to explore the extent to which indices above the threshold percentile overlap with others. The EJCountTable function produces two-way table that summarizes the number of locations that are within a distance of census blocks above the 80th percentile threshold for environmental and/or demographic indicators. 
+
+```{r}
+EJCountTable(my.EJ.data)
+
+```
+
+Users can also view these data by using the EJMaps function, which produces an interactive map of the U.S. that displays all locations of interest as points. Points are shaded based on the number of indicators above the threshold for proximal CBGs, which allows users to easily identify locations that may be good candidates for outreach efforts and further analysis. 
+
+library(leaflet)
+library(RColorBrewer)
+library(mapview)
+```{r}
+EJMaps(input.data = my.EJ.data, 
+       indic.option = 'total')
+```
+
+Maps can be customized to shade locations by the number of environmental and/or demographic indicators above the threshold value. 
+
+```{r}
+EJMaps(input.data = my.EJ.data, 
+       indic.option = 'environmental')
+```
+
+
+##Water-based EJ screening analysis
+
+All of the above batch analyses can also be completed for water-based features. This package leverages the surface water network established in the National Hydrology Dataset [link to NHD hydrology explanation here]… Users can supply a list catchments or points, and the tool will identify catchments specified distance up or downstream of these locations. Then, the environmental and demographic data for the CBGs falling within or intersecting the buffer distance from the selected water features are summarized as before. 
+
+library(nhdplusTools)
+library(arcpullr)
+
+```{r}
+my.EJ.waterdata <- EJfunction(data_type="waterbased", 
+                              facility_data=facilities[1:10,], 
+                              input.type = 'sf', 
+                              gis_option = "centroid", 
+                              buff_dist = 1, 
+                              attains = T)
+
+EJfunction(input.type = "waterbased",
+           facility_data = my.EJ.data, 
+           input.type = 'catchment',
+           gis_option = "intersection", 
+           buff_dist = 1,
+           threshold = 80,   
+           state = NULL,
+           ds_mode = "DM",
+           attains = T)
+```
+
+
+
+
+
+
+
+
+
+
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
