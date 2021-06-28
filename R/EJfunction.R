@@ -153,7 +153,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
     EJ.list.data <- list()
     EJ.index.data <- list()
     EJ.demographics.data <- list()
-    EJ.CorrPlots.data <- list()
+    EJ.corrplots.data <- list()
     EJ.facil.data <- list()
 
     j=1
@@ -194,8 +194,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
           EJIndexes(area1_intersect, gis_method="intersect" , buffer=i)
         EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
           EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
-        EJ.CorrPlots.data[[paste0("CorrPlots_intersect_radius",i,"mi")]] <-
-          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
+        EJ.corrplots.data[[paste0("corrplots_intersect_radius",i,"mi")]] <-
+          EJcorrplots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
           EJFacilLevel(list_data = EJ.list.data[[j]],
                        facil_data = st_transform(facility_data, crs = 4326))
@@ -216,8 +216,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
           EJIndexes(area2_centroid, gis_method="centroid" , buffer=i)
         EJ.demographics.data[[paste0("demographics_centroid_radius",i,"mi")]] <-
           EJdemographics(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
-        EJ.CorrPlots.data[[paste0("CorrPlots_centroid_radius",i,"mi")]] <-
-          EJCorrPlots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
+        EJ.corrplots.data[[paste0("corrplots_centroid_radius",i,"mi")]] <-
+          EJcorrplots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
           EJFacilLevel(list_data = EJ.list.data[[j]],
                        facil_data = st_transform(facility_data, crs = 4326))
@@ -240,8 +240,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
           EJIndexes(area3_intersection, gis_method="intersection" , buffer=i)
         EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
           EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
-        EJ.CorrPlots.data[[paste0("CorrPlots_intersection_radius",i,"mi")]] <-
-          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
+        EJ.corrplots.data[[paste0("corrplots_intersection_radius",i,"mi")]] <-
+          EJcorrplots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
 
         ### Areal apportionment using circular buffers around facilities
         # Extract the state associated with each facility
@@ -312,7 +312,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       }
 
       EJ.demographics.data <- list()
-      # EJ.demoOverlap.data <- list()
+      EJ.corrplots.data <- list
       EJ.facil.data <- list()
       EJ.list.data <- list()
       EJ.index.data <- list()
@@ -362,7 +362,10 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
 
         EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
           EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
-
+        
+        EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
+          EJCorrPlots(area1_intersect, gis_method = gis_option , buffer=i, threshold=Thresh)
+        
         # EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
         #   EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
@@ -447,18 +450,18 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       }
 
       if(attains.check == F){
-        return.me <- list(EJ.demographics.data, # EJ.demoOverlap.data
+        return.me <- list(EJ.demographics.data, EJ.corrplots.data,
                           EJ.facil.data, EJ.list.data,
                           EJ.index.data, EJ.buffer.shapes)
-        names(return.me) <- c('EJ.demographics.data', #'EJ.demoOverlap.data',
+        names(return.me) <- c('EJ.demographics.data', 'EJ.corrplots.data',
                               'EJ.facil.data', 'EJ.list.data',
                               'EJ.index.data', 'EJ.buffer.summary')
       } else {
-        return.me <- list(EJ.demographics.data, EJ.demoOverlap.data,
+        return.me <- list(EJ.demographics.data, EJ.corrplots.data,
                           EJ.facil.data, EJ.list.data,
                           EJ.index.data, EJ.buffer.shapes,
                           EJ.attains.data)
-        names(return.me) <- c('EJ.demographics.data', #'EJ.demoOverlap.data',
+        names(return.me) <- c('EJ.demographics.data', 'EJ.corrplots.data',
                               'EJ.facil.data', 'EJ.list.data',
                               'EJ.index.data', 'EJ.buffer.summary',
                               'EJ.attainsdata.raw')
