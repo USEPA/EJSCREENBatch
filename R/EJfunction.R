@@ -193,7 +193,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.index.data[[paste0("Indexes_intersect_radius",i,"mi")]] <-
           EJIndexes(area1_intersect, gis_method="intersect" , buffer=i)
         EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
-          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i)
+          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
         EJ.CorrPlots.data[[paste0("CorrPlots_intersect_radius",i,"mi")]] <-
           EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
