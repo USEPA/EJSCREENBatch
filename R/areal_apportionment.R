@@ -6,19 +6,19 @@
 #' Data and Applications Center (SEDAC)
 #'
 #'
-#' @param ejscreen.bgs.data EJSCREEN data
+#' @param ejscreen_bgs_data EJSCREEN data
 #' @param facility_buff Polygons representing buffered areas of interest
-#' @param facil.data Original facility-level data (for non-buffered shapes)
-#' @param path.raster.layer
+#' @param facil_data Original facility-level data (for non-buffered shapes)
+#' @param path_raster_layer
 #'
 #' @return
 #' @export
 #'
 #' @examples
-areal_apportionment <- function(ejscreen.bgs.data, facility_buff, facil.data, path.raster.layer){
+areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, path_raster_layer){
 
 print('Importing rasters for spatial weighting...')
-layers <- list.files(path=path.raster.layer, pattern= "((pop)).*\\.tif$", full.names = TRUE )
+layers <- list.files(path=path_raster_layer, pattern= "((pop)).*\\.tif$", full.names = TRUE )
 raster_extract <- raster::raster(layers) %>% 
   raster::projectRaster(crs="ESRI:102005")
 
@@ -28,7 +28,7 @@ raster_extract <- raster::raster(layers) %>%
 print('Computing weights by areal apportionment...')
 methods=c("intersect", "intersection")
 for(method in methods){
-  intermediate <- ejscreen.bgs.data %>% 
+  intermediate <- ejscreen_bgs_data %>% 
     dplyr::select(ID, Shape) %>% 
     {if(method=="intersection"){
       sf::st_intersection(.,facility_buff) %>% 
@@ -146,7 +146,7 @@ facility_level_estimates <- do.call(rbind,lapply(states, function(x){
          'Age Over 64'       = P_OVER64PCT,
          shape_ID            = shapeID) 
 
-df.latlon <- facil.data %>%
+df.latlon <- facil_data %>%
   dplyr::select(shape_ID, geometry) %>%
   st_transform(crs = 4326)
 

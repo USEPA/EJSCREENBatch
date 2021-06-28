@@ -11,9 +11,9 @@
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
 #' @param ds_mode Set Upstream/downstream option for water-based screening. Default is downstream.
 #' @param ds_dist Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.
-#' @param input.type
+#' @param input_type
 #' @param attains Option to pull data from the attains database. Default is FALSE.
-#' @param raster.data Dasymetric raster data. Default is to use 1kmX1km raster
+#' @param raster_data Dasymetric raster data. Default is to use 1kmX1km raster
 #'                    data from NASA's Socioeconomic Data and Applications Center (SEDAC)
 #'
 #'
@@ -31,7 +31,7 @@
 #' # options to consider
 #' # 1) gis_option. Three options available: intersect, centroid, intersection.
 #' #    Instersection is default.
-#' # 2) buff.dist. Radius to use around facilities
+#' # 2) buff_dist. Radius to use around facilities
 #' # 3) Threshold for EJ consideration. EJScreen uses 80 as default.
 #' # 4) states. Can restrict analysis to specific states.
 #' # bring in data for contiguous US
@@ -53,11 +53,11 @@
 #' # 4) Attains. Call attains API for data? (T/F). Default is False
 #'
 #' c <- EJfunction(data_type="waterbased", facility_data=facilities,
-#'                 input.type = 'sf', attains = F)
+#'                 input_type = 'sf', attains = F)
 #'
 EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
-                       input.type = NULL, attains=NULL, raster.data = "data/US Census Grid_SF2010_TIFF"){
+                       input_type = NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
 
 
   `%notin%` = Negate(`%in%`)
@@ -79,11 +79,11 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
 
   #If conducting waterbased analysis, need to know input type
   if(data_type=="waterbased"){
-    if(input.type %notin% c("sf", "catchment")){
+    if(input_type %notin% c("sf", "catchment")){
       stop("Input type not supported. Please specify one of the following data types:
          sf OR catchment.")
     } else {
-      in.type <- input.type
+      in.type <- input_type
     }
 
     # Convert list to data.frame if catchmentIDs provided.
@@ -96,7 +96,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
   #Check for raster data. Only needed if running intersection method. This data
   #needs to be pre-downloaded.
   if(is.null(gis_option) || gis_option=="intersection" || gis_option=="all"){
-    if(is.null(raster.data)){
+    if(is.null(raster_data)){
       stop("Buffering using intersection method requires raster data for areal
            apportionment. Please provide path to raster data.")
     }
@@ -197,8 +197,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.CorrPlots.data[[paste0("CorrPlots_intersect_radius",i,"mi")]] <-
           EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
-          EJFacilLevel(list.data = EJ.list.data[[j]],
-                       facil.data = st_transform(facility_data, crs = 4326))
+          EJFacilLevel(list_data = EJ.list.data[[j]],
+                       facil_data = st_transform(facility_data, crs = 4326))
       }
 
       if(gis_option %in% c("all", "centroid")){
@@ -219,8 +219,8 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.CorrPlots.data[[paste0("CorrPlots_centroid_radius",i,"mi")]] <-
           EJCorrPlots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
-          EJFacilLevel(list.data = EJ.list.data[[j]],
-                       facil.data = st_transform(facility_data, crs = 4326))
+          EJFacilLevel(list_data = EJ.list.data[[j]],
+                       facil_data = st_transform(facility_data, crs = 4326))
       }
 
       if(gis_option %in% c("all", "intersection")){
@@ -255,10 +255,10 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         rm(state.shapes)
 
         EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
-          areal_apportionment(ejscreen.bgs.data = data.state.uspr,
+          areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                               facility_buff = facility_buff,
-                              facil.data = facility_data,
-                              path.raster.layer = raster.data)
+                              facil_data = facility_data,
+                              path_raster_layer = raster_data)
         }
         j=j+1
       }
@@ -372,16 +372,16 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         if(gis_option %in% c('intersect','centroid')){
           if (in.type == 'sf'){
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-              EJFacilLevel(list.data = area,
-                           facil.data = st_transform(facility_data, crs = 4326))
+              EJFacilLevel(list_data = area,
+                           facil_data = st_transform(facility_data, crs = 4326))
           } else if (in.type == 'catchment'){
             temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
               mutate(comid = as.numeric(comid)) %>%
               inner_join(facility_data, by = c('comid' = 'V1')) %>%
               st_as_sf()
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-              EJFacilLevel(list.data = area,
-                           facil.data = st_transform(temp.mat, crs = 4326))
+              EJFacilLevel(list_data = area,
+                           facil_data = st_transform(temp.mat, crs = 4326))
             rm(temp.mat)
           }
 
@@ -401,10 +401,10 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
               st_as_sf()
 
             EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
-              areal_apportionment(ejscreen.bgs.data = data.state.uspr,
+              areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                   facility_buff = facility_buff,
-                                  facil.data = facility_data,
-                                  path.raster.layer = raster.data)
+                                  facil_data = facility_data,
+                                  path_raster_layer = raster_data)
           } else if (in.type == 'catchment') {
 
             ## Shapefile for downstream (/upstream?) buffer
@@ -424,10 +424,10 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
               st_transform(crs = 4326)
 
             EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
-              areal_apportionment(ejscreen.bgs.data = data.state.uspr,
+              areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                   facility_buff = facility_buff,
-                                  facil.data = temp.mat,
-                                  path.raster.layer = raster.data)
+                                  facil_data = temp.mat,
+                                  path_raster_layer = raster_data)
           }
           rm(state.shapes)
 

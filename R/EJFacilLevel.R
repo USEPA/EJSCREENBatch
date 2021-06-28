@@ -1,16 +1,16 @@
 #' Title
 #'
-#' @param list.data
-#' @param facil.data
+#' @param list_data
+#' @param facil_data
 #'
 #' @return
 #' @export
 #'
 #' @examples
-EJFacilLevel <- function(list.data, facil.data) {
+EJFacilLevel <- function(list_data, facil_data) {
 
   # Extract key variables, take ***pop-weighted*** average
-  df.var.wm <-list.data %>%
+  df.var.wm <-list_data %>%
     as.data.frame() %>%
     dplyr::select(P_MINORPCT_US, P_LWINCPCT_US, P_LESHSPCT_US, P_LNGISPCT_US,
                   P_UNDR5PCT_US, P_OVR64PCT_US, P_LDPNT_US, P_VULEOPCT_US,
@@ -57,14 +57,14 @@ EJFacilLevel <- function(list.data, facil.data) {
            'Age Over 64'       = P_OVR64PCT)
 
   # Sum of population w/in 5miles
-  df.pop.sum <- list.data %>%
+  df.pop.sum <- list_data %>%
     dplyr::select(ACSTOTPOP, shape_ID) %>%
     rename(`Pop. Count` = ACSTOTPOP) %>%
     group_by(shape_ID) %>%
     summarize_at(vars(`Pop. Count`),funs(sum))
 
   # Need lat/lon, (previously: URL to the facility's DFR)
-  df.latlon <- facil.data %>%
+  df.latlon <- facil_data %>%
     dplyr::select(shape_ID, geometry) %>%
     st_transform(crs = 4326)
 
