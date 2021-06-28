@@ -10,14 +10,13 @@
 #' @param justreadname
 #' @param addflag
 #' @param cutoff
-#' @param or.tied
 #'
 #' @return
 #' @export
 #'
 #' @examples
 ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
-          justreadname = NULL, addflag = FALSE, cutoff = 80, or.tied = TRUE)
+          justreadname = NULL, addflag = FALSE, cutoff = 80)
 {
 
   `%notin%` = Negate(`%in%`)

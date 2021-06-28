@@ -7,7 +7,7 @@
 #' @param rank_type Required. Either 'location' or 'CBG'
 #' @param geography_type
 #' @param rank_count Required. 
-#' @param save.option
+#' @param save_option
 #'
 #' @return
 #' @export
@@ -15,11 +15,11 @@
 #' @examples
 #' # Facility and CBG rankings
 #' facil.ranking <- EJRanking(input_data = a2, rank_count = 10, rank_type = 'location',
-#'                             geography_type = 'US', save.option = F)
+#'                             geography_type = 'US', save_option = F)
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
-                      rank_count = 10, save.option = F){
+                      rank_count = 10, save_option = F){
 
   if (!(geography_type %in% c('US','state'))){
     stop('Geography type must be either -US- or -state-.')
@@ -56,7 +56,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           flextable::theme_zebra() %>%
           flextable::set_table_properties(layout='autofit', width = .3)
 
-        if (save.option == T){
+        if (save_option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                  dir.create(file.path(getwd(),"ranktables/")), FALSE)
           flextable::save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
@@ -139,7 +139,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           flextable::theme_zebra() %>%
           flextable::set_table_properties(layout='autofit', width = .3)
 
-        if (save.option == T){
+        if (save_option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                  dir.create(file.path(getwd(),"ranktables/")), FALSE)
           flextable::save_as_image(x = data_transf[[names(input_data$EJ.list.data)[i]]],

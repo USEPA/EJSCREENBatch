@@ -5,10 +5,10 @@
 #' (2) a data.table containing raw ATTAINs API data (OPTIONAL)
 #'
 #' @param input_data
-#' @param ds.us.mode Option for upstream or downstream. Default is downstream.
-#' @param ds.us.dist Distance up/downstream. Default is 50 miles.
-#' @param buff.dist Distance in miles to buffer out. Default is 1 mile.
-#' @param input.type Type of data inputted. Options limited to 'sf' and 'catchment'
+#' @param ds_us_mode Option for upstream or downstream. Default is downstream.
+#' @param ds_us_dist Distance up/downstream. Default is 50 miles.
+#' @param buff_dist Distance in miles to buffer out. Default is 1 mile.
+#' @param input_type Type of data inputted. Options limited to 'sf' and 'catchment'
 #' @param attains
 #'
 #' @return
@@ -16,10 +16,10 @@
 #'
 #' @examples
 
-EJWaterReturnCatchmentBuffers <-  function(input.data, ds.us.mode, ds.us.dist, buff.dist, input.type, attains){
+EJWaterReturnCatchmentBuffers <-  function(input.data, ds_us_mode, ds_us_dist, buff_dist, input_type, attains){
   # Determine the input.data type:
   # (in future could have this determine object type (sf, numeric list, etc.) without user input)
-  if (input.type == 'sf'){
+  if (input_type == 'sf'){
     input.data <- st_transform(input.data, crs = 4326)
     feature.id <- vector(mode = "list", length = dim(input.data)[1])
     for (i in 1:dim(input.data)[1]){
@@ -42,7 +42,7 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds.us.mode, ds.us.dist, b
         )
     }
     feature.id <- as.numeric(feature.id)
-  } else if (input.type == 'catchment'){
+  } else if (input_type == 'catchment'){
     # List of catchments
     feature.id <- input.data$V1
 
@@ -73,12 +73,12 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds.us.mode, ds.us.dist, b
     nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
     if(length(get_nldi_feature(nldi.feature)) > 0){
       nldi.temp <- navigate_nldi(nldi.feature,
-                                 mode = ds.us.mode,
-                                 distance_km = round(ds.us.dist*1.60934))$DD_flowlines
+                                 mode = ds_us_mode,
+                                 distance_km = round(ds_us_dist*1.60934))$DD_flowlines
       feature.list[[i]] <- nldi.temp  %>%
         st_union() %>%
         st_transform("ESRI:102005") %>%
-        st_buffer(dist = set_units(buff.dist,"mi")) %>%
+        st_buffer(dist = set_units(buff_dist,"mi")) %>%
         st_as_sf
 
       # Call ATTAINs database on all down/upstream catchments
@@ -132,13 +132,13 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds.us.mode, ds.us.dist, b
                   listed_303d_area), by = .id] %>%
               unique() %>%
               mutate_if(is.numeric, round, digits = 3)
-    if (input.type == 'catchment'){
+    if (input_type == 'catchment'){
       return.me <- list(feature.buff, nhd.attains, summary.attains, hold.together)
     } else {
       return.me <- list(feature.buff, nhd.attains, summary.attains, NULL)
     }
   } else {
-    if (input.type == 'catchment'){
+    if (input_type == 'catchment'){
       return.me <- list(feature.buff, NULL, NULL, hold.together)
     } else {
       return.me <- list(feature.buff, NULL, NULL, NULL)

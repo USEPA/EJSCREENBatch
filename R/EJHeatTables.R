@@ -10,9 +10,9 @@
 #' topN is an integer set by user when using ranking table. (Default is 10, min is 0.)
 #' topN_dta_idx denotes which EJfunction() output data to use (e.g. when there are mult. buff. distances)
 #' -> it is an integer. Default setting is 1
-#' input.names is user-provided list of facility names. it must be same length as input.data
+#' input.names is user-provided list of facility names. it must be same length as input_data
 #'
-#' @param input.data
+#' @param input_data
 #' @param type
 #' @param geog_lvl
 #' @param keepid
@@ -24,9 +24,9 @@
 #' @export
 #'
 #' @examples
-#' y1 <- EJHeatTables(input.data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
-#' y2 <- EJHeatTables(input.data = y, type = 'all', geog_lvl = 'state')
-EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN = NULL,
+#' y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
+#' y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
+EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN = NULL,
                          topN_dta_idx = NULL, input.names = NULL, save.option = F){
 
   # Set default geography level @ nat'l scale
@@ -41,12 +41,12 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
   if (type == 'all'){ # This returns a HeatTable for median of ALL facilities
 
     # Preallocate list
-    dt <- vector(mode = 'list', length = length(input.data$EJ.facil.data))
+    dt <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
 
     ## This takes the MEAN
-    for (i in 1:length(input.data$EJ.facil.data)){
+    for (i in 1:length(input_data$EJ.facil.data)){
       if (geog == 'US'){
-        df.var.wm <- input.data$EJ.list.data[[i]] %>%
+        df.var.wm <- input_data$EJ.list.data[[i]] %>%
           dplyr::select(P_MINORPCT_US, P_LWINCPCT_US, P_LESHSPCT_US, P_LNGISPCT_US,
                         P_UNDR5PCT_US, P_OVR64PCT_US, P_LDPNT_US, P_VULEOPCT_US,
                         P_DSLPM_US, P_CANCR_US, P_RESP_US, P_PTRAF_US, P_PWDIS_US,
@@ -72,7 +72,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
         }
 
       } else if (geog == 'state') {
-        df.var.wm <- input.data$EJ.list.data[[i]] %>%
+        df.var.wm <- input_data$EJ.list.data[[i]] %>%
           dplyr::select(P_MINORPCT_state, P_LWINCPCT_state, P_LESHSPCT_state, P_LNGISPCT_state,
                         P_UNDR5PCT_state, P_OVR64PCT_state, P_LDPNT_state, P_VULEOPCT_state,
                         P_DSLPM_state, P_CANCR_state, P_RESP_state, P_PTRAF_state, P_PWDIS_state,
@@ -119,7 +119,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
 
       # Write to dt.list
       dt[[i]] <- data.table::melt(df.var.wm)[,2]
-      names(dt[[i]]) <- paste0(str_sub(labels(input.data$EJ.facil.data)[[i]],-3,-3),
+      names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
                                ' mile radius')
     }
 
@@ -162,20 +162,20 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
 
 
     # Preallocate list
-    dt <- vector(mode = 'list', length = length(input.data$EJ.facil.data))
+    dt <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
 
     # Keep list of relevant varnames
-    keepnames <- as.data.table(input.data$EJ.facil.data[[1]]
+    keepnames <- as.data.table(input_data$EJ.facil.data[[1]]
     )[, dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
 
     ## This draws from facility level data (median CBG value for that facil)
-    for (i in 1:length(input.data$EJ.facil.data)){
-      dt[[i]] <- as.data.table(input.data$EJ.facil.data[[i]]
+    for (i in 1:length(input_data$EJ.facil.data)){
+      dt[[i]] <- as.data.table(input_data$EJ.facil.data[[i]]
       )[geography == geog & shape_ID == shape.keep,
         dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
       ][, lapply(.SD, round)]
       dt[[i]] <- dplyr::melt(dt[[i]])[,2]
-      names(dt[[i]]) <- paste0(str_sub(labels(input.data$EJ.facil.data)[[i]],-3,-3),
+      names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
                                ' mile radius')
     }
 
@@ -224,7 +224,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     # When EJfunction data has more than 1 buffer dist, which DF to use?
     if(is.null(topN_dta_idx)){
       dta.idx <- 1 # Default is the first list element in ...$EJ.facil.list
-    } else if((topN_dta_idx > length(input.data$EJ.facil.data)) |
+    } else if((topN_dta_idx > length(input_data$EJ.facil.data)) |
               !is.numeric(topN_dta_idx)){
       stop('Error: index provided is non-numeric or exceeds length of list.')
     } else {
@@ -234,10 +234,10 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
     ##
     # Extract nat'l level data, keep only top N
     if (!is.null(input.names)){
-      if(length(input.names) != dim(input.data$EJ.facil.data[[dta.idx]])[1]/2){
+      if(length(input.names) != dim(input_data$EJ.facil.data[[dta.idx]])[1]/2){
         stop('List of names but be same length as list of input geometries.')
       } else {
-        dt <- as.data.table(input.data$EJ.facil.data[[dta.idx]]
+        dt <- as.data.table(input_data$EJ.facil.data[[dta.idx]]
         )[geography == geog
         ][, `Total indicators above 80th %ile` :=
             as.numeric(as.character(`Env. indicators above 80th %ile`)) +
@@ -250,7 +250,7 @@ EJHeatTables <- function(input.data, type, geog_lvl= NULL, keepid = NULL, topN =
         setcolorder(dt, neworder = 'NPDES Permit Number')
       }
     } else {
-      dt <- as.data.table(input.data$EJ.facil.data[[dta.idx]]
+      dt <- as.data.table(input_data$EJ.facil.data[[dta.idx]]
       )[geography == geog
       ][, `Total indicators above 80th %ile` :=
           as.numeric(as.character(`Env. indicators above 80th %ile`)) +
