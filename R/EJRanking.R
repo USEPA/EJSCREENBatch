@@ -35,7 +35,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
 
       if (rank_count > (dim(input_data$EJ.facil.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
-      } else if(input_name %notin% colnames(input_data$EJ.facil.data[[i]])){
+      } else if(!is.null(input_name) & (input_name %notin% colnames(input_data$EJ.facil.data[[i]]))){
         stop('Input_name must be a variable in input_data')
       } else {
         locay <- input_data$EJ.facil.data[[i]] %>%
