@@ -20,6 +20,6 @@ Imports:
   RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
   leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools
 Depends: 
-  dplyr, sf, data.table
+  tidyverse, sf, data.table
 LazyData: true
 RoxygenNote: 7.1.1

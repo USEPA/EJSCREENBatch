@@ -56,7 +56,7 @@
 #'                 input_type = 'sf', attains = F)
 #'
 EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL,
-                       threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
+                       threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL, save_option=NULL,
                        input_type = NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
 
 
@@ -164,14 +164,14 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
       #if polygon provided, default is to use polygon without buffer but can add buffer if desired
       if(facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
         if (i > 0){
-          facility_buff <- st_buffer(facility_data %>% st_transform("ESRI:102005"), 
+          facility_buff <- st_buffer(facility_data %>% st_transform("ESRI:102005"),
                                      dist = units::set_units(i,"mi"))
         } else {
           stop('Buffer around points required.')
         }
       } else if(facil.geom.type %in% c('POLYGON', 'MULTIPOLYGON')){
         if (i > 0){
-          facility_buff <- st_buffer(facility_data %>% st_transform("ESRI:102005"), 
+          facility_buff <- st_buffer(facility_data %>% st_transform("ESRI:102005"),
                                      dist = units::set_units(i,"mi"))
         } else if (i == 0) {
           facility_buff <- facility_data
@@ -362,10 +362,10 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
 
         EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
           EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
-        
+
         EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
           EJCorrPlots(area1_intersect, gis_method = gis_option , buffer=i, threshold=Thresh)
-        
+
         # EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
         #   EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
