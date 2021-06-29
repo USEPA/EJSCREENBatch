@@ -108,7 +108,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     tibble::rowid_to_column("shape_ID")
   
   # Create internal facility name mapping (if provided by user)
-  if (!is.null(input_name) & (length(input_name) == dim(facility_data)[1]){
+  if (!is.null(input_name) & (length(input_name) == dim(facility_data)[1])){
     facility_name <- as.data.frame(input_name) %>%
       tibble::rowid_to_column("shape_ID")
     names(facility_name)[2] <- "Shape Name"
