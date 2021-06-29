@@ -111,12 +111,18 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
   # Create internal facility name mapping (if provided by user)
   if (!is.null(input_name) & (length(input_name) == dim(facility_data)[1])){
-    facility_name <- as.data.frame(input_name) %>%
+    facility_name <- facility_data %>%
+      as.data.frame() %>%
+      dplyr::select(input_name,-geometry) %>%
       tibble::rowid_to_column("shape_ID")
-    names(facility_name)[2] <- "Shape Name"
-  } else if (!is.null(input_name) & (length(input_name) != dim(facility_data)[1])) {
-    stop('Input_name must be of same length as facility_data.')
+    # names(facility_name)[2] <- "Shape Name"
+  } else if(input_name %notin% colnames(facility_data)){
+    stop('Input_name must be a variable in facility_data.')
   }
+
+  # else if (!is.null(input_name) & (length(input_name) != dim(facility_data)[1])) {
+  #   stop('Input_name must be of same length as facility_data.')
+  # }
 
   # Determine most common geometry type in the input sf dataframe
   facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
@@ -211,7 +217,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
             EJFacilLevel(list_data = EJ.list.data[[j]],
                          facil_data = st_transform(facility_data, crs = 4326)) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
-            dplyr::relocate(`Shape Name`)
+            dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
@@ -242,7 +248,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
             EJFacilLevel(list_data = EJ.list.data[[j]],
                          facil_data = st_transform(facility_data, crs = 4326)) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
-            dplyr::relocate(`Shape Name`)
+            dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
@@ -287,7 +293,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                                 facil_data = facility_data,
                                 path_raster_layer = raster_data) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
-            dplyr::relocate(`Shape Name`)
+            dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
             areal_apportionment(ejscreen_bgs_data = data.state.uspr,
