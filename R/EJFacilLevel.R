@@ -78,9 +78,11 @@ EJFacilLevel <- function(list_data, facil_data) {
              `WW Discharge`, `Resp. Hazard` )
 
   together.sf <- together.sf %>% mutate(`Env. indicators above 80th %ile` = as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                                                                     `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
+                                                                                                     `Air, Cancer`:`Resp. Hazard`) > 80, 
+                                                                                              na.rm = T))) %>%
     mutate(`Demo. indicators above 80th %ile` = as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                                         `Low Income`:`Age Over 64`) > 80))) %>%
+                                                                         `Low Income`:`Age Over 64`) > 80,
+                                                                  na.rm = T))) %>%
     mutate_if(is.numeric, round)
 
   return(together.sf)
