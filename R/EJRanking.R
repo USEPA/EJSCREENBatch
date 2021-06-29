@@ -35,9 +35,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
 
       if (rank_count > (dim(input_data$EJ.facil.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
-      } else if(!is.null(input_name) & (input_name %notin% colnames(input_data$EJ.facil.data[[i]]))){
-        stop('Input_name must be a variable in input_data')
-      } else {
+      } else if(length(input_name %notin% colnames(input_data$EJ.facil.data[[i]]))==0 || input_name %in% colnames(input_data$EJ.facil.data[[i]])){
+
         locay <- input_data$EJ.facil.data[[i]] %>%
           dplyr::filter(geography == geography_type) %>%
           dplyr::mutate(`Total indicators above 80th %ile` =
@@ -68,6 +67,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           flextable::save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
                         path = paste0('ranktables/loca_',names(input_data$EJ.facil.data)[i], ".png"))
         }
+      }  else if(input_name %notin% colnames(input_data$EJ.facil.data[[i]])){
+        stop('Input_name must be a variable in input_data')
       }
     }
   } else if (rank_type == 'cbg'){
