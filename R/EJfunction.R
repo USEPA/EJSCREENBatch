@@ -110,7 +110,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     st_transform("ESRI:102005")
 
   # Create internal facility name mapping (if provided by user)
-  if (!is.null(input_name) & (length(input_name) == dim(facility_data)[1])){
+  if (!is.null(input_name) ){  #& (length(input_name) == dim(facility_data)[1])
     facility_name <- facility_data %>%
       as.data.frame() %>%
       dplyr::select(input_name,-geometry) %>%
