@@ -195,7 +195,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
           EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
         EJ.corrplots.data[[paste0("corrplots_intersect_radius",i,"mi")]] <-
-          EJcorrplots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
+          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
           EJFacilLevel(list_data = EJ.list.data[[j]],
                        facil_data = st_transform(facility_data, crs = 4326))
@@ -217,7 +217,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.demographics.data[[paste0("demographics_centroid_radius",i,"mi")]] <-
           EJdemographics(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
         EJ.corrplots.data[[paste0("corrplots_centroid_radius",i,"mi")]] <-
-          EJcorrplots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
+          EJCorrPlots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
         EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
           EJFacilLevel(list_data = EJ.list.data[[j]],
                        facil_data = st_transform(facility_data, crs = 4326))
@@ -241,7 +241,7 @@ EJfunction <- function(data_type, facility_data, gis_option=NULL, buff_dist=NULL
         EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
           EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
         EJ.corrplots.data[[paste0("corrplots_intersection_radius",i,"mi")]] <-
-          EJcorrplots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
+          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
 
         ### Areal apportionment using circular buffers around facilities
         # Extract the state associated with each facility
