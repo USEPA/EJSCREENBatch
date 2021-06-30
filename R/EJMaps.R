@@ -88,10 +88,9 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         leaflet::addCircleMarkers(radius = 5,
                          color = ~ pal(`Env. indicators above 80th %ile`),
                          opacity = 0.75,
-                         #clusterOptions = markerClusterOptions(),
                          popup = leafpop::popupTable(map.data,
                                             feature.id = F, row.numbers = F,
-                                            zcol = names(map.data)[1:20]) %>%
+                                            zcol = names(map.data)[1:20])) %>%
         leaflet::addLegend(pal = pal, values = ~`Env. indicators above 80th %ile`, position = "bottomright")
     }
 
@@ -113,7 +112,6 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         leaflet::addCircleMarkers(radius = 5,
                          opacity = 0.75,
                          color = ~ pal(`Demo. indicators above 80th %ile`),
-                         #clusterOptions = markerClusterOptions(),
                          popup = leafpop::popupTable(map.data,
                                             feature.id = F, row.numbers = F,
                                             zcol = names(map.data)[1:20])) %>%
