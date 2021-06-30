@@ -31,14 +31,14 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
     # Create an empty list for rankings (one for each dist and buffer method)
     data_transf <- list()
     
-    # Use name or shape_ID?
-    keep.id <- names(input_data)[1]
-
     for (i in 1:length(input_data$EJ.facil.data)){
 
       if (rank_count > (dim(input_data$EJ.facil.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
       } 
+      
+      # Use name or shape_ID?
+      keep.id <- names(input_data$EJ.facil.data[[i]])[1]
       
       locay <- input_data$EJ.facil.data[[i]] %>%
         as.data.frame() %>%
@@ -48,7 +48,6 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
                         as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
         dplyr::arrange(desc(`Total indicators above 80th %ile`),
                        desc(`Env. indicators above 80th %ile`)) %>%
-        dplyr::rename(`location ID` = shape_ID) %>%
         dplyr::select_if(names(.) %in% c(keep.id,
                                          "Total indicators above 80th %ile",
                                          "Env. indicators above 80th %ile",
