@@ -258,8 +258,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
       flextable::bold(bold = T, part = 'header') %>%
       flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
-      flextable::bold(i = 8, j = 1, bold = T, part = 'body') %>%
-      flextable::set_table_properties(layout = "autofit")
+      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
     
     ## Save if option selected.
     if (save_option == T){
