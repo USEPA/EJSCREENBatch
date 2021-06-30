@@ -183,7 +183,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
         out
       }) %>%
-      flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
+      flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
       flextable::bold(bold = T, part = 'header') %>%
       flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
       flextable::bold(i = 8, j = 1, bold = T, part = 'body')
@@ -257,8 +257,8 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
   #   # Create the final table
   #   heat.table <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
   #     flextable::flextable() %>%
-  #     flextable::compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
-  #     flextable::compose(i = 1, j = 2, value = as_paragraph(""), part = "header") %>%
+  #     flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
+  #     flextable::compose(i = 1, j = 2, value = flextable::as_paragraph(""), part = "header") %>%
   #     flextable::autofit() %>%
   #     flextable::align_nottext_col(align = 'center') %>%
   #     flextable::align_text_col(align = 'left') %>%
