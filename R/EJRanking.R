@@ -38,6 +38,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
       } else if(length(input_name %notin% colnames(input_data$EJ.facil.data[[i]]))==0 || input_name %in% colnames(input_data$EJ.facil.data[[i]])){
 
         locay <- input_data$EJ.facil.data[[i]] %>%
+          as.data.frame() %>%
           dplyr::filter(geography == geography_type) %>%
           dplyr::mutate(`Total indicators above 80th %ile` =
                    as.numeric(as.character(`Env. indicators above 80th %ile`)) +

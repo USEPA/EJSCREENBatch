@@ -57,7 +57,7 @@
 #'                 input_type = 'sf', attains = F)
 #'
 EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=NULL, buff_dist=NULL,
-                       threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL, save_option=NULL,
+                       threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL, save_option=F,
                        input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
 
 
