@@ -10,7 +10,6 @@
 #' topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
 #' topN_dta_idx denotes which EJfunction() output data to use (e.g. when there are mult. buff. distances)
 #' -> it is an integer. Default setting is 1
-#' input.names is user-provided list of facility names. it must be same length as input_data
 #'
 #' @param input_data
 #' @param type
@@ -27,7 +26,7 @@
 #' y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
 #' y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
 EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN = NULL,
-                         topN_dta_idx = NULL, input.names = NULL, save_option = F){
+                         topN_dta_idx = NULL, save_option = F){
 
   # Set default geography level @ nat'l scale
   if(is.null(geog_lvl)){
@@ -217,7 +216,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
     }
     
     # Facility names for merging
-    facil.name <- names(input_data$EJ.facil.data[[i]])[1]
+    facil.name <- names(input_data$EJ.facil.data[[dta.idx]])[1]
 
     ##
     # Extract nat'l level data, keep only top N
