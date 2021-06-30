@@ -136,63 +136,63 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
     if (save_option == T){
       flextable::save_as_image(x = heat.table, path = "heat_table_all.png")
     }
+    
+  } else if (type == 'single') { #This returns HeatTable for user-specified facil
+    
+    if (is.null(keepid) | !is.numeric(keepid)){
+      stop('Must include a numeric row ID (keepid) of single facility for this table type.')
+    } else {
+      shape.keep <- keepid
+    }
+    
+    # Preallocate list
+    dt <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
+    
+    # Keep list of relevant varnames
+    keepnames <- as.data.table(input_data$EJ.facil.data[[1]]
+    )[, dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
+    
+    ## This draws from facility level data (median CBG value for that facil)
+    for (i in 1:length(input_data$EJ.facil.data)){
 
-  # } else if (type == 'single') { #This returns HeatTable for user-specified facil
-  # 
-  #   if (is.null(keepid) | !is.numeric(keepid)){
-  #     stop('Must include a numeric row ID (keepid) of single facility for this table type.')
-  #   } else {
-  #     shape.keep <- keepid
-  #   }
-  # 
-  # 
-  #   # Preallocate list
-  #   dt <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
-  # 
-  #   # Keep list of relevant varnames
-  #   keepnames <- as.data.table(input_data$EJ.facil.data[[1]]
-  #   )[, dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
-  # 
-  #   ## This draws from facility level data (median CBG value for that facil)
-  #   for (i in 1:length(input_data$EJ.facil.data)){
-  #     dt[[i]] <- as.data.table(input_data$EJ.facil.data[[i]]
-  #     )[geography == geog & shape_ID == shape.keep,
-  #       dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
-  #     ][, lapply(.SD, round)]
-  #     dt[[i]] <- dplyr::melt(dt[[i]])[,2]
-  #     names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
-  #                              ' mile radius')
-  #   }
-  # 
-  #   ## Shape into data.table
-  #   dt <- as.data.table(cbind(keepnames,rlist::list.cbind(dt))
-  #   )[1:6, ind.type := 'Demographic'
-  #   ][7:17, ind.type := 'Environmental']
-  # 
-  #   ## Create the heat table
-  #   heat.table <- flextable::as_grouped_data(dt, groups = 'ind.type') %>%
-  #     flextable::flextable() %>%
-  #     flextable::compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>%
-  #     flextable::autofit() %>%
-  #     flextable::align_nottext_col(align = 'center') %>%
-  #     flextable::align_text_col(align = 'left') %>%
-  #     bg(bg = function(x){
-  #       out <- rep("transparent", length(x))
-  #       out[is.numeric(x) & x >= 95] <- "red1"
-  #       out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
-  #       out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
-  #       out
-  #     }) %>%
-  #     flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
-  #     flextable::bold(bold = T, part = 'header') %>%
-  #     flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
-  #     flextable::bold(i = 8, j = 1, bold = T, part = 'body')
-  # 
-  #   ## Save if option selected.
-  #   if (save_option == T){
-  #     flextable::save_as_image(x = heat.table, path = "heat_table_single.png")
-  #   }
-  # 
+      dt[[i]] <- data.table::as.data.table(input_data$EJ.facil.data[[i]]
+        )[geography == geog & shape_ID == shape.keep,
+          dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
+          ][, lapply(.SD, round)]
+      dt[[i]] <- dplyr::melt(dt[[i]])[,2]
+      names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
+                               ' mile radius')
+    }
+    
+    ## Shape into data.table
+    dt <- as.data.table(cbind(keepnames,rlist::list.cbind(dt))
+    )[1:6, ind.type := 'Demographic'
+    ][7:17, ind.type := 'Environmental']
+    
+    ## Create the heat table
+    heat.table <- flextable::as_grouped_data(dt, groups = 'ind.type') %>%
+      flextable::flextable() %>%
+      flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
+      flextable::autofit() %>%
+      flextable::align_nottext_col(align = 'center') %>%
+      flextable::align_text_col(align = 'left') %>%
+      flextable::bg(bg = function(x){
+        out <- rep("transparent", length(x))
+        out[is.numeric(x) & x >= 95] <- "red1"
+        out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
+        out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
+        out
+      }) %>%
+      flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
+      flextable::bold(bold = T, part = 'header') %>%
+      flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
+      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
+    
+    ## Save if option selected.
+    if (save_option == T){
+      flextable::save_as_image(x = heat.table, path = "heat_table_single.png")
+    }
+    
   # } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
   # 
   #   # How many facilities included in table?
