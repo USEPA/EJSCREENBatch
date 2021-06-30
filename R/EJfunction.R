@@ -111,18 +111,14 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
   # Create internal facility name mapping (if provided by user)
   if (!is.null(input_name) ){  #& (length(input_name) == dim(facility_data)[1])
+    if(input_name %notin% colnames(facility_data)){
+      stop('Input_name must be a variable in facility_data.')
+    }
     facility_name <- facility_data %>%
       as.data.frame() %>%
       dplyr::select(input_name,-geometry) %>%
       tibble::rowid_to_column("shape_ID")
-    # names(facility_name)[2] <- "Shape Name"
-  } else if(input_name %notin% colnames(facility_data)){
-    stop('Input_name must be a variable in facility_data.')
   }
-
-  # else if (!is.null(input_name) & (length(input_name) != dim(facility_data)[1])) {
-  #   stop('Input_name must be of same length as facility_data.')
-  # }
 
   # Determine most common geometry type in the input sf dataframe
   facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
@@ -407,25 +403,39 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
       EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
         EJCorrPlots(area1_intersect, gis_method = gis_option , buffer=i, threshold=Thresh)
 
-      # EJ.demoOverlap.data[[paste0("demoOverlap_",gis_option,"_buffer",i,"mi")]] <-
-      #   EJdemoOverlap(area, gis_method = gis_option, buffer=i, threshold=Thresh)
-
-
       #############
       ## This returns facility level summaries for
       if(gis_option %in% c('intersect','centroid')){
         if (in.type == 'sf'){
-          EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-            EJFacilLevel(list_data = area,
-                         facil_data = st_transform(facility_data, crs = 4326))
+          if (!is.null(input_name)) {
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJFacilLevel(list_data = area,
+                           facil_data = st_transform(facility_data, crs = 4326)) %>%
+              dplyr::inner_join(facility_name, by = 'shape_ID') %>%
+              dplyr::relocate(input_name)
+          } else {
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJFacilLevel(list_data = area,
+                           facil_data = st_transform(facility_data, crs = 4326))
+          }
         } else if (in.type == 'catchment'){
           temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
             mutate(comid = as.numeric(comid)) %>%
             inner_join(facility_data, by = c('comid' = 'V1')) %>%
             st_as_sf()
-          EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-            EJFacilLevel(list_data = area,
-                         facil_data = st_transform(temp.mat, crs = 4326))
+          
+          if (!is.null(input_name)) {
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJFacilLevel(list_data = area,
+                           facil_data = st_transform(temp.mat, crs = 4326)) %>%
+              dplyr::inner_join(facility_name, by = 'shape_ID') %>%
+              dplyr::relocate(input_name)
+          } else {
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJFacilLevel(list_data = area,
+                           facil_data = st_transform(temp.mat, crs = 4326))
+          }
+
           rm(temp.mat)
         }
 
