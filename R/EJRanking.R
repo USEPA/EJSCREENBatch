@@ -48,6 +48,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
                         as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
         dplyr::arrange(desc(`Total indicators above 80th %ile`),
                        desc(`Env. indicators above 80th %ile`)) %>%
+        dplyr::rename(`location ID` = shape_ID) %>%
         dplyr::select_if(names(.) %in% c(keep.id,
                                          "Total indicators above 80th %ile",
                                          "Env. indicators above 80th %ile",
@@ -56,7 +57,6 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
                         as.numeric(as.character(`Env. indicators above 80th %ile`))) %>%
         dplyr::mutate(`Demo. indicators above 80th %ile` =
                         as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
-        dplyr::rename(`location ID` = shape_ID) %>%
         dplyr::mutate(Rank = row_number()) %>%
         dplyr::relocate(Rank) %>%
         dplyr::slice_head(n = rank_count)
