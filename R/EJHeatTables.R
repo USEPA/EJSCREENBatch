@@ -45,32 +45,18 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
 
     ## This takes the MEAN
     for (i in 1:length(input_data$EJ.facil.data)){
+
       if (geog == 'US'){
         df.var.wm <- input_data$EJ.list.data[[i]] %>%
           dplyr::select(P_MINORPCT_US, P_LWINCPCT_US, P_LESHSPCT_US, P_LNGISPCT_US,
                         P_UNDR5PCT_US, P_OVR64PCT_US, P_LDPNT_US, P_VULEOPCT_US,
                         P_DSLPM_US, P_CANCR_US, P_RESP_US, P_PTRAF_US, P_PWDIS_US,
                         P_PNPL_US, P_PRMP_US, P_PTSDF_US, P_OZONE_US,
-                        P_PM25_US,
-                        #P_MINORPCT_state, P_LWINCPCT_state, P_LESHSPCT_state, P_LNGISPCT_state,
-                        #P_UNDR5PCT_state, P_OVR64PCT_state, P_LDPNT_state, P_VULEOPCT_state,
-                        #P_DSLPM_state, P_CANCR_state, P_RESP_state, P_PTRAF_state, P_PWDIS_state,
-                        #P_PNPL_state, P_PRMP_state, P_PTSDF_state, P_OZONE_state,
-                        #P_PM25_state,
-                        ACSTOTPOP, shape_ID
-                        # Below are EJ "indices" rather than environmental indicators
-                        #P_LDPNT_D2_US, P_DSLPM_D2_US, P_CANCR_D2_US,
-                        #P_RESP_D2_US, P_PTRAF_D2_US, P_PWDIS_D2_US, P_PNPL_D2_US,
-                        #P_PRMP_D2_US, P_PTSDF_D2_US, P_OZONE_D2_US, P_PM25_D2_US,
-                        #P_LDPNT_D2_state, P_DSLPM_D2_state, P_CANCR_D2_state,
-                        #P_RESP_D2_state, P_PTRAF_D2_state, P_PWDIS_D2_state, P_PNPL_D2_state,
-                        #P_PRMP_D2_state, P_PTSDF_D2_state, P_OZONE_D2_state, P_PM25_D2_state,
-          ) %>% as.data.table()
+                        P_PM25_US, ACSTOTPOP, shape_ID) %>% as.data.table()
 
         for (col in 1:ncol(df.var.wm)){
           colnames(df.var.wm)[col] <-  sub("_US", "", colnames(df.var.wm)[col])
         }
-
       } else if (geog == 'state') {
         df.var.wm <- input_data$EJ.list.data[[i]] %>%
           dplyr::select(P_MINORPCT_state, P_LWINCPCT_state, P_LESHSPCT_state, P_LNGISPCT_state,
@@ -83,13 +69,12 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         for (col in 1:ncol(df.var.wm)){
           colnames(df.var.wm)[col] <-  sub("_state", "", colnames(df.var.wm)[col])
         }
-
       } else {
         stop('Geography must be "US" or "state".')
       }
 
       df.var.wm <- df.var.wm %>%
-        dplyr::rename(Lead                = P_LDPNT,
+        dplyr::rename(Lead         = P_LDPNT,
                'Diesel PM'         = P_DSLPM,
                'Air, Cancer'       = P_CANCR,
                'Resp. Hazard'      = P_RESP,
@@ -135,7 +120,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::autofit() %>%
       flextable::align_nottext_col(align = 'center') %>%
       flextable::align_text_col(align = 'left') %>%
-      bg(bg = function(x){
+      flextable::bg(bg = function(x){
         out <- rep("transparent", length(x))
         out[is.numeric(x) & x >= 95] <- "red1"
         out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
