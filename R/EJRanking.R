@@ -5,8 +5,8 @@
 #'
 #' @param input_data
 #' @param rank_type Required. Either 'location' or 'CBG'
-#' @param geography_type
 #' @param rank_count Required.
+#' @param geography_type Either 'US' or 'state
 #' @param save_option
 #'
 #' @return
@@ -19,7 +19,7 @@
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
-                      rank_count = 10, input_name=NULL, save_option = F){
+                      rank_count = 10, save_option = F){
 
   `%notin%` = Negate(`%in%`)
   if (!(geography_type %in% c('US','state'))){
@@ -30,46 +30,45 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
 
     # Create an empty list for rankings (one for each dist and buffer method)
     data_transf <- list()
-
+    
     for (i in 1:length(input_data$EJ.facil.data)){
 
       if (rank_count > (dim(input_data$EJ.facil.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
-      } else if(length(input_name %notin% colnames(input_data$EJ.facil.data[[i]]))==0 || input_name %in% colnames(input_data$EJ.facil.data[[i]])){
-
-        locay <- input_data$EJ.facil.data[[i]] %>%
-          as.data.frame() %>%
-          dplyr::filter(geography == geography_type) %>%
-          dplyr::mutate(`Total indicators above 80th %ile` =
-                   as.numeric(as.character(`Env. indicators above 80th %ile`)) +
-                   as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
-          dplyr::arrange(desc(`Total indicators above 80th %ile`),
-                  desc(`Env. indicators above 80th %ile`)) %>%
-          dplyr::select_if(names(.) %in% c("shape_ID", input_name,
-                 "Total indicators above 80th %ile",
-                 "Env. indicators above 80th %ile",
-                 "Demo. indicators above 80th %ile")) %>%
-          dplyr::mutate(`Env. indicators above 80th %ile` =
-                   as.numeric(as.character(`Env. indicators above 80th %ile`))) %>%
-          dplyr::mutate(`Demo. indicators above 80th %ile` =
-                   as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
-          dplyr::rename(`location ID` = shape_ID) %>%
-          dplyr::mutate(Rank = row_number()) %>%
-          dplyr::relocate(Rank) %>%
-          dplyr::slice_head(n = rank_count)
-
-        data_transf[[names(input_data$EJ.facil.data)[i]]] <- flextable::flextable(locay) %>%
-          flextable::theme_zebra() %>%
-          flextable::set_table_properties(layout='autofit', width = .3)
-
-        if (save_option == T){
-          ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
-                 dir.create(file.path(getwd(),"ranktables/")), FALSE)
-          flextable::save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
-                        path = paste0('ranktables/loca_',names(input_data$EJ.facil.data)[i], ".png"))
-        }
-      }  else if(input_name %notin% colnames(input_data$EJ.facil.data[[i]])){
-        stop('Input_name must be a variable in input_data')
+      } 
+      
+      # Use name or shape_ID?
+      keep.id <- names(input_data$EJ.facil.data[[i]])[1]
+      
+      locay <- input_data$EJ.facil.data[[i]] %>%
+        as.data.frame() %>%
+        dplyr::filter(geography == geography_type) %>%
+        dplyr::mutate(`Total indicators above 80th %ile` =
+                        as.numeric(as.character(`Env. indicators above 80th %ile`)) +
+                        as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
+        dplyr::arrange(desc(`Total indicators above 80th %ile`),
+                       desc(`Env. indicators above 80th %ile`)) %>%
+        dplyr::select_if(names(.) %in% c(keep.id,
+                                         "Total indicators above 80th %ile",
+                                         "Env. indicators above 80th %ile",
+                                         "Demo. indicators above 80th %ile")) %>%
+        dplyr::mutate(`Env. indicators above 80th %ile` =
+                        as.numeric(as.character(`Env. indicators above 80th %ile`))) %>%
+        dplyr::mutate(`Demo. indicators above 80th %ile` =
+                        as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
+        dplyr::mutate(Rank = row_number()) %>%
+        dplyr::relocate(Rank) %>%
+        dplyr::slice_head(n = rank_count)
+      
+      data_transf[[names(input_data$EJ.facil.data)[i]]] <- flextable::flextable(locay) %>%
+        flextable::theme_zebra() %>%
+        flextable::set_table_properties(layout='autofit', width = .3)
+      
+      if (save_option == T){
+        ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
+               dir.create(file.path(getwd(),"ranktables/")), FALSE)
+        flextable::save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
+                                 path = paste0('ranktables/loca_',names(input_data$EJ.facil.data)[i], ".png"))
       }
     }
   } else if (rank_type == 'cbg'){
@@ -95,8 +94,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           as.data.table()
 
         cbg <- data.table::melt(unique(cbg), id = 'ID'
-        )[, variable := stri_replace_last_fixed(variable,'_','|')
-        ][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)
+        )[, variable := stringi::stri_replace_last_fixed(variable,'_','|')
+        ][, c('variable','geography') := data.table::tstrsplit(variable, '|', fixed = T)
         ][!is.na(ID)]
 
         cbg <- data.table::dcast(cbg, ID + geography ~ variable, value.var = "value") %>%
