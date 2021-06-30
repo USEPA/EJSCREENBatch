@@ -7,7 +7,7 @@
 #'
 #' geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
 #' when type = 'single, keepid must be set by user, denotes the (integer) rowid of the facility
-#' topN is an integer set by user when using ranking table. (Default is 10, min is 0.)
+#' topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
 #' topN_dta_idx denotes which EJfunction() output data to use (e.g. when there are mult. buff. distances)
 #' -> it is an integer. Default setting is 1
 #' input.names is user-provided list of facility names. it must be same length as input_data
@@ -193,91 +193,78 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::save_as_image(x = heat.table, path = "heat_table_single.png")
     }
     
-  # } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
-  # 
-  #   # How many facilities included in table?
-  #   if(is.null(topN)){
-  #     n_rank <-  10 #default values
-  #   } else if (topN > 10) {
-  #     n_rank <- 10   #user inputted values that override default
-  #   } else if (topN <= 10 & topN > 0) {
-  #     n_rank <- round(topN)
-  #   } else {
-  #     stop('User-designated value for topN must be an integer between 1 and 10')
-  #   }
-  # 
-  #   # When EJfunction data has more than 1 buffer dist, which DF to use?
-  #   if(is.null(topN_dta_idx)){
-  #     dta.idx <- 1 # Default is the first list element in ...$EJ.facil.list
-  #   } else if((topN_dta_idx > length(input_data$EJ.facil.data)) |
-  #             !is.numeric(topN_dta_idx)){
-  #     stop('Error: index provided is non-numeric or exceeds length of list.')
-  #   } else {
-  #     dta.idx <- topN_dta_idx
-  #   }
-  # 
-  #   ##
-  #   # Extract nat'l level data, keep only top N
-  #   if (!is.null(input.names)){
-  #     if(length(input.names) != dim(input_data$EJ.facil.data[[dta.idx]])[1]/2){
-  #       stop('List of names but be same length as list of input geometries.')
-  #     } else {
-  #       dt <- as.data.table(input_data$EJ.facil.data[[dta.idx]]
-  #       )[geography == geog
-  #       ][, `Total indicators above 80th %ile` :=
-  #           as.numeric(as.character(`Env. indicators above 80th %ile`)) +
-  #           as.numeric(as.character(`Demo. indicators above 80th %ile`))
-  #       ][, `NPDES Permit Number` :=
-  #           as.vector(facilities$`NPDES Permit Number`)
-  #       ][order(-`Total indicators above 80th %ile`)
-  #       ][1:n_rank,
-  #       ][, dplyr::select(.SD, c(`Low Income`:`Resp. Hazard`, `NPDES Permit Number`))]
-  #       setcolorder(dt, neworder = 'NPDES Permit Number')
-  #     }
-  #   } else {
-  #     dt <- as.data.table(input_data$EJ.facil.data[[dta.idx]]
-  #     )[geography == geog
-  #     ][, `Total indicators above 80th %ile` :=
-  #         as.numeric(as.character(`Env. indicators above 80th %ile`)) +
-  #         as.numeric(as.character(`Demo. indicators above 80th %ile`))
-  #     ][order(-`Total indicators above 80th %ile`)
-  #     ][1:n_rank,
-  #     ][, dplyr::select(.SD, c(shape_ID, `Low Income`:`Resp. Hazard`))]
-  #     setcolorder(dt, neworder = 'shape_ID')
-  #   }
-  #   # Reshape/transpose data
-  #   new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
-  #   setnames(new.dt, as.character(new.dt[1,]))
-  #   cols <- names(new.dt)[2:(dim(new.dt)[2])]
-  #   new.dt <- new.dt[-1,][, (cols) := lapply(.SD, as.numeric),
-  #                         .SDcols = cols][1:6, ind.type := 'Demographic'
-  #                         ][7:17, ind.type := 'Environmental'
-  #                         ]
-  # 
-  #   # Create the final table
-  #   heat.table <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
-  #     flextable::flextable() %>%
-  #     flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
-  #     flextable::compose(i = 1, j = 2, value = flextable::as_paragraph(""), part = "header") %>%
-  #     flextable::autofit() %>%
-  #     flextable::align_nottext_col(align = 'center') %>%
-  #     flextable::align_text_col(align = 'left') %>%
-  #     bg(bg = function(x){
-  #       out <- rep("transparent", length(x))
-  #       out[is.numeric(x) & x >= 95] <- "red1"
-  #       out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
-  #       out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
-  #       out
-  #     }) %>%
-  #     flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
-  #     flextable::bold(bold = T, part = 'header') %>%
-  #     flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
-  #     flextable::bold(i = 8, j = 1, bold = T, part = 'body')
-  # 
-  #   ## Save if option selected.
-  #   if (save_option == T){
-  #     flextable::save_as_image(x = heat.table, path = "heat_table_top10.png")
-  #   }
+  } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
+    
+    # How many facilities included in table?
+    if(is.null(topN)){
+      n_rank <-  5 #default values
+    } else if (topN > 10) {
+      n_rank <- 10   # Nope, 10 is max.
+    } else if (topN <= 10 & topN > 0) {
+      n_rank <- round(topN) # user inputted values that override default
+    } else {
+      stop('User-designated value for topN must be an integer between 1 and 10')
+    }
+    
+    # When EJfunction data has more than 1 buffer dist, which DF to use?
+    if(is.null(topN_dta_idx)){
+      dta.idx <- 1 # Default is the first list element in ...$EJ.facil.list
+    } else if((topN_dta_idx > length(input_data$EJ.facil.data)) |
+              !is.numeric(topN_dta_idx)){
+      stop('Error: index provided is non-numeric or exceeds length of list.')
+    } else {
+      dta.idx <- topN_dta_idx
+    }
+    
+    # Facility names for merging
+    facil.name <- names(input_data$EJ.facil.data[[i]])[1]
+
+    ##
+    # Extract nat'l level data, keep only top N
+    dt <- as.data.table(input_data$EJ.facil.data[[dta.idx]]
+      )[geography == geog
+        ][, `Total indicators above 80th %ile` :=
+          as.numeric(as.character(`Env. indicators above 80th %ile`)) +
+          as.numeric(as.character(`Demo. indicators above 80th %ile`))
+          ][order(-`Total indicators above 80th %ile`)
+            ][1:n_rank,
+              ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name), 
+                             `Low Income`:`Resp. Hazard`))] #Could add pop.count later
+    setcolorder(dt, neworder = facil.name)
+    
+    # Reshape/transpose data
+    new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
+    setnames(new.dt, as.character(new.dt[1,]))
+    cols <- names(new.dt)[2:(dim(new.dt)[2])]
+    new.dt <- new.dt[-1,][, (cols) := lapply(.SD, as.numeric),
+                          .SDcols = cols][1:6, ind.type := 'Demographic'
+                          ][7:17, ind.type := 'Environmental'
+                            ]
+    
+    # Create the final table
+    heat.table <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
+      flextable::flextable() %>%
+      flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
+      flextable::compose(i = 1, j = 2, value = flextable::as_paragraph(""), part = "header") %>%
+      flextable::autofit() %>%
+      flextable::align_nottext_col(align = 'center') %>%
+      flextable::align_text_col(align = 'left') %>%
+      flextable::bg(bg = function(x){
+        out <- rep("transparent", length(x))
+        out[is.numeric(x) & x >= 95] <- "red1"
+        out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
+        out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
+        out
+      }) %>%
+      flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
+      flextable::bold(bold = T, part = 'header') %>%
+      flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
+      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
+    
+    ## Save if option selected.
+    if (save_option == T){
+      flextable::save_as_image(x = heat.table, path = "heat_table_topN.png")
+    }
 
   } else {
     stop('Table type not valid. Please specify one of "all", "single" OR "topn"')
