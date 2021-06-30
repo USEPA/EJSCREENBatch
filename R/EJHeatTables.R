@@ -18,7 +18,7 @@
 #' @param keepid
 #' @param topN
 #' @param topN_dta_idx
-#' @param save.option
+#' @param save_option
 #'
 #' @return
 #' @export
@@ -27,7 +27,7 @@
 #' y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
 #' y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
 EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN = NULL,
-                         topN_dta_idx = NULL, input.names = NULL, save.option = F){
+                         topN_dta_idx = NULL, input.names = NULL, save_option = F){
 
   # Set default geography level @ nat'l scale
   if(is.null(geog_lvl)){
@@ -127,13 +127,13 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
         out
       }) %>%
-      flextable::compose(j = 2, value = as_paragraph(''), part = 'head') %>%
+      flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
       flextable::bold(bold = T, part = 'header') %>%
       flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
       flextable::bold(i = 8, j = 1, bold = T, part = 'body')
 
     ## Save if option selected.
-    if (save.option == T){
+    if (save_option == T){
       flextable::save_as_image(x = heat.table, path = "heat_table_all.png")
     }
 
@@ -189,7 +189,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::bold(i = 8, j = 1, bold = T, part = 'body')
 
     ## Save if option selected.
-    if (save.option == T){
+    if (save_option == T){
       flextable::save_as_image(x = heat.table, path = "heat_table_single.png")
     }
 
@@ -275,7 +275,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::bold(i = 8, j = 1, bold = T, part = 'body')
 
     ## Save if option selected.
-    if (save.option == T){
+    if (save_option == T){
       flextable::save_as_image(x = heat.table, path = "heat_table_top10.png")
     }
 
