@@ -259,8 +259,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::bold(bold = T, part = 'header') %>%
       flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
       flextable::bold(i = 8, j = 1, bold = T, part = 'body') %>%
-      flextable::fontsize(size = 11, part = 'header') %>%
-      flextable::fontsize(size = 10, part = 'body')
+      officedown::set_table_properties(layout = "autofit")
     
     ## Save if option selected.
     if (save_option == T){
