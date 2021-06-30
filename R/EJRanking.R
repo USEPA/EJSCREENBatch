@@ -94,8 +94,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           as.data.table()
 
         cbg <- data.table::melt(unique(cbg), id = 'ID'
-        )[, variable := stri_replace_last_fixed(variable,'_','|')
-        ][, c('variable','geography') := tstrsplit(variable, '|', fixed = T)
+        )[, variable := stringi::stri_replace_last_fixed(variable,'_','|')
+        ][, c('variable','geography') := data.table::tstrsplit(variable, '|', fixed = T)
         ][!is.na(ID)]
 
         cbg <- data.table::dcast(cbg, ID + geography ~ variable, value.var = "value") %>%
