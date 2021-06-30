@@ -50,7 +50,7 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
     if (ind.option == 'total'){
       # Color palette
       pal <- leaflet::colorFactor(
-        rev(RColorBrewer::brewer.pal(n=16, "Spectral")),
+        rev(RColorBrewer::brewer.pal(n=11, "Spectral")), # NOTE: brewer.pal can't go over 11 :(
         domain = map.data$`Total indicators above 80th %ile`)
 
       # Leaflet object
@@ -74,7 +74,7 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
 
       # Color palette
       pal <- leaflet::colorFactor(
-        rev(RColorBrewer::brewer.pal(n=10, "Spectral")),
+        rev(RColorBrewer::brewer.pal(n=11, "Spectral")),
         domain = map.data$`Env. indicators above 80th %ile`)
 
       # Leaflet object
