@@ -91,7 +91,7 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
                          #clusterOptions = markerClusterOptions(),
                          popup = leafpop::popupTable(map.data,
                                             feature.id = F, row.numbers = F,
-                                            zcol = names(map.data[1:20])) %>%
+                                            zcol = names(map.data)[1:20]) %>%
         leaflet::addLegend(pal = pal, values = ~`Env. indicators above 80th %ile`, position = "bottomright")
     }
 
