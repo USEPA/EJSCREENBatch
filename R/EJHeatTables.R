@@ -237,8 +237,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
                             ]
       
       # Create the final table
-      heat.table[[stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
-                                   start = 7)[i]]] <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
+      ht <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
         flextable::flextable() %>%
         flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
         flextable::compose(i = 1, j = 2, value = flextable::as_paragraph(""), part = "header") %>%
@@ -257,12 +256,14 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
         flextable::bold(i = 8, j = 1, bold = T, part = 'body')
       
+      heat.table[[stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
+                                   start = 7)[i]]] <- ht
+      
       ## Save if option selected.
       if (save_option == T){
         ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
                dir.create(file.path(getwd(),"heattabs/")), FALSE)
-        flextable::save_as_image(x = heat.table[[stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
-                                                                  start = 7)[i]]], 
+        flextable::save_as_image(x = ht, 
                                  path = paste0("heattabs/ht_topN_",
                                                stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
                                                                 start = 7),
