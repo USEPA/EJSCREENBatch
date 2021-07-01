@@ -256,7 +256,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
         flextable::bold(i = 8, j = 1, bold = T, part = 'body')
       
-      heat.table[[stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
+      heat.table[[stringr::str_sub(names(input_data$EJ.facil.data), 
                                    start = 7)[i]]] <- ht
       
       ## Save if option selected.
@@ -265,8 +265,8 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
                dir.create(file.path(getwd(),"heattabs/")), FALSE)
         flextable::save_as_image(x = ht, 
                                  path = paste0("heattabs/ht_topN_",
-                                               stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
-                                                                start = 7),
+                                               stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                                start = 7)[i],
                                                ".png"))
       }
     }
