@@ -5,7 +5,7 @@
 #'
 #' @param data_type Required. Either "landbased" or "waterbased"
 #' @param facility_data Required.
-#' @param input_type Requried. Input must be "sf" object or list of catchments (ComIDs)
+#' @param input_type Required. Input must be "sf" object or list of catchments (ComIDs)
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
 #' @param buff_dist Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
 #' @param threshold User specified threshold to represent potential concern. Default is 80\%.
@@ -401,7 +401,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
       EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
-        EJCorrPlots(area1_intersect, gis_method = gis_option , buffer=i, threshold=Thresh)
+        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh)
 
       #############
       ## This returns facility level summaries for
