@@ -8,25 +8,23 @@
 #' geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
 #' when type = 'single, keepid must be set by user, denotes the (integer) rowid of the facility
 #' topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
-#' topN_dta_idx denotes which EJfunction() output data to use (e.g. when there are mult. buff. distances)
-#' -> it is an integer. Default setting is 1
+
 #'
 #' @param input_data
 #' @param type
 #' @param geog_lvl
 #' @param keepid
 #' @param topN
-#' @param topN_dta_idx
 #' @param save_option
 #'
 #' @return
 #' @export
 #'
 #' @examples
-#' y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
+#' y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5)
 #' y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
 EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN = NULL,
-                         topN_dta_idx = NULL, save_option = F){
+                         save_option = F){
 
   # Set default geography level @ nat'l scale
   if(is.null(geog_lvl)){
@@ -133,7 +131,9 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
 
     ## Save if option selected.
     if (save_option == T){
-      flextable::save_as_image(x = heat.table, path = "heat_table_all.png")
+      ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
+             dir.create(file.path(getwd(),"heattabs/")), FALSE)
+      flextable::save_as_image(x = heat.table, path = "heattabs/ht_all.png")
     }
     
   } else if (type == 'single') { #This returns HeatTable for user-specified facil
@@ -189,7 +189,10 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
     
     ## Save if option selected.
     if (save_option == T){
-      flextable::save_as_image(x = heat.table, path = "heat_table_single.png")
+      ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
+             dir.create(file.path(getwd(),"heattabs/")), FALSE)
+      flextable::save_as_image(x = heat.table, path = 'heattabs/ht_single_',
+                               keepid,".png")
     }
     
   } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
@@ -205,66 +208,64 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       stop('User-designated value for topN must be an integer between 1 and 10')
     }
     
-    # When EJfunction data has more than 1 buffer dist, which DF to use?
-    if(is.null(topN_dta_idx)){
-      dta.idx <- 1 # Default is the first list element in ...$EJ.facil.list
-    } else if((topN_dta_idx > length(input_data$EJ.facil.data)) |
-              !is.numeric(topN_dta_idx)){
-      stop('Error: index provided is non-numeric or exceeds length of list.')
-    } else {
-      dta.idx <- topN_dta_idx
-    }
-    
-    # Facility names for merging
-    facil.name <- names(input_data$EJ.facil.data[[dta.idx]])[1]
-
-    ##
-    # Extract nat'l level data, keep only top N
-    dt <- as.data.table(input_data$EJ.facil.data[[dta.idx]]
+    for (i in length(input_data$EJ.facil.data)) {
+      # Facility names for merging
+      facil.name <- names(input_data$EJ.facil.data[[i]])[1]
+      
+      ##
+      # Extract nat'l level data, keep only top N
+      dt <- as.data.table(input_data$EJ.facil.data[[i]]
       )[geography == geog
-        ][, `Total indicators above 80th %ile` :=
+      ][, `Total indicators above 80th %ile` :=
           as.numeric(as.character(`Env. indicators above 80th %ile`)) +
           as.numeric(as.character(`Demo. indicators above 80th %ile`))
-          ][order(-`Total indicators above 80th %ile`)
-            ][1:n_rank,
-              ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name), 
-                             `Low Income`:`Resp. Hazard`))] #Could add pop.count later
-    setcolorder(dt, neworder = facil.name)
-    
-    # Reshape/transpose data
-    new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
-    setnames(new.dt, as.character(new.dt[1,]))
-    cols <- names(new.dt)[2:(dim(new.dt)[2])]
-    new.dt <- new.dt[-1,][, (cols) := lapply(.SD, as.numeric),
-                          .SDcols = cols][1:6, ind.type := 'Demographic'
-                          ][7:17, ind.type := 'Environmental'
+      ][order(-`Total indicators above 80th %ile`)
+      ][1:n_rank,
+      ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name), 
+                               `Pop. Count`:`Resp. Hazard`))] #Could add pop.count later
+      setcolorder(dt, neworder = facil.name)
+      
+      # Reshape/transpose data
+      new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
+      setnames(new.dt, as.character(new.dt[1,]))
+      cols <- names(new.dt)[2:(dim(new.dt)[2])]
+      new.dt <- new.dt[-1,][, (cols) := lapply(.SD, as.numeric),
+                            .SDcols = cols][1:6, ind.type := 'Demographic'
+                            ][7:17, ind.type := 'Environmental'
                             ]
-    
-    # Create the final table
-    heat.table <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
-      flextable::flextable() %>%
-      flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
-      flextable::compose(i = 1, j = 2, value = flextable::as_paragraph(""), part = "header") %>%
-      flextable::autofit() %>%
-      flextable::align_nottext_col(align = 'center') %>%
-      flextable::align_text_col(align = 'left') %>%
-      flextable::bg(bg = function(x){
-        out <- rep("transparent", length(x))
-        out[is.numeric(x) & x >= 95] <- "red1"
-        out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
-        out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
-        out
-      }) %>%
-      flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
-      flextable::bold(bold = T, part = 'header') %>%
-      flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
-      flextable::bold(i = 8, j = 1, bold = T, part = 'body')
-    
-    ## Save if option selected.
-    if (save_option == T){
-      flextable::save_as_image(x = heat.table, path = "heat_table_topN.png")
+      
+      # Create the final table
+      heat.table[[stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
+                                   start = 7)[i]]] <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
+        flextable::flextable() %>%
+        flextable::compose(i = 1, j = 1, value = flextable::as_paragraph(""), part = "header") %>%
+        flextable::compose(i = 1, j = 2, value = flextable::as_paragraph(""), part = "header") %>%
+        flextable::autofit() %>%
+        flextable::align_nottext_col(align = 'center') %>%
+        flextable::align_text_col(align = 'left') %>%
+        flextable::bg(bg = function(x){
+          out <- rep("transparent", length(x))
+          out[is.numeric(x) & x >= 95] <- "red1"
+          out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
+          out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
+          out
+        }) %>%
+        flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
+        flextable::bold(bold = T, part = 'header') %>%
+        flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
+        flextable::bold(i = 8, j = 1, bold = T, part = 'body')
+      
+      ## Save if option selected.
+      if (save_option == T){
+        ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
+               dir.create(file.path(getwd(),"heattabs/")), FALSE)
+        flextable::save_as_image(x = heat.table, 
+                                 path = paste0("heattabs/ht_topN_",
+                                               stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
+                                                                start = 7),
+                                               ".png")
+      }
     }
-
   } else {
     stop('Table type not valid. Please specify one of "all", "single" OR "topn"')
   }

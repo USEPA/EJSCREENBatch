@@ -124,9 +124,9 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
              dir.create(file.path(getwd(),"EJmaps/")), FALSE)
 
       htmlwidgets::saveWidget(EJ.maps[[names(input_data$EJ.facil.data)[i]]],
-                 file= paste0('EJmaps/', names(input_data$EJ.facil.data)[i],'.html'))
+                 file= paste0('EJmaps/',indic_option,'_map_', names(input_data$EJ.facil.data)[i],'.html'))
       mapview::mapshot(EJ.maps[[names(input_data$EJ.facil.data)[i]]],
-              file = paste0('EJmaps/', names(input_data$EJ.facil.data)[i],".png"))
+              file = paste0('EJmaps/',indic_option,'_map_', names(input_data$EJ.facil.data)[i],".png"))
     }
   }
 
