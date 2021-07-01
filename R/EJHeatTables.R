@@ -156,7 +156,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
 
       dt[[i]] <- data.table::as.data.table(input_data$EJ.facil.data[[i]]
         )[geography == geog & shape_ID == shape.keep,
-          dplyr::select(.SD, `Pop. Count`:`Resp. Hazard`)
+          dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
           ][, lapply(.SD, round)]
       dt[[i]] <- data.table::melt(dt[[i]])[,2]
       names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
@@ -208,6 +208,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       stop('User-designated value for topN must be an integer between 1 and 10')
     }
     
+    heat.table <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
     for (i in length(input_data$EJ.facil.data)) {
       # Facility names for merging
       facil.name <- names(input_data$EJ.facil.data[[i]])[1]
@@ -222,7 +223,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       ][order(-`Total indicators above 80th %ile`)
       ][1:n_rank,
       ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name), 
-                               `Pop. Count`:`Resp. Hazard`))] #Could add pop.count later
+                               `Low Income`:`Resp. Hazard`))]
       setcolorder(dt, neworder = facil.name)
       
       # Reshape/transpose data
