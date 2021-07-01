@@ -15,6 +15,7 @@
 #' @export
 #'
 #' @examples
+#' 
 
 EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, buff_dist, input_type, attains){
   # Determine the input_data type:
@@ -65,6 +66,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     #feature.id <- hold.together$comid
   }
 
+  # Just a temporary comment to try and figure out what's preventing this update.
+  
   # Loop through catchment IDs to extract down/upstream buffer polygons
   geo.base <- 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3' #For ATTAINS API
   feature.list <- vector(mode = "list", length = length(feature.id))
