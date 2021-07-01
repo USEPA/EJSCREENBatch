@@ -44,7 +44,7 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
           as.numeric(as.character(`Demo. indicators above 80th %ile`))
       )) %>% 
       dplyr::filter(!is.na(geometry)) %>%
-      dplyr::filter(geography == perc_geog) %>%
+      dplyr::filter(geography == geog.ind) %>%
       st_as_sf(crs = 4326)
     
     if (ind.option == 'total'){
