@@ -60,7 +60,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
         dplyr::relocate(Rank) %>%
         dplyr::slice_head(n = rank_count)
       
-      data_transf[[names(input_data$EJ.facil.data)[i]]] <- flextable::flextable(locay) %>%
+      data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                    start = 7)[i]]] <- flextable::flextable(locay) %>%
         flextable::theme_zebra() %>%
         flextable::set_table_properties(layout='autofit', width = .3)
       
@@ -145,7 +146,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           dplyr::rename(`CBG code` = ID) %>%
           dplyr::slice_head(n = rank_count)
 
-        data_transf[[names(input_data$EJ.list.data)[i]]] <- flextable::flextable(cbg) %>%
+        data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                      start = 7)[i]]] <- flextable::flextable(cbg) %>%
           flextable::theme_zebra() %>%
           flextable::set_table_properties(layout='autofit', width = .3)
 
