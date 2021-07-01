@@ -78,7 +78,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
       feature.list[[i]] <- nldi.temp  %>%
         sf::st_union() %>%
         sf::st_transform("ESRI:102005") %>%
-        sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
+        sf::st_buffer(dist = set_units(buff_dist,"mi")) %>%
         sf::st_as_sf()
 
       # Call ATTAINs database on all down/upstream catchments
