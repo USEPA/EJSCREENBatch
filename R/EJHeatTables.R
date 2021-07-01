@@ -156,7 +156,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
 
       dt[[i]] <- data.table::as.data.table(input_data$EJ.facil.data[[i]]
         )[geography == geog & shape_ID == shape.keep,
-          dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
+          dplyr::select(.SD, `Pop. Count`:`Resp. Hazard`)
           ][, lapply(.SD, round)]
       dt[[i]] <- data.table::melt(dt[[i]])[,2]
       names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
