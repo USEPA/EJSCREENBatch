@@ -191,8 +191,8 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
     if (save_option == T){
       ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
              dir.create(file.path(getwd(),"heattabs/")), FALSE)
-      flextable::save_as_image(x = heat.table, path = 'heattabs/ht_single_',
-                               keepid,".png")
+      flextable::save_as_image(x = heat.table, path = paste0('heattabs/ht_single_',
+                               keepid,".png"))
     }
     
   } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
