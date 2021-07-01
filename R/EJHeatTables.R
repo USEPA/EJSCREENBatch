@@ -208,7 +208,8 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       stop('User-designated value for topN must be an integer between 1 and 10')
     }
     
-    heat.table <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
+    heat.table <- list()
+    
     for (i in length(input_data$EJ.facil.data)) {
       # Facility names for merging
       facil.name <- names(input_data$EJ.facil.data[[i]])[1]
