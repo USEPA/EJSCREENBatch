@@ -16,16 +16,16 @@
 #'
 #' @examples
 
-EJWaterReturnCatchmentBuffers <-  function(input.data, ds_us_mode, ds_us_dist, buff_dist, input_type, attains){
-  # Determine the input.data type:
+EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, buff_dist, input_type, attains){
+  # Determine the input_data type:
   # (in future could have this determine object type (sf, numeric list, etc.) without user input)
   if (input_type == 'sf'){
-    input.data <- st_transform(input.data, crs = 4326)
-    feature.id <- vector(mode = "list", length = dim(input.data)[1])
-    for (i in 1:dim(input.data)[1]){
+    input_data <- sf::st_transform(input_data, crs = 4326)
+    feature.id <- vector(mode = "list", length = dim(input_data)[1])
+    for (i in 1:dim(input_data)[1]){
       feature.id[[i]] <- tryCatch(
         {
-        nhdplusTools::get_nhdplus(AOI = input.data[i,],
+        nhdplusTools::get_nhdplus(AOI = input_data[i,],
                                      realization = 'catchment')$featureid
         },
         error=function(cond) {
@@ -44,21 +44,21 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds_us_mode, ds_us_dist, b
     feature.id <- as.numeric(feature.id)
   } else if (input_type == 'catchment'){
     # List of catchments
-    feature.id <- input.data$V1
+    feature.id <- input_data$V1
 
     # State shapefile for matching to start catchment
-    state.shapes <- spData::us_states %>% st_as_sf() %>%
-      st_transform(crs="ESRI:102005") %>%
+    state.shapes <- spData::us_states %>% sf::st_as_sf() %>%
+      sf::st_transform(crs="ESRI:102005") %>%
       dplyr::select('NAME') %>%
-      rename(facility_state = NAME)
+      dplyr::rename(facility_state = NAME)
 
     # Loop through catchmentIDs and extract centroid lat/lon of waterbody
-    hold.me <- vector(mode = 'list', length = length(input.data))
-    for (k in 1:dim(input.data)[1]){
-      hold.me[[k]] <- get_nldi_feature(list(featureSource = 'comid', featureID = feature.id[k])) %>%
-        st_centroid() %>%
-        st_transform(crs='ESRI:102005') %>%
-        st_join(state.shapes, join=st_intersects) %>%
+    hold.me <- vector(mode = 'list', length = length(input_data))
+    for (k in 1:dim(input_data)[1]){
+      hold.me[[k]] <- nhdplusTools::get_nldi_feature(list(featureSource = 'comid', featureID = feature.id[k])) %>%
+        sf::st_centroid() %>%
+        sf::st_transform(crs='ESRI:102005') %>%
+        sf::st_join(state.shapes, join=st_intersects) %>%
         dplyr::select(comid, facility_state, geometry)
     }
     hold.together <- do.call(rbind, hold.me)
@@ -71,20 +71,20 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds_us_mode, ds_us_dist, b
   nhd.catchment <- vector(mode = 'list', length = length(feature.id))
   for (i in 1:length(feature.id)){
     nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
-    if(length(get_nldi_feature(nldi.feature)) > 0){
-      nldi.temp <- navigate_nldi(nldi.feature,
+    if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
+      nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                  mode = ds_us_mode,
                                  distance_km = round(ds_us_dist*1.60934))$DD_flowlines
       feature.list[[i]] <- nldi.temp  %>%
-        st_union() %>%
-        st_transform("ESRI:102005") %>%
-        st_buffer(dist = set_units(buff_dist,"mi")) %>%
-        st_as_sf
+        sf::st_union() %>%
+        sf::st_transform("ESRI:102005") %>%
+        sf::st_buffer(dist = set_units(buff_dist,"mi")) %>%
+        sf::st_as_sf
 
       # Call ATTAINs database on all down/upstream catchments
       if (attains == T) {
-        sql.statement <- sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
-        nhd.catchment[[i]] <- get_spatial_layer(geo.base, where = sql.statement)
+        sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
+        nhd.catchment[[i]] <- arcpullr::get_spatial_layer(geo.base, where = sql.statement)
         if (dim(nhd.catchment[[i]])[1] < 1) {
           nhd.catchment[[i]] <- NULL
         }
@@ -94,19 +94,19 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds_us_mode, ds_us_dist, b
     }
   }
 
-  feature.buff <- rbindlist(feature.list, idcol = T) %>%
-    mutate(start_catchment = feature.id[.id]) %>%
-    rename(shape_ID = 1,
+  feature.buff <- data.table::rbindlist(feature.list, idcol = T) %>%
+    dplyr::mutate(start_catchment = feature.id[.id]) %>%
+    dplyr::rename(shape_ID = 1,
            geometry=x) %>%
-    st_as_sf()
+    sf::st_as_sf()
 
   if (attains == T){
-    nhd.attains <- rbindlist(nhd.catchment, idcol = T)
+    nhd.attains <- data.table::rbindlist(nhd.catchment, idcol = T)
 
     # this is slightly messy:
     # (since ATTAINS only returns geography at catchment, not assessment level)
     # take the max ATTAINs status for a given catchment, facility pair.
-    summary.attains <- nhd.attains %>% as.data.table()
+    summary.attains <- nhd.attains %>% data.table::as.data.table()
     summary.attains <- summary.attains[, .(.id, OBJECTID, nhdplusid, assessmentunitidentifier,
                  ircategory, areasqkm)
              ][, irflag := as.integer(substring(ircategory,1,1))]
@@ -131,7 +131,7 @@ EJWaterReturnCatchmentBuffers <-  function(input.data, ds_us_mode, ds_us_dist, b
             ][, .(total_area, attainment_area, unassess_area, tmdl_complete_area, tmdl_4b4c_area,
                   listed_303d_area), by = .id] %>%
               unique() %>%
-              mutate_if(is.numeric, round, digits = 3)
+              dplyr::mutate_if(is.numeric, round, digits = 3)
     if (input_type == 'catchment'){
       return.me <- list(feature.buff, nhd.attains, summary.attains, hold.together)
     } else {
