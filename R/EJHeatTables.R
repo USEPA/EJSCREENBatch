@@ -263,7 +263,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
                                  path = paste0("heattabs/ht_topN_",
                                                stringr::str_sub(names(lag.1mile.isct$EJ.facil.data), 
                                                                 start = 7),
-                                               ".png")
+                                               ".png"))
       }
     }
   } else {
