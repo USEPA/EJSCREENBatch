@@ -67,9 +67,11 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
       if (save_option == T){
         ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                dir.create(file.path(getwd(),"ranktables/")), FALSE)
-        flextable::save_as_image(x = data_transf[[names(input_data$EJ.facil.data)[i]]],
+        flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                                   start = 7)[i]]],
                                  path = paste0('ranktables/location_',
-                                               names(input_data$EJ.facil.data)[i],".png"))
+                                               stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                                start = 7)[i],".png"))
       }
     }
   } else if (rank_type == 'cbg'){
@@ -150,9 +152,11 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
         if (save_option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                  dir.create(file.path(getwd(),"ranktables/")), FALSE)
-          flextable::save_as_image(x = data_transf[[names(input_data$EJ.list.data)[i]]],
+          flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                                     start = 7)[i]]],
                         path = paste0('ranktables/cbg_',
-                                      names(input_data$EJ.list.data)[i],".png"))
+                                      stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                       start = 7)[i],".png"))
         }
       }
     }
