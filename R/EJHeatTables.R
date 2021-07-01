@@ -210,13 +210,13 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
     
     heat.table <- list()
     
-    for (i in length(input_data$EJ.facil.data)) {
+    for (k in 1:length(input_data$EJ.facil.data)) {
       # Facility names for merging
-      facil.name <- names(input_data$EJ.facil.data[[i]])[1]
+      facil.name <- names(input_data$EJ.facil.data[[k]])[1]
       
       ##
       # Extract nat'l level data, keep only top N
-      dt <- as.data.table(input_data$EJ.facil.data[[i]]
+      dt <- as.data.table(input_data$EJ.facil.data[[k]]
       )[geography == geog
       ][, `Total indicators above 80th %ile` :=
           as.numeric(as.character(`Env. indicators above 80th %ile`)) +
@@ -257,7 +257,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         flextable::bold(i = 8, j = 1, bold = T, part = 'body')
       
       heat.table[[stringr::str_sub(names(input_data$EJ.facil.data), 
-                                   start = 7)[i]]] <- ht
+                                   start = 7)[k]]] <- ht
       
       ## Save if option selected.
       if (save_option == T){
@@ -266,7 +266,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         flextable::save_as_image(x = ht, 
                                  path = paste0("heattabs/ht_topN_",
                                                stringr::str_sub(names(input_data$EJ.facil.data), 
-                                                                start = 7)[i],
+                                                                start = 7)[k],
                                                ".png"))
       }
     }
