@@ -54,7 +54,8 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         domain = map.data$`Total indicators above 80th %ile`)
 
       # Leaflet object
-      EJ.maps[[names(input_data$EJ.facil.data)[i]]] <-
+      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                start = 7)[i]]] <-
         leaflet::leaflet(data = map.data) %>% 
         leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
@@ -78,7 +79,8 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         domain = map.data$`Env. indicators above 80th %ile`)
 
       # Leaflet object
-      EJ.maps[[names(input_data$EJ.facil.data)[i]]] <-
+      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                start = 7)[i]]] <-
         leaflet::leaflet(data = map.data) %>% 
         leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
@@ -102,7 +104,8 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         domain = map.data$`Demo. indicators above 80th %ile`)
 
       # Leaflet object
-      EJ.maps[[names(input_data$EJ.facil.data)[i]]] <-
+      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                start = 7)[i]]] <-
         leaflet::leaflet(data = map.data) %>% 
         leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
@@ -123,10 +126,16 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
       ifelse(!dir.exists(file.path(getwd(),"EJmaps/")),
              dir.create(file.path(getwd(),"EJmaps/")), FALSE)
 
-      htmlwidgets::saveWidget(EJ.maps[[names(input_data$EJ.facil.data)[i]]],
-                 file= paste0('EJmaps/',indic_option,'_map_', names(input_data$EJ.facil.data)[i],'.html'))
-      mapview::mapshot(EJ.maps[[names(input_data$EJ.facil.data)[i]]],
-              file = paste0('EJmaps/',indic_option,'_map_', names(input_data$EJ.facil.data)[i],".png"))
+      htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                        start = 7)[i]]],
+                 file= paste0('EJmaps/',indic_option,'_map_', 
+                              stringr::str_sub(names(input_data$EJ.facil.data), 
+                                               start = 7)[i],'.html'))
+      mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+                                                 start = 7)[i]]],
+              file = paste0('EJmaps/',indic_option,'_map_', 
+                            stringr::str_sub(names(input_data$EJ.facil.data), 
+                                             start = 7)[i],".png"))
     }
   }
 
