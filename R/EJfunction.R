@@ -438,7 +438,6 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                          facil_data = st_transform(temp.mat, crs = 4326)) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(catchment_ID)
-          }
 
           rm(temp.mat)
         }
