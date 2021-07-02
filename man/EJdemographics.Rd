@@ -4,7 +4,7 @@
 \alias{EJdemographics}
 \title{EJ Demographics}
 \usage{
-EJdemographics(data, gis_method, buffer)
+EJdemographics(data, gis_method, buffer, threshold)
 }
 \arguments{
 \item{gis_method}{User specified method of creating buffers around areas of interest (intersect, centroid, intersection).}

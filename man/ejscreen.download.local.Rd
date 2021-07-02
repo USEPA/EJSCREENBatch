@@ -5,18 +5,17 @@
 \title{EJSCREEN data download}
 \usage{
 ejscreen.download.local(
-  folder = "~/data/",
+  folder = "EJSCREEN data",
   file,
   yr = NULL,
   ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
   justreadname = NULL,
   addflag = FALSE,
-  cutoff = 80,
-  or.tied = TRUE
+  cutoff = 80
 )
 }
 \arguments{
-\item{or.tied}{}
+\item{cutoff}{}
 }
 \value{
 

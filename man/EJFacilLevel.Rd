@@ -4,10 +4,10 @@
 \alias{EJFacilLevel}
 \title{Title}
 \usage{
-EJFacilLevel(list.data, facil.data)
+EJFacilLevel(list_data, facil_data)
 }
 \arguments{
-\item{facil.data}{}
+\item{facil_data}{}
 }
 \value{
 

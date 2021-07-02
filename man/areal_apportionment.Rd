@@ -4,12 +4,21 @@
 \alias{areal_apportionment}
 \title{EJ Population Areal Apportionment}
 \usage{
-areal_apportionment(ejscreen.bgs.data, facility_buff, raster.pop.data)
+areal_apportionment(
+  ejscreen_bgs_data,
+  facility_buff,
+  facil_data,
+  path_raster_layer
+)
 }
 \arguments{
-\item{ejscreen.bgs.data}{EJSCREEN data}
+\item{ejscreen_bgs_data}{EJSCREEN data}
 
 \item{facility_buff}{Polygons representing buffered areas of interest}
+
+\item{facil_data}{Original facility-level data (for non-buffered shapes)}
+
+\item{path_raster_layer}{}
 }
 \value{
 

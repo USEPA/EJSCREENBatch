@@ -5,18 +5,17 @@
 \title{EJ Heat Tables}
 \usage{
 EJHeatTables(
-  input.data,
+  input_data,
   type,
   geog_lvl = NULL,
   keepid = NULL,
   topN = NULL,
   topN_dta_idx = NULL,
-  input.names = NULL,
-  save.option = F
+  save_option = F
 )
 }
 \arguments{
-\item{save.option}{}
+\item{save_option}{}
 }
 \value{
 
@@ -30,12 +29,11 @@ Produces one of three possible heat tables.
 \details{
 geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
 when type = 'single, keepid must be set by user, denotes the (integer) rowid of the facility
-topN is an integer set by user when using ranking table. (Default is 10, min is 0.)
+topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
 topN_dta_idx denotes which EJfunction() output data to use (e.g. when there are mult. buff. distances)
 -> it is an integer. Default setting is 1
-input.names is user-provided list of facility names. it must be same length as input.data
 }
 \examples{
-y1 <- EJHeatTables(input.data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
-y2 <- EJHeatTables(input.data = y, type = 'all', geog_lvl = 'state')
+y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
+y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
 }

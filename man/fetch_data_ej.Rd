@@ -15,6 +15,7 @@ screening for the entire contiguous US.}
 
 }
 \description{
-This function checks if the most recent data from EJSCREEN is already
-part of the package.
+This function looks for data from EJSCREEN. First checks if from EJSCREEN is
+in working directory. If not, it creates a directory and downloads most recent
+data.
 }

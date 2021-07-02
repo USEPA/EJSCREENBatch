@@ -7,21 +7,29 @@
 EJfunction(
   data_type,
   facility_data,
+  input_type = NULL,
   gis_option = NULL,
   buff_dist = NULL,
   threshold = NULL,
   state = NULL,
   ds_mode = NULL,
   ds_dist = NULL,
-  input.type = NULL,
+  save_option = F,
+  input_name = NULL,
   attains = NULL,
-  raster.data = "data/US Census Grid_SF2010_TIFF"
+  raster_data = "data/US Census Grid_SF2010_TIFF"
 )
 }
 \arguments{
+\item{data_type}{Required. Either "landbased" or "waterbased"}
+
+\item{facility_data}{Required.}
+
+\item{input_type}{Requried. Input must be "sf" object or list of catchments (ComIDs)}
+
 \item{gis_option}{User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.}
 
-\item{buff_dist}{Distance(s) used to create buffers. Default is 1, 3, and 5 miles.}
+\item{buff_dist}{Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.}
 
 \item{threshold}{User specified threshold to represent potential concern. Default is 80\%.}
 
@@ -31,9 +39,11 @@ EJfunction(
 
 \item{ds_dist}{Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.}
 
+\item{input_name}{Vector of names for facilities}
+
 \item{attains}{Option to pull data from the attains database. Default is FALSE.}
 
-\item{raster.data}{Dasymetric raster data. Default is to use 1kmX1km raster
+\item{raster_data}{Dasymetric raster data. Default is to use 1kmX1km raster
 data from NASA's Socioeconomic Data and Applications Center (SEDAC)}
 }
 \value{
@@ -44,11 +54,6 @@ Main function that performs screening (land and water-based).
 Input must be an SF object! User must make this transformation.
 }
 \examples{
-#read in data
-facilities <- fread("dmr_mpp_facilities_2019.csv") \%>\%
- unique() \%>\%
- st_as_sf(coords = c("Facility Longitude", "Facility Latitude"), crs = 4326)  \%>\%
- st_transform("ESRI:102005")
 
 #===============================================================================
 #=====================FEATURE 1: LAND-BASED ANALYSIS============================
@@ -59,7 +64,7 @@ facilities <- fread("dmr_mpp_facilities_2019.csv") \%>\%
 # options to consider
 # 1) gis_option. Three options available: intersect, centroid, intersection.
 #    Instersection is default.
-# 2) buff.dist. Radius to use around facilities
+# 2) buff_dist. Radius to use around facilities
 # 3) Threshold for EJ consideration. EJScreen uses 80 as default.
 # 4) states. Can restrict analysis to specific states.
 # bring in data for contiguous US
@@ -81,6 +86,6 @@ a1 <- EJfunction(data_type="landbased", facility_data = facilities, gis_option="
 # 4) Attains. Call attains API for data? (T/F). Default is False
 
 c <- EJfunction(data_type="waterbased", facility_data=facilities,
-                input.type = 'sf', attains = F)
+                input_type = 'sf', attains = F)
 
 }

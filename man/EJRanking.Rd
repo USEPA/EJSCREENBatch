@@ -9,11 +9,17 @@ EJRanking(
   rank_type = "location",
   geography_type = "US",
   rank_count = 10,
-  save.option = F
+  save_option = F
 )
 }
 \arguments{
-\item{save.option}{}
+\item{rank_type}{Required. Either 'location' or 'CBG'}
+
+\item{geography_type}{Either 'US' or 'state}
+
+\item{rank_count}{Required.}
+
+\item{save_option}{}
 }
 \value{
 
@@ -25,7 +31,7 @@ of indicators that exceed the 80th percentile.
 \examples{
 # Facility and CBG rankings
 facil.ranking <- EJRanking(input_data = a2, rank_count = 10, rank_type = 'location',
-                            geography_type = 'US', save.option = F)
+                            geography_type = 'US', save_option = F)
 
 cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 }

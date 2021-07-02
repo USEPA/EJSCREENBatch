@@ -4,16 +4,14 @@
 \alias{EJMaps}
 \title{EJ Maps}
 \usage{
-EJMaps(
-  input.data,
-  indic.option = NULL,
-  perc.geog = NULL,
-  input.name = NULL,
-  save.options = F
-)
+EJMaps(input_data, indic_option = NULL, perc_geog = NULL, save_options = F)
 }
 \arguments{
-\item{save.options}{}
+\item{indic_option}{Options are 'total', 'environmental','demographic'. 'total' is default.}
+
+\item{perc_geog}{Options are 'US' or 'state'.}
+
+\item{save_options}{}
 }
 \value{
 
@@ -23,5 +21,5 @@ Produces an interactive map that displays all facilities. Facility names (user
 defined) are displayed for each facility. Use national or state percentiles (default: US)
 }
 \examples{
-maps <- EJMaps(input.data = z, perc.geog = 'US', save.option = F)
+maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
 }
