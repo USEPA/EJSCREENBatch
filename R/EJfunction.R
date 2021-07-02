@@ -93,6 +93,8 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
       facility_data <- as.data.frame(facility_data)
       names(facility_data) <- 'catchment_ID'
     }
+  } else {
+    in.type <- 'sf'
   }
 
   #Check for raster data. Only needed if running intersection method. This data
