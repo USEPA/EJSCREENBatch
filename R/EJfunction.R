@@ -87,6 +87,9 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
     # Convert list to data.frame if catchmentIDs provided.
     if(in.type == 'catchment'){
+      if (!is.null(input_name)){
+        stop("When input_type == 'catchment', provision of an input_name is not permitted. ComID serves as the identifying name. Please set input_name = NULL.")
+      }
       facility_data <- as.data.frame(facility_data)
       names(facility_data) <- 'V1'
     }
@@ -105,9 +108,14 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
   # Create internal function facility ID (in case user doesn't)
   # Create internal function facility ID (in case user doesn't)
-  facility_data <- facility_data %>%
-    tibble::rowid_to_column("shape_ID") %>%
-    st_transform("ESRI:102005")
+  if(data_type == 'waterbased' & in.type == 'catchment') {
+    facility_data <- facility_data %>%
+      tibble::rowid_to_column("shape_ID")
+  } else {
+    facility_data <- facility_data %>%
+      tibble::rowid_to_column("shape_ID") %>%
+      st_transform("ESRI:102005")
+  }
 
   # Create internal facility name mapping (if provided by user)
   if (!is.null(input_name)){  #& (length(input_name) == dim(facility_data)[1])
