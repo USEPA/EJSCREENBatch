@@ -30,7 +30,7 @@ EJCountTable <- function(input_data, save_option = F){
                                                                      start = 7)[i]]],
                     path = paste0('counttables/ct_',
                                   stringr::str_sub(names(input_data$EJ.facil.data), 
-                                                   start = 7), ".png"))
+                                                   start = 7)[i], ".png"))
     }
   }
 
