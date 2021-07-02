@@ -91,7 +91,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         stop("When input_type == 'catchment', provision of an input_name is not permitted. ComID serves as the identifying name. Please set input_name = NULL.")
       }
       facility_data <- as.data.frame(facility_data)
-      names(facility_data) <- 'V1'
+      names(facility_data) <- 'catchment_ID'
     }
   }
 
@@ -111,6 +111,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   if(data_type == 'waterbased' & in.type == 'catchment') {
     facility_data <- facility_data %>%
       tibble::rowid_to_column("shape_ID")
+    facility_name <- facility_data
   } else {
     facility_data <- facility_data %>%
       tibble::rowid_to_column("shape_ID") %>%
@@ -429,19 +430,14 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         } else if (in.type == 'catchment'){
           temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(facility_data, by = c('comid' = 'V1')) %>%
+            inner_join(facility_data, by = c('comid' = 'catchment_ID')) %>%
             st_as_sf()
           
-          if (!is.null(input_name)) {
-            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-              EJFacilLevel(list_data = area,
-                           facil_data = st_transform(temp.mat, crs = 4326)) %>%
-              dplyr::inner_join(facility_name, by = 'shape_ID') %>%
-              dplyr::relocate(input_name)
-          } else {
-            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-              EJFacilLevel(list_data = area,
-                           facil_data = st_transform(temp.mat, crs = 4326))
+          EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+            EJFacilLevel(list_data = area,
+                         facil_data = st_transform(temp.mat, crs = 4326)) %>%
+            dplyr::inner_join(facility_name, by = 'shape_ID') %>%
+            dplyr::relocate(catchment_ID)
           }
 
           rm(temp.mat)
@@ -455,24 +451,38 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           st_transform(crs="ESRI:102005") %>%
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
+        
         if(in.type == 'sf'){
           facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
             dplyr::select(shape_ID, facility_state) %>%
             st_drop_geometry() %>%
             inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
             st_as_sf()
+          
+          if (!is.null(input_name)) {
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+              areal_apportionment(ejscreen_bgs_data = data.state.uspr,
+                                  facility_buff = facility_buff,
+                                  facil_data = facility_data,
+                                  path_raster_layer = raster_data) %>%
+              dplyr::inner_join(facility_name, by = 'shape_ID') %>%
+              dplyr::relocate(input_name)
+          } else {
+            EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
+              EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+              areal_apportionment(ejscreen_bgs_data = data.state.uspr,
+                                  facility_buff = facility_buff,
+                                  facil_data = facility_data,
+                                  path_raster_layer = raster_data)
+          }
 
-          EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
-            areal_apportionment(ejscreen_bgs_data = data.state.uspr,
-                                facility_buff = facility_buff,
-                                facil_data = facility_data,
-                                path_raster_layer = raster_data)
         } else if (in.type == 'catchment') {
 
           ## Shapefile for downstream (/upstream?) buffer
           facility_buff <- catchment.polygons[[4]] %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(facility_data, by = c('comid' = 'V1')) %>%
+            inner_join(facility_data, by = c('comid' = 'catchment_ID')) %>%
             dplyr::select(shape_ID, facility_state) %>%
             st_drop_geometry() %>%
             inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
@@ -481,7 +491,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           ## Shapefile with lat/lon of catchmentID waterbody centroid
           temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(facility_data, by = c('comid' = 'V1')) %>%
+            inner_join(facility_data, by = c('comid' = 'catchmentID')) %>%
             st_as_sf() %>%
             st_transform(crs = 4326)
 
@@ -489,7 +499,9 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
             areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                 facility_buff = facility_buff,
                                 facil_data = temp.mat,
-                                path_raster_layer = raster_data)
+                                path_raster_layer = raster_data) %>%
+              dplyr::inner_join(facility_name, by = 'shape_ID') %>%
+              dplyr::relocate(catchment_ID)
         }
         rm(state.shapes)
 
