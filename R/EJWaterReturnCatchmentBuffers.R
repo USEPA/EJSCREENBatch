@@ -45,7 +45,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     feature.id <- as.numeric(feature.id)
   } else if (input_type == 'catchment'){
     # List of catchments
-    feature.id <- input_data$V1
+    feature.id <- input_data$catchment_ID
 
     # State shapefile for matching to start catchment
     state.shapes <- spData::us_states %>% sf::st_as_sf() %>%
@@ -114,7 +114,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
                  ircategory, areasqkm)
              ][, irflag := as.integer(substring(ircategory,1,1))]
 
-    summary.attains <- summary.attains[summary.attains[, .I[which.max(irflag)], by = .(.id, nhdplusid)]$V1
+    summary.attains <- summary.attains[summary.attains[, .I[which.max(irflag)], by = .(.id, nhdplusid)]$catchment_ID
                   ][, irflag := NULL
                     ][, total_area := sum(areasqkm, na.rm = T), by = .id
                       ][, unassess.temp := as.integer(ircategory == '3')
