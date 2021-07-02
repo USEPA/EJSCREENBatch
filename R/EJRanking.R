@@ -63,7 +63,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
       data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
                                     start = 7)[i]]] <- flextable::flextable(locay) %>%
         flextable::theme_zebra() %>%
-        flextable::set_table_properties(layout='autofit', width = .3)
+        flextable::set_table_properties(layout='autofit', width = .3) %>%
+        flextable::colformat_num(big.mark = '')
       
       if (save_option == T){
         ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
@@ -149,7 +150,8 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
         data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
                                       start = 7)[i]]] <- flextable::flextable(cbg) %>%
           flextable::theme_zebra() %>%
-          flextable::set_table_properties(layout='autofit', width = .3)
+          flextable::set_table_properties(layout='autofit', width = .3) %>%
+          flextable::colformat_num(big.mark = '')
 
         if (save_option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
