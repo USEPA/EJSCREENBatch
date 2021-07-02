@@ -116,8 +116,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     }
     facility_name <- facility_data %>%
       as.data.frame() %>%
-      dplyr::select(input_name,-geometry) %>%
-      tibble::rowid_to_column("shape_ID")
+      dplyr::select(input_name,shape_ID, -geometry)
   }
 
   # Determine most common geometry type in the input sf dataframe
@@ -349,7 +348,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     }
 
     EJ.demographics.data <- list()
-    EJ.corrplots.data <- list
+    EJ.corrplots.data <- list()
     EJ.facil.data <- list()
     EJ.list.data <- list()
     EJ.index.data <- list()
