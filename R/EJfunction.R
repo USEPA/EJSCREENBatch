@@ -128,9 +128,10 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   }
 
   # Determine most common geometry type in the input sf dataframe
-  facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
-  facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(facility_data), facil.geom.type)))]
-
+  if (in.type != 'catchment'){
+    facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
+    facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(facility_data), facil.geom.type)))]
+  }
   #set threshold
   if(is.null(threshold)){
     Thresh <-  80 #default values
