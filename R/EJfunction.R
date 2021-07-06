@@ -57,7 +57,10 @@
 #'                 input_type = 'sf', attains = F)
 #'
 EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=NULL, buff_dist=NULL,
-                       threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL, save_option=F,
+                       threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
+                       produce_ancillary_tables = FALSE,
+                       heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
+                       rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
                        input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
 
 
@@ -67,6 +70,58 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     stop("Data type not supported. Please specify one of the following data types:
          landbased OR waterbased.")
   }
+
+  #heat table checks
+  if(!is.null(heat_table_type)){
+    if(heat_table_type  %notin% c("all","single","topn")){
+      stop("Heat table type must be one of the following: 'all', 'signle',or 'topn'. Default is 'all'")
+    }
+  }
+
+  if(!is.null(heat_table_geog_lvl)){
+    if(heat_table_geog_lvl  %notin% c("state","US")){
+      stop("Heat table type must be one of the following: 'state' or 'US'. Default is 'state'")
+    }
+  }
+
+  if(is.null(heat_table_type)){
+    heat_table_type = 'all'
+  }
+
+  if(is.null(heat_table_geog_lvl)){
+    heat_table_type = 'state'
+  }
+
+  if(heat_table_type == "topn" & is.null(heat_table_topN)){
+    stop("Must specify number of locations to include for option 'topn'")
+  }
+
+  #Ranking table checks
+  if(!is.null(rank_type)){
+    if(rank_type  %notin% c("location","cbg")){
+      stop("Heat table type must be one of the following: 'location' or 'cbg'. Default is 'location'")
+    }
+  }
+
+  if(!is.null(rank_geography_type)){
+    if(rank_geography_type  %notin% c("US","state")){
+      stop("Heat table type must be one of the following: 'state' or 'US'. Default is 'US'")
+    }
+  }
+
+  if(is.null(rank_type)){
+    rank_type = 'location'
+  }
+
+  if(is.null(rank_geography_type)){
+    rank_geography_type = 'US'
+  }
+
+  if(is.null(rank_count)){
+    rank_count = 10
+  }
+
+
 
   # Bring in EJ Screen Data
   if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
@@ -318,6 +373,20 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     output.list <- sapply(objects(pattern="^EJ", envir = environment()),get, envir = environment(), simplify=F, USE.NAMES=T)
     output.list <- output.list[unlist(lapply(output.list,class))!="function"]
 
+
+    if(produce_ancillary_tables==TRUE){
+      EJHeatTables(input_data = output.list, heat_table_type = heat_table_type,
+                   heat_table_geog_lvl = heat_table_geog_lvl, heat_table_keepid=NULL,
+                   heat_table_topN=NULL, save_option=T)
+
+
+      EJRanking(input_data = output.list,
+                rank_type = rank_type,
+                rank_geography_type = rank_geography_type,
+                rank_count = rank_count,
+                save_option=T)
+    }
+
     return(output.list)
 
     #--------------------------------------------------------------------------#
@@ -434,7 +503,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
             mutate(comid = as.numeric(comid)) %>%
             inner_join(facility_data, by = c('comid' = 'catchment_ID')) %>%
             st_as_sf()
-          
+
           EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
             EJFacilLevel(list_data = area,
                          facil_data = st_transform(temp.mat, crs = 4326)) %>%
@@ -452,14 +521,14 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           st_transform(crs="ESRI:102005") %>%
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
-        
+
         if(in.type == 'sf'){
           facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
             dplyr::select(shape_ID, facility_state) %>%
             st_drop_geometry() %>%
             inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
             st_as_sf()
-          
+
           if (!is.null(input_name)) {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
               EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-

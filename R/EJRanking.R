@@ -6,7 +6,7 @@
 #' @param input_data
 #' @param rank_type Required. Either 'location' or 'CBG'
 #' @param rank_count Required.
-#' @param geography_type Either 'US' or 'state
+#' @param rank_geography_type Either 'US' or 'state
 #' @param save_option
 #'
 #' @return
@@ -15,14 +15,14 @@
 #' @examples
 #' # Facility and CBG rankings
 #' facil.ranking <- EJRanking(input_data = a2, rank_count = 10, rank_type = 'location',
-#'                             geography_type = 'US', save_option = F)
+#'                             rank_geography_type = 'US', save_option = F)
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
-EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
+EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 'US',
                       rank_count = 10, save_option = F){
 
   `%notin%` = Negate(`%in%`)
-  if (!(geography_type %in% c('US','state'))){
+  if (!(rank_geography_type %in% c('US','state'))){
     stop('Geography type must be either -US- or -state-.')
   }
 
@@ -30,19 +30,19 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
 
     # Create an empty list for rankings (one for each dist and buffer method)
     data_transf <- list()
-    
+
     for (i in 1:length(input_data$EJ.facil.data)){
 
       if (rank_count > (dim(input_data$EJ.facil.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
-      } 
-      
+      }
+
       # Use name or shape_ID?
       keep.id <- names(input_data$EJ.facil.data[[i]])[1]
-      
+
       locay <- input_data$EJ.facil.data[[i]] %>%
         as.data.frame() %>%
-        dplyr::filter(geography == geography_type) %>%
+        dplyr::filter(geography == rank_geography_type) %>%
         dplyr::mutate(`Total indicators above 80th %ile` =
                         as.numeric(as.character(`Env. indicators above 80th %ile`)) +
                         as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
@@ -59,20 +59,20 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
         dplyr::mutate(Rank = row_number()) %>%
         dplyr::relocate(Rank) %>%
         dplyr::slice_head(n = rank_count)
-      
-      data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+
+      data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                     start = 7)[i]]] <- flextable::flextable(locay) %>%
         flextable::theme_zebra() %>%
         flextable::set_table_properties(layout='autofit', width = .3) %>%
         flextable::colformat_num(big.mark = '')
-      
+
       if (save_option == T){
         ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                dir.create(file.path(getwd(),"ranktables/")), FALSE)
-        flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+        flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                    start = 7)[i]]],
                                  path = paste0('ranktables/location_',
-                                               stringr::str_sub(names(input_data$EJ.facil.data), 
+                                               stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[i],".png"))
       }
     }
@@ -137,7 +137,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
                    `Env. indicators above 80th %ile` +
                    `Demo. indicators above 80th %ile`) %>%
           dplyr::arrange(desc(`Total indicators above 80th %ile`)) %>%
-          dplyr::filter(geography == geography_type) %>%
+          dplyr::filter(geography == rank_geography_type) %>%
           dplyr::arrange(desc(`Total indicators above 80th %ile`),
                   desc(`Env. indicators above 80th %ile`)) %>%
           dplyr::select(ID,
@@ -147,7 +147,7 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
           dplyr::rename(`CBG code` = ID) %>%
           dplyr::slice_head(n = rank_count)
 
-        data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+        data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                       start = 7)[i]]] <- flextable::flextable(cbg) %>%
           flextable::theme_zebra() %>%
           flextable::set_table_properties(layout='autofit', width = .3) %>%
@@ -156,10 +156,10 @@ EJRanking <- function(input_data, rank_type = 'location', geography_type = 'US',
         if (save_option == T){
           ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
                  dir.create(file.path(getwd(),"ranktables/")), FALSE)
-          flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data), 
+          flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
                         path = paste0('ranktables/cbg_',
-                                      stringr::str_sub(names(input_data$EJ.facil.data), 
+                                      stringr::str_sub(names(input_data$EJ.facil.data),
                                                        start = 7)[i],".png"))
         }
       }

@@ -5,37 +5,37 @@
 #' 2) Summary of median CBG value for a single facility ('single')
 #' 3) Summary of median CBG values for "top N" facilities ('topn')
 #'
-#' geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
-#' when type = 'single, keepid must be set by user, denotes the (integer) rowid of the facility
+#' heat_table_geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
+#' when type = 'single, heat_table_keepid must be set by user, denotes the (integer) rowid of the facility
 #' topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
 
 #'
 #' @param input_data
-#' @param type
-#' @param geog_lvl
-#' @param keepid
-#' @param topN
-#' @param save_option
+#' @param heat_table_type  All facilities, single facility, top N facilities. If top N facilities, must specify topN.
+#' @param heat_table_geog_lvl state or US
+#' @param heat_table_keepid
+#' @param heat_table_topN
+#' @param save_option Option to save heat table to a folder in working directory. Default is FALSE.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-#' y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5)
-#' y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
-EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN = NULL,
+#' y1 <- EJHeatTables(input_data = y, heat_table_type = 'topn', heat_table_topN = 5)
+#' y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
+EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL, heat_table_keepid = NULL, heat_table_topN = NULL,
                          save_option = F){
 
   # Set default geography level @ nat'l scale
-  if(is.null(geog_lvl)){
+  if(is.null(heat_table_geog_lvl)){
     geog <- 'US'  #default values
-  } else if(!(geog_lvl %in% c('US', 'state'))){
+  } else if(!(heat_table_geog_lvl %in% c('US', 'state'))){
     stop('Geographies available are "US" and "state".')
   } else {
-    geog <- geog_lvl  #user inputted values that override default
+    geog <- heat_table_geog_lvl  #user inputted values that override default
   }
 
-  if (type == 'all'){ # This returns a HeatTable for median of ALL facilities
+  if (heat_table_type == 'all'){ # This returns a HeatTable for median of ALL facilities
 
     # Preallocate list
     dt <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
@@ -136,22 +136,22 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
              dir.create(file.path(getwd(),"heattabs/")), FALSE)
       flextable::save_as_image(x = heat.table, path = "heattabs/ht_all.png")
     }
-    
-  } else if (type == 'single') { #This returns HeatTable for user-specified facil
-    
-    if (is.null(keepid) | !is.numeric(keepid)){
-      stop('Must include a numeric row ID (keepid) of single facility for this table type.')
+
+  } else if (heat_table_type == 'single') { #This returns HeatTable for user-specified facil
+
+    if (is.null(heat_table_keepid) | !is.numeric(heat_table_keepid)){
+      stop('Must include a numeric row ID (heat_table_keepid) of single facility for this table type.')
     } else {
-      shape.keep <- keepid
+      shape.keep <- heat_table_keepid
     }
-    
+
     # Preallocate list
     dt <- vector(mode = 'list', length = length(input_data$EJ.facil.data))
-    
+
     # Keep list of relevant varnames
     keepnames <- as.data.table(input_data$EJ.facil.data[[1]]
     )[, dplyr::select(.SD, `Low Income`:`Resp. Hazard`)] %>% names()
-    
+
     ## This draws from facility level data (median CBG value for that facil)
     for (i in 1:length(input_data$EJ.facil.data)){
 
@@ -163,12 +163,12 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       names(dt[[i]]) <- paste0(str_sub(labels(input_data$EJ.facil.data)[[i]],-3,-3),
                                ' mile radius')
     }
-    
+
     ## Shape into data.table
     dt <- as.data.table(cbind(keepnames,rlist::list.cbind(dt))
     )[1:6, ind.type := 'Demographic'
     ][7:17, ind.type := 'Environmental']
-    
+
     ## Create the heat table
     heat.table <- flextable::as_grouped_data(dt, groups = 'ind.type') %>%
       flextable::flextable() %>%
@@ -188,17 +188,17 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
       flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
       flextable::bold(i = 8, j = 1, bold = T, part = 'body') %>%
       flextable::colformat_num(big.mark = '')
-    
+
     ## Save if option selected.
     if (save_option == T){
       ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
              dir.create(file.path(getwd(),"heattabs/")), FALSE)
       flextable::save_as_image(x = heat.table, path = paste0('heattabs/ht_single_',
-                               keepid,".png"))
+                                                             heat_table_keepid,".png"))
     }
-    
-  } else if (type == 'topn') { #Return HeatTable summary for Top10 facilities
-    
+
+  } else if (heat_table_type == 'topn') { #Return HeatTable summary for Top10 facilities
+
     # How many facilities included in table?
     if(is.null(topN)){
       n_rank <-  5 #default values
@@ -209,13 +209,13 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
     } else {
       stop('User-designated value for topN must be an integer between 1 and 10')
     }
-    
+
     heat.table <- list()
-    
+
     for (k in 1:length(input_data$EJ.facil.data)) {
       # Facility names for merging
       facil.name <- names(input_data$EJ.facil.data[[k]])[1]
-      
+
       ##
       # Extract nat'l level data, keep only top N
       dt <- as.data.table(input_data$EJ.facil.data[[k]]
@@ -225,10 +225,10 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
           as.numeric(as.character(`Demo. indicators above 80th %ile`))
       ][order(-`Total indicators above 80th %ile`)
       ][1:n_rank,
-      ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name), 
+      ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name),
                                `Low Income`:`Resp. Hazard`))]
       setcolorder(dt, neworder = facil.name)
-      
+
       # Reshape/transpose data
       new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
       setnames(new.dt, as.character(new.dt[1,]))
@@ -237,7 +237,7 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
                             .SDcols = cols][1:6, ind.type := 'Demographic'
                             ][7:17, ind.type := 'Environmental'
                             ]
-      
+
       # Create the final table
       ht <- flextable::as_grouped_data(new.dt, groups = 'ind.type') %>%
         flextable::flextable() %>%
@@ -258,17 +258,17 @@ EJHeatTables <- function(input_data, type, geog_lvl= NULL, keepid = NULL, topN =
         flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
         flextable::bold(i = 8, j = 1, bold = T, part = 'body') %>%
         flextable::colformat_num(big.mark = '')
-      
-      heat.table[[stringr::str_sub(names(input_data$EJ.facil.data), 
+
+      heat.table[[stringr::str_sub(names(input_data$EJ.facil.data),
                                    start = 7)[k]]] <- ht
-      
+
       ## Save if option selected.
       if (save_option == T){
         ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
                dir.create(file.path(getwd(),"heattabs/")), FALSE)
-        flextable::save_as_image(x = ht, 
+        flextable::save_as_image(x = ht,
                                  path = paste0("heattabs/ht_topN_",
-                                               stringr::str_sub(names(input_data$EJ.facil.data), 
+                                               stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[k],
                                                ".png"))
       }
