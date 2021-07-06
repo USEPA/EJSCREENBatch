@@ -14,7 +14,15 @@
 #' @param ds_dist Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.
 #' @param input_name Vector of names for facilities
 #' @param attains Option to pull data from the attains database. Default is FALSE.
-#' @param raster_data Dasymetric raster data. Default is to use 1kmX1km raster
+#' @param produce_ancillary_tables Option to return Heat table and Ranking Table. Default is FALSE.
+#' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
+#' @param heat_table_geog_lvl State or US.
+#' @param heat_table_keepid Keep IDs in Heat Table. Default is TRUE.
+#' @param heat_table_topN Number of locations to include in Heat table.
+#' @param rank_type Ranking table type--"location" or "cbg".
+#' @param rank_geography_type State or US.
+#' @param rank_count Number of locations to include in ranking table.
+#' @param raster_data Path to dasymetric raster data. Recommend using 1kmX1km raster
 #'                    data from NASA's Socioeconomic Data and Applications Center (SEDAC)
 #'
 #'
@@ -58,7 +66,7 @@
 #'
 EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=NULL, buff_dist=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
-                       produce_ancillary_tables = FALSE,
+                       produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
                        input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
@@ -69,6 +77,11 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   if(data_type %notin% c("landbased", "waterbased")){
     stop("Data type not supported. Please specify one of the following data types:
          landbased OR waterbased.")
+  }
+
+  #produce heat table and ranking table?
+  if(is.null(produce_ancillary_tables)){
+    produce_ancillary_tables = FALSE
   }
 
   #heat table checks
@@ -85,11 +98,11 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   }
 
   if(is.null(heat_table_type)){
-    heat_table_type = 'all'
+    heat_table_type <- 'all'
   }
 
   if(is.null(heat_table_geog_lvl)){
-    heat_table_type = 'state'
+    heat_table_geog_lvl <- 'state'
   }
 
   if(heat_table_type == "topn" & is.null(heat_table_topN)){
@@ -110,11 +123,11 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   }
 
   if(is.null(rank_type)){
-    rank_type = 'location'
+    rank_type <- 'location'
   }
 
   if(is.null(rank_geography_type)){
-    rank_geography_type = 'US'
+    rank_geography_type <- 'US'
   }
 
   if(is.null(rank_count)){
@@ -370,24 +383,24 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     EJ.list.data <- Filter(Negate(is.null), EJ.list.data)
     EJ.facil.data <- Filter(Negate(is.null), EJ.facil.data)
 
-    output.list <- sapply(objects(pattern="^EJ", envir = environment()),get, envir = environment(), simplify=F, USE.NAMES=T)
-    output.list <- output.list[unlist(lapply(output.list,class))!="function"]
+    return.me <- sapply(objects(pattern="^EJ", envir = environment()),get, envir = environment(), simplify=F, USE.NAMES=T)
+    return.me <- return.me[unlist(lapply(return.me,class))!="function"]
 
 
     if(produce_ancillary_tables==TRUE){
-      EJHeatTables(input_data = output.list, heat_table_type = heat_table_type,
+      EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl, heat_table_keepid=NULL,
                    heat_table_topN=NULL, save_option=T)
 
 
-      EJRanking(input_data = output.list,
+      EJRanking(input_data = return.me,
                 rank_type = rank_type,
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
                 save_option=T)
     }
 
-    return(output.list)
+    return(return.me)
 
     #--------------------------------------------------------------------------#
     #--------------------------------------------------------------------------#
@@ -606,6 +619,20 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                             'EJ.facil.data', 'EJ.list.data',
                             'EJ.index.data', 'EJ.buffer.summary',
                             'EJ.attainsdata.raw')
+    }
+
+
+    if(produce_ancillary_tables==TRUE){
+      EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
+                   heat_table_geog_lvl = heat_table_geog_lvl, heat_table_keepid=NULL,
+                   heat_table_topN=NULL, save_option=T)
+
+
+      EJRanking(input_data = return.me,
+                rank_type = rank_type,
+                rank_geography_type = rank_geography_type,
+                rank_count = rank_count,
+                save_option=T)
     }
     return(return.me)
 
