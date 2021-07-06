@@ -6,14 +6,14 @@
 #' @param input_data
 #' @param indic_option Options are 'total', 'environmental','demographic'. 'total' is default.
 #' @param perc_geog Options are 'US' or 'state'.
-#' @param save_options
+#' @param save_option
 #'
 #' @return
 #' @export
 #'
 #' @examples
 #' maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
-EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_options = F){
+EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F){
 
   ## 3 possible color schemes: by env., demo. or total above 80th
   if(is.null(indic_option)){
@@ -37,16 +37,16 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
   EJ.maps <- list()
 
   for (i in 1:length(input_data$EJ.facil.data)){
-    
+
     map.data <- input_data$EJ.facil.data[[i]] %>%
       dplyr::mutate(`Total indicators above 80th %ile` = as.factor(
         as.numeric(as.character(`Env. indicators above 80th %ile`)) +
           as.numeric(as.character(`Demo. indicators above 80th %ile`))
-      )) %>% 
+      )) %>%
       dplyr::filter(!is.na(geometry)) %>%
       dplyr::filter(geography == geog.ind) %>%
       st_as_sf(crs = 4326)
-    
+
     if (ind.option == 'total'){
       # Color palette
       pal <- leaflet::colorFactor(
@@ -54,9 +54,9 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         domain = map.data$`Total indicators above 80th %ile`)
 
       # Leaflet object
-      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                 start = 7)[i]]] <-
-        leaflet::leaflet(data = map.data) %>% 
+        leaflet::leaflet(data = map.data) %>%
         leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
                   lat1 = min(sf::st_coordinates(map.data)[,2]),
@@ -79,9 +79,9 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         domain = map.data$`Env. indicators above 80th %ile`)
 
       # Leaflet object
-      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                 start = 7)[i]]] <-
-        leaflet::leaflet(data = map.data) %>% 
+        leaflet::leaflet(data = map.data) %>%
         leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
                            lat1 = min(sf::st_coordinates(map.data)[,2]),
@@ -104,9 +104,9 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         domain = map.data$`Demo. indicators above 80th %ile`)
 
       # Leaflet object
-      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                 start = 7)[i]]] <-
-        leaflet::leaflet(data = map.data) %>% 
+        leaflet::leaflet(data = map.data) %>%
         leaflet::addTiles() %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
                            lat1 = min(sf::st_coordinates(map.data)[,2]),
@@ -122,19 +122,19 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
     }
 
     # Save me
-    if (save_options == T) {
+    if (save_option == T) {
       ifelse(!dir.exists(file.path(getwd(),"EJmaps/")),
              dir.create(file.path(getwd(),"EJmaps/")), FALSE)
 
-      htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+      htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                         start = 7)[i]]],
-                 file= paste0('EJmaps/',indic_option,'_map_', 
-                              stringr::str_sub(names(input_data$EJ.facil.data), 
+                 file= paste0('EJmaps/',indic_option,'_map_',
+                              stringr::str_sub(names(input_data$EJ.facil.data),
                                                start = 7)[i],'.html'))
-      mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data), 
+      mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                  start = 7)[i]]],
-              file = paste0('EJmaps/',indic_option,'_map_', 
-                            stringr::str_sub(names(input_data$EJ.facil.data), 
+              file = paste0('EJmaps/',indic_option,'_map_',
+                            stringr::str_sub(names(input_data$EJ.facil.data),
                                              start = 7)[i],".png"))
     }
   }
