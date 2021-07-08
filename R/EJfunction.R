@@ -69,6 +69,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                        produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
+                       maps_perc_geog='US',
                        input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
 
 
@@ -398,6 +399,8 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
                 save_option=T)
+
+      EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }
 
     return(return.me)
@@ -633,6 +636,8 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
                 save_option=T)
+
+      EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }
     return(return.me)
 
