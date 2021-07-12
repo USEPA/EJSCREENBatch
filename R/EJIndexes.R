@@ -11,7 +11,7 @@
 #' @export
 #'
 #' @examples
-EJIndexes <- function(data, gis_method, buffer){
+EJIndexes <- function(data, gis_method, buffer,threshold){
   ifelse(!dir.exists(file.path(getwd(),"plots")), dir.create(file.path(getwd(),"plots")), FALSE)
 
   data.list <- list()
@@ -49,7 +49,7 @@ EJIndexes <- function(data, gis_method, buffer){
               names = c("Lead", "Diesel PM", "Air, Cancer", "Resp. Hazard", "Traffic", "WW Discharge", "NPL", "RMP Facility", "TSD Facility", "Ozone", "PM", "Demo. Index"),
               ylab="State Percentile",
               main=paste0("EJ Indexes relative to ", percentile," \n GIS Method: ",gis_method," \n Buffer: ", buffer," mile Distance"), las=2, cex.axis=.75)
-    abline(h=50, col="Red", lty=5)
+    abline(h=threshold, col="Red", lty=5)
     dev.off()
 
     assign(paste0("indexes.",percentile),demo.df, envir = environment())

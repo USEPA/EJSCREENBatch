@@ -88,7 +88,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   #heat table checks
   if(!is.null(heat_table_type)){
     if(heat_table_type  %notin% c("all","single","topn")){
-      stop("Heat table type must be one of the following: 'all', 'signle',or 'topn'. Default is 'all'")
+      stop("Heat table type must be one of the following: 'all', 'single',or 'topn'. Default is 'all'")
     }
   }
 
@@ -282,7 +282,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         names(EJ.list.data)[j] = paste0("area1_intersect_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_intersect_radius",i,"mi")]] <-
-          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i)
+          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
         EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
           EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
         EJ.corrplots.data[[paste0("corrplots_intersect_radius",i,"mi")]] <-
@@ -313,7 +313,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         names(EJ.list.data)[j] = paste0("area2_centroid_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_centroid_radius",i,"mi")]] <-
-          EJIndexes(area2_centroid, gis_method="centroid" , buffer=i)
+          EJIndexes(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
         EJ.demographics.data[[paste0("demographics_centroid_radius",i,"mi")]] <-
           EJdemographics(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
         EJ.corrplots.data[[paste0("corrplots_centroid_radius",i,"mi")]] <-
@@ -345,7 +345,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         names(EJ.list.data)[j] = paste0("area3_intersection_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_intersection_radius",i,"mi")]] <-
-          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i)
+          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
         EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
           EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
         EJ.corrplots.data[[paste0("corrplots_intersection_radius",i,"mi")]] <-
@@ -491,7 +491,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
       EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- area
 
       EJ.index.data[[paste0("Indexes_",gis_option,"_buffer",i,"mi")]] <-
-        EJIndexes(area, gis_method = gis_option, buffer=i)
+        EJIndexes(area, gis_method = gis_option, buffer=i, threshold=Thresh)
 
       EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
         EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
