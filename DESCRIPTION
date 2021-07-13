@@ -7,7 +7,7 @@ Authors@R: c(
     person("Morgan", "Teachey", email = "teachey.morgan@epa.gov", role = c("aut")),
     person("Adam", "Theising", email = "theising.adam@epa.gov", role = c("aut")))
 Maintainer: Ahmed Rachid El-Khattabi <elkhattabi.ahmedrachid@epa.gov>
-Description: This package is a wrapper for EJSCREEN cfeated to allows users to 
+Description: This package is a wrapper for EJSCREEN, created to allows users to 
              perform batch screening for water-related environmental justice purposes.
              Users can perform either a land-based screening to screen locations 
              with circular buffers around those locations. Users can also 
@@ -16,7 +16,7 @@ Description: This package is a wrapper for EJSCREEN cfeated to allows users to
 License: MIT
 Encoding: UTF-8
 Imports:
-  tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot, 
+  tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot, tigris,
   RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
   leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools
 Depends: 

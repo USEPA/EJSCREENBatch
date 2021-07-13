@@ -122,16 +122,16 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
 
   if(file=="StatePctile"){
     db <- sf::st_read(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",yr,"_StatePct")) %>%
-      filter_state(state_filter=state) %>%
-      st_transform("ESRI:102005") %>%
-      mutate(area_bg = st_area(Shape)) %>%
-      rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
+      tigris::filter_state(state_filter=state) %>%
+      sf::st_transform("ESRI:102005") %>%
+      dplyr::mutate(area_bg = st_area(Shape)) %>%
+      dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
   } else{
-    db <- read_csv(paste0(folder,"/EJSCREEN_",yr,"_USPR.csv"), col_types=cols(.default = "c")) %>%
-      select(ID, starts_with("P_")) %>%
-      rename_at(vars(-ID), ~ paste0(., '_US')) %>%
-      na_if("None") %>%
-      mutate_at(vars(-ID), as.numeric)
+    db <- data.table::fread(paste0(folder,"/EJSCREEN_",yr,"_USPR.csv"), colClasses = 'character') %>%
+      dplyr::select(ID, starts_with("P_")) %>%
+      dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
+      dplyr::na_if("None") %>%
+      dplyr::mutate_at(vars(-ID), as.numeric)
   }
 
   return(db)
