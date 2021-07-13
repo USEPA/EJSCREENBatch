@@ -27,11 +27,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-Environmental justice (EJ) analyses summarize demographics of local populations and environmental burden in order to study the impacts policy decisions may have on different communities. While impacts are often localized, it is helpful for decision makers to be able to assess impacts across many areas at once, allowing for comparison between communities and across regulatory actions. To streamline initial screening-level EJ analysis efforts, this package was developed to leverage nation demographic and environmental datasets made available through the U.S. Environmental Protection Agency. 
+Environmental justice (EJ) analyses summarize demographics of local populations and environmental burden in order to study the impacts policy decisions may have on different communities. While impacts are often localized, it is helpful for decision makers to be able to assess impacts across many areas at once, allowing for comparison between communities and across regulatory actions. To streamline initial screening-level EJ analysis efforts, this package was developed to leverage national demographic and environmental datasets made available through the U.S. Environmental Protection Agency. Specifically, it allows users to analyze EJ summary statistics for an unlimited number of locations (coordinates or water features) and produces customized figures and maps based on user specifications.
 
 The EJSCREENbatch R package primarily relies on data provided by [EJSCREEN](https://www.epa.gov/ejscreen), a mapping and screening tool maintained by EPA that provides demographic and environmental impact data on the Census Block Group (CBG) level for the United States. For information on how these data were prepared, refer to the [EJSCREEN Technical Information Guidance](https://www.epa.gov/ejscreen/technical-documentation-ejscreen)
 
-The EJSCREENbatch R package allows users to analyze EJ summary statistics for unlimited number of locations (coordinates or water features) and produces customized figures and maps based on user specifications.
+ 
 
 ## Getting started
 To access the latest version of the package, simply install from the EPA's Github Repo:
@@ -41,20 +41,34 @@ library(devtools)
 install_github(repo = "USEPA/EJSCREENbatch")
 ```
 
+
 Then load the package, and set your working directory to that of your input data. (Note: as of V1.0, you must also create an object with the filepath housing the SEDAC raster.)
 ```{r, warning = F, message = F}
 library(EJSCREENbatch)
 
 # Set directory and local pointer to SEDAC raster file.
-setwd("C:/Users/atheisin/OneDrive - Environmental Protection Agency (EPA)/ejscreen")
-raster.path <- 'C:/Users/atheisin/Downloads/EJ_example/US Census Grid_SF2010_TIFF'
+  user<-tolower(Sys.getenv("USERNAME"))
+
+  if(user=="aelkhatt"){
+    setwd("C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/PFAS")
+    path.raster.layer <- "C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/EJScreen/US Census Grid_SF2010_TIFF"
+
+  } else if(user=="atheisin"){
+    setwd("C:/Users/atheisin/OneDrive - Environmental Protection Agency (EPA)/ejscreen")
+    raster.path <- 'C:/Users/atheisin/Downloads/EJ_example/US Census Grid_SF2010_TIFF'
+    
+  } else if(user=="mteachey"){
+    print("Morgan")
+    
+  }
+  
 ```
   
 ## Input data requirements
 
-First, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), boundary shapes (i.e. a set of polygons represeting wetlands or lagoons), or a waterbody identifier from the NHDPlus database (more on this below).
+First, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), boundary shapes (i.e. a set of polygons representing wetlands or lagoons), or a waterbody identifier from the NHDPlus database (more on this below).
 
-Here, as a toy data set, we draw 20 random latitude/longitude coordinates from the continental USA. These points will serve as our "locations of interest" for the vignette's sample EJ analysis.
+Here create a toy data set by drawing 20 random latitude/longitude coordinates from the continental USA. These points will serve as our "locations of interest" for the vignette's sample EJ analysis.
 
 ```{r}
 ## Draw random points from the lower 48
@@ -68,7 +82,7 @@ rnd.pts <- as.data.frame(cbind(name = paste0('facility_name_',1:20),
 
 One important technical item to note: location inputs must be fed into package functions either (1) as a _simple feature_ (sf) dataframe for point/line/polygon shapes or (2) as a _list_ of catchment common identifiers (COMIDs). See the [sf package](https://r-spatial.github.io/sf/index.html) documentation for a primer on using spatial data in R and the [nhdplusTools package](https://usgs-r.github.io/nhdplusTools/) for an overview of the catchment ID data structure.
 
-For a illustrative sense of the geographies that will be screened, we map our (toy data's) location inputs below. In the next section, given these starting locations, we draw spatial buffers that are used to extract demographic and environmental data from EJSCREEN's national database.
+For an illustrative sense of the geographies that will be screened, we map our location inputs below. In the next section, we draw spatial buffers around our locations to extract demographic and environmental data from EJSCREEN's national database.
 
 ```{r, warning = F, message = F}
 # See where these imaginary facilities fall:
@@ -82,12 +96,12 @@ ggplot() +
 ```
 
 ## Analysis with coordinate locations
-Then, the locations of interest are supplied to the EJfunction, which prepares the data for use in all other functions. As providing a comparison group is essential in all EJ analyses, the data population is reported in percentiles, either within the state a CBG is located in or on the national level, based on user input. The user is able to specify additional preferences, such as:
+The locations of interest are then supplied to the EJfunction, which prepares the data for use in all other functions. Since providing a comparison group is essential in all EJ analyses, the data population is reported in percentiles, either within the state a CBG is located in or on the national level, based on user input. The user is able to specify additional preferences, such as:
 
 1.	Buffer distance from which to select proximal CBGs and buffering method using the buff_dist input. 
 2.	Buffer GIS option to use to pull data from selected CBGs via the gis_option input. The default is “intersection”. 
 3.	Threshold for identifying elevated indicated and potential populations of concern. The default is the 80th percentile, as recommended by EJSCREEN [cite documentation]. 
-4.	State, if the user wants to run an analysis for a single state. 
+4.	State, if the user wants to restrict the analysis to a single state. 
 
 This function also creates some initial plots for examination of trends in environmental and demographic indicators: 
 

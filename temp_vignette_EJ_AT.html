@@ -1494,12 +1494,12 @@ div.tocify {
 
 <!-- setup 3col/9col grid for toc_float and main content  -->
 <div class="row">
-<div class="col-xs-12 col-sm-4 col-md-3">
+<div class="col-sm-12 col-md-4 col-lg-3">
 <div id="TOC" class="tocify">
 </div>
 </div>
 
-<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+<div class="toc-content col-sm-12 col-md-8 col-lg-9">
 
 
 
@@ -1528,8 +1528,23 @@ install_github(repo = &quot;USEPA/EJSCREENbatch&quot;)</code></pre>
 <pre class="r"><code>library(EJSCREENbatch)
 
 # Set directory and local pointer to SEDAC raster file.
-setwd(&quot;C:/Users/atheisin/OneDrive - Environmental Protection Agency (EPA)/ejscreen&quot;)
-raster.path &lt;- &#39;C:/Users/atheisin/Downloads/EJ_example/US Census Grid_SF2010_TIFF&#39;</code></pre>
+  user&lt;-tolower(Sys.getenv(&quot;USERNAME&quot;))
+
+  if(user==&quot;aelkhatt&quot;){
+    setwd(&quot;C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/PFAS&quot;)
+    path.raster.layer &lt;- &quot;C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/EJScreen/US Census Grid_SF2010_TIFF&quot;
+    print(&quot;AR&quot;)
+
+  } else if(user==&quot;atheisin&quot;){
+    setwd(&quot;C:/Users/atheisin/OneDrive - Environmental Protection Agency (EPA)/ejscreen&quot;)
+    raster.path &lt;- &#39;C:/Users/atheisin/Downloads/EJ_example/US Census Grid_SF2010_TIFF&#39;
+    print(&quot;Adam&quot;)
+    
+  } else if(user==&quot;mteachey&quot;){
+    print(&quot;Morgan&quot;)
+    
+  }
+#&gt; [1] &quot;AR&quot;</code></pre>
 </div>
 <div id="input-data-requirements" class="section level2">
 <h2>Input data requirements</h2>
@@ -1605,9 +1620,6 @@ $(document).ready(function () {
 
 <script>
 $(document).ready(function ()  {
-
-    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
-    $('.unlisted.unnumbered').addClass('toc-ignore')
 
     // move toc-ignore selectors from section div to header
     $('div.section.toc-ignore')
