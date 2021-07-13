@@ -122,7 +122,7 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
 
   if(file=="StatePctile"){
     db <- sf::st_read(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",yr,"_StatePct")) %>%
-      tigris::filter_state(state_filter=state) %>%
+      filter_state(state_filter=state) %>%
       sf::st_transform("ESRI:102005") %>%
       dplyr::mutate(area_bg = st_area(Shape)) %>%
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))

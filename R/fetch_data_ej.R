@@ -46,7 +46,7 @@
     ##newer data, user should remove existing data from local directory.
     calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/"), pattern="StatePctile.gdb"))))
     gdb_stpctile <- sf::st_read(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",calendar_year,"_StatePct")) %>%
-      filter_state(state_filter=state) %>%
+      filter_state(state_filter=state_filter) %>%
       st_transform("ESRI:102005") %>%
       mutate(area_bg = st_area(Shape)) %>%
       rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
