@@ -16,7 +16,7 @@ Description: This package is a wrapper for EJSCREEN, created to allows users to
 License: MIT
 Encoding: UTF-8
 Imports:
-  tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot, tigris,
+  tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot,
   RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
   leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools
 Depends: 
