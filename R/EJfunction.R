@@ -400,6 +400,8 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                 rank_count = rank_count,
                 save_option=T)
 
+      EJCountTable(input_data = return.me, save_option = T)
+
       EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }
 
@@ -636,6 +638,8 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
                 save_option=T)
+
+      EJCountTable(input_data = return.me, save_option = T)
 
       EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }
