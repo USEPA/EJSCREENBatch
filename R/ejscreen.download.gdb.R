@@ -16,7 +16,7 @@
 #'
 #' @examples
 ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
-          justreadname = NULL, addflag = FALSE, cutoff = 80)
+                                     state=NULL, justreadname = NULL, addflag = FALSE, cutoff = 80)
 {
 
   `%notin%` = Negate(`%in%`)
@@ -107,7 +107,18 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       utils::unzip(file.path(folder, myfilename), exdir=folder)
     }
 
-
+    # Option to filter states--only used if user specifies this
+    filter_state <- function(data, state_filter){
+      if(!is.null(state_filter)){
+        if(state_filter %in% unique(data$ST_ABBREV)){
+          data <- data %>%
+            filter(!(ST_ABBREV %in% state_filter))
+        }
+      } else {
+        data <- data %>%
+          filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
+      }
+    }
 
   if(file=="StatePctile"){
     db <- sf::st_read(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",yr,"_StatePct")) %>%
