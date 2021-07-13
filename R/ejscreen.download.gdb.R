@@ -120,8 +120,9 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       }
     }
 
+
   if(file=="StatePctile"){
-    db <- sf::st_read(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",yr,"_StatePct")) %>%
+    db <- sf::st_read(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"), layer = st_layers(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"))[[1]]) %>%
       filter_state(state_filter=state) %>%
       sf::st_transform("ESRI:102005") %>%
       dplyr::mutate(area_bg = st_area(Shape)) %>%

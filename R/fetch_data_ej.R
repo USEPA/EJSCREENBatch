@@ -45,7 +45,7 @@
     #if user does not want to use data already in directory and wants to re-download
     ##newer data, user should remove existing data from local directory.
     calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/"), pattern="StatePctile.gdb"))))
-    gdb_stpctile <- sf::st_read(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer = paste0("EJSCREEN_",calendar_year,"_StatePct")) %>%
+    gdb_stpctile <- sf::st_read(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer =st_layers(dsn = paste0(folder,"/EJSCREEN_",calendar_year,"_StatePctile.gdb"))[[1]]) %>%
       filter_state(state_filter=state_filter) %>%
       st_transform("ESRI:102005") %>%
       mutate(area_bg = st_area(Shape)) %>%
