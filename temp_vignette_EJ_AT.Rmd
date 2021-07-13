@@ -50,7 +50,7 @@ library(EJSCREENbatch)
   user<-tolower(Sys.getenv("USERNAME"))
 
   if(user=="aelkhatt"){
-    setwd("C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/PFAS")
+    setwd("C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/EJSCREEN")
     path.raster.layer <- "C:/Users/aelkhatt/OneDrive - Environmental Protection Agency (EPA)/Documents/projects/environmental justice/EJScreen/US Census Grid_SF2010_TIFF"
 
   } else if(user=="atheisin"){
