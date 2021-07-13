@@ -116,7 +116,7 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       dplyr::mutate(area_bg = st_area(Shape)) %>%
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
   } else{
-    db <- read_csv(paste0(folder,"/EJSCREEN_",yr,"_USPR.csv"), col_types=cols(.default = "c")) %>%
+    db <- data.table::fread(paste0(folder,"/EJSCREEN_",yr,"_USPR.csv"), colClasses = 'character') %>%
       dplyr::select(ID, starts_with("P_")) %>%
       dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
       dplyr::na_if("None") %>%
