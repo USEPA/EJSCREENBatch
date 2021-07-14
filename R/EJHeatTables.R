@@ -200,14 +200,14 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
   } else if (heat_table_type == 'topn') { #Return HeatTable summary for Top10 facilities
 
     # How many facilities included in table?
-    if(is.null(topN)){
+    if(is.null(heat_table_topN)){
       n_rank <-  5 #default values
-    } else if (topN > 10) {
+    } else if (heat_table_topN > 10) {
       n_rank <- 10   # Nope, 10 is max.
-    } else if (topN <= 10 & topN > 0) {
-      n_rank <- round(topN) # user inputted values that override default
+    } else if (heat_table_topN <= 10 & heat_table_topN > 0) {
+      n_rank <- round(heat_table_topN) # user inputted values that override default
     } else {
-      stop('User-designated value for topN must be an integer between 1 and 10')
+      stop('User-designated value for heat_table_topN must be an integer between 1 and 10')
     }
 
     heat.table <- list()
