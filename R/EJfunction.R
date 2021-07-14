@@ -5,7 +5,7 @@
 #'
 #' @param data_type Required. Either "landbased" or "waterbased"
 #' @param facility_data Required.
-#' @param input_type Required. Input must be "sf" object or list of catchments (ComIDs)
+#' @param input_type Required if data_type == "waterbased". Input must be "sf" object or list of catchments (ComIDs)
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
 #' @param buff_dist Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
 #' @param threshold User specified threshold to represent potential concern. Default is 80\%.
@@ -14,7 +14,7 @@
 #' @param ds_dist Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.
 #' @param input_name Vector of names for facilities
 #' @param attains Option to pull data from the attains database. Default is FALSE.
-#' @param produce_ancillary_tables Option to return Heat table and Ranking Table. Default is FALSE.
+#' @param produce_ancillary_tables Option to return secondary tables/figures. Default is FALSE.
 #' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
 #' @param heat_table_geog_lvl State or US.
 #' @param heat_table_keepid Keep IDs in Heat Table. Default is TRUE.
