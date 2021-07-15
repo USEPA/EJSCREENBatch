@@ -17,7 +17,7 @@
 #' @param produce_ancillary_tables Option to return secondary tables/figures. Default is FALSE.
 #' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
 #' @param heat_table_geog_lvl State or US.
-#' @param heat_table_keepid Keep IDs in Heat Table. Default is TRUE.
+#' @param heat_table_keepid shape_ID to keep if type = 'single'
 #' @param heat_table_topN Number of locations to include in Heat table.
 #' @param rank_type Ranking table type--"location" or "cbg".
 #' @param rank_geography_type State or US.
@@ -101,7 +101,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   if(is.null(heat_table_type)){
     heat_table_type <- 'all'
   }
-
+  
   if(is.null(heat_table_geog_lvl)){
     heat_table_geog_lvl <- 'state'
   }
@@ -390,8 +390,9 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
-                   heat_table_geog_lvl = heat_table_geog_lvl, heat_table_keepid=NULL,
-                   heat_table_topN=NULL, save_option=T)
+                   heat_table_geog_lvl = heat_table_geog_lvl, 
+                   heat_table_keepid = heat_table_keepid,
+                   heat_table_topN = heat_table_topN, save_option=T)
 
 
       EJRanking(input_data = return.me,
@@ -629,8 +630,9 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
-                   heat_table_geog_lvl = heat_table_geog_lvl, heat_table_keepid=NULL,
-                   heat_table_topN=NULL, save_option=T)
+                   heat_table_geog_lvl = heat_table_geog_lvl, 
+                   heat_table_keepid = heat_table_keepid,
+                   heat_table_topN = heat_table_topN, save_option=T)
 
 
       EJRanking(input_data = return.me,

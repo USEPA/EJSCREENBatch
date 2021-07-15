@@ -113,8 +113,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     summary.attains <- summary.attains[, .(.id, OBJECTID, nhdplusid, assessmentunitidentifier,
                  ircategory, areasqkm)
              ][, irflag := as.integer(substring(ircategory,1,1))]
-
-    summary.attains <- summary.attains[summary.attains[, .I[which.max(irflag)], by = .(.id, nhdplusid)]$catchment_ID
+    summary.attains <- summary.attains[summary.attains[, .I[which.max(irflag)], by = .(.id, nhdplusid)]$V1
                   ][, irflag := NULL
                     ][, total_area := sum(areasqkm, na.rm = T), by = .id
                       ][, unassess.temp := as.integer(ircategory == '3')
