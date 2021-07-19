@@ -2,3 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
+docs/reference/EJSCREEN data/
+vignettes/EJSCREEN data/
+vignettes/plots/
+vignettes/Using_EJSCREENbatch_cache/
+vignettes/flowlineimage.png
+
+

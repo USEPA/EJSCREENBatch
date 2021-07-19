@@ -13,8 +13,8 @@ national demographic and environmental datasets made available through
 the U.S. Environmental Protection Agency.
 
 This package offers canned functions to extract and process Census block
-group EJSCREEN data for buffered areas surrounding user-provided
-[sf](https://r-spatial.github.io/sf/) geographies. Users can request
+group EJSCREEN data for buffered areas surrounding user-provided [sf
+geographies](https://r-spatial.github.io/sf/). Users can request
 different buffer distances or GIS inclusion methods. Moreover, buffers
 can be distance-based over land (i.e. drawing circles around lat/longs)
 or water (leveraging the [NHDPlus
@@ -50,8 +50,8 @@ library(EJSCREENbatch)
 
 ## Example
 
-An overview of the p ackage, [example use of its functions](url.here),
-and additional documentation are available in the vignette directory.
+An overview of the package, example use of its functions, and additional
+documentation are available in the vignette directory.
 
 ## EPA Disclaimer
 
@@ -65,3 +65,7 @@ manufacturer, or otherwise, does not constitute or imply their
 endorsement, recommendation or favoring by EPA. The EPA seal and logo
 shall not be used in any manner to imply endorsement of any commercial
 product or activity by EPA or the United States Government.
+
+## License
+
+This project is licensed under the MIT license.
