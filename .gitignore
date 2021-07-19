@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+README.Rmd
 docs/reference/EJSCREEN data/
 vignettes/EJSCREEN data/
 vignettes/plots/
