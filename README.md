@@ -48,6 +48,13 @@ install_github('USEPA/EJSCREENbatch', build_vignettes=TRUE)
 library(EJSCREENbatch)
 ```
 
+*NOTE:* in this developmental version of the package, users must
+manually download NASA’s [SEDAC population density raster
+file](https://sedac.ciesin.columbia.edu/data/set/usgrid-summary-file1-2010/data-download)
+and point the function towards where it is housed locally. Unfortunately
+this download requires creation of a (free) account; users should
+download the geotiff version of the raster files.
+
 ## Example
 
 An overview of the package, example use of its functions, and additional
