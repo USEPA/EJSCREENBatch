@@ -70,12 +70,13 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
                        maps_perc_geog='US',
-                       input_name=NULL, attains=NULL, raster_data = NULL){
+                       input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
 
 
   #default to using API
+  # put in wrapper to use API
   #Option for raster (in development)
-  raster_data <- "data/US Census Grid_SF2010_TIFF"
+
 
   `%notin%` = Negate(`%in%`)
   #check to make sure data type is currently supported in tool
