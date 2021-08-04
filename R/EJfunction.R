@@ -70,8 +70,12 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
                        maps_perc_geog='US',
-                       input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
+                       input_name=NULL, attains=NULL, raster_data = NULL){
 
+
+  #default to using API
+  #Option for raster (in development)
+  raster_data <- "data/US Census Grid_SF2010_TIFF"
 
   `%notin%` = Negate(`%in%`)
   #check to make sure data type is currently supported in tool
@@ -101,7 +105,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   if(is.null(heat_table_type)){
     heat_table_type <- 'all'
   }
-  
+
   if(is.null(heat_table_geog_lvl)){
     heat_table_geog_lvl <- 'state'
   }
@@ -390,7 +394,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
-                   heat_table_geog_lvl = heat_table_geog_lvl, 
+                   heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_keepid = heat_table_keepid,
                    heat_table_topN = heat_table_topN, save_option=T)
 
@@ -630,7 +634,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
 
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
-                   heat_table_geog_lvl = heat_table_geog_lvl, 
+                   heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_keepid = heat_table_keepid,
                    heat_table_topN = heat_table_topN, save_option=T)
 
