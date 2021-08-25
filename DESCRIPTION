@@ -18,7 +18,8 @@ Encoding: UTF-8
 Imports:
   tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot,
   RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
-  leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools
+  leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools,
+  rlist, exactextractr 
 Depends: 
   tidyverse, sf, data.table
 LazyData: true
