@@ -51,9 +51,11 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
 
   ej_indexes <- data %>%
     as.data.frame() %>%
-    dplyr::select(ID, STATE_NAME, ST_ABBREV, P_LDPNT_state, P_DSLPM_state, P_CANCR_state,
-                  P_RESP_state, P_PTRAF_state, P_PWDIS_state, P_PNPL_state,
-                  P_PRMP_state, P_PTSDF_state, P_OZONE_state, P_PM25_state, P_VULEOPCT_state) %>%
+    dplyr::select(ID, STATE_NAME, ST_ABBREV, starts_with("P_LDPNT"),
+                  starts_with("P_DSLPM"), starts_with("P_CANCR"),
+                  starts_with("P_RESP"), starts_with("P_PTRAF"), starts_with("P_PWDIS"),
+                  starts_with("P_PNPL"), starts_with("P_PRMP"), starts_with("P_PTSDF"),
+                  starts_with("P_OZONE"), starts_with("P_PM25"), starts_with("P_VULEOPCT")) %>%
     rename(
       Lead_Paint_S=P_LDPNT_state,
       Diesel_PM_S=P_DSLPM_state,
