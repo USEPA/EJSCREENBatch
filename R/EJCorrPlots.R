@@ -113,7 +113,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_S")))
       }
-?ends_with
+
 
       w <- which(step1==1,arr.ind=TRUE)
       step1[w] <- names(step1)[w[,"col"]]
