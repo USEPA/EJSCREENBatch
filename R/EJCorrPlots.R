@@ -25,15 +25,24 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
 
   demo_indexes <- data %>%
     as.data.frame() %>%
-    dplyr::select(ID, STATE_NAME, ST_ABBREV, P_MINORPCT_state, P_LWINCPCT_state,
-                  P_LESHSPCT_state, P_LNGISPCT_state, P_UNDR5PCT_state, P_OVR64PCT_state) %>%
+    dplyr::select(ID, STATE_NAME, ST_ABBREV, starts_with("P_MINORPCT"),
+                  starts_with("P_LWINCPCT"), starts_with("P_LESHSPCT"),
+                  starts_with("P_LNGISPCT"), starts_with("P_UNDR5PCT"),
+                  starts_with("P_OVR64PCT")) %>%
     rename(
-      Minority=P_MINORPCT_state,
-      Low_Income=P_LWINCPCT_state,
-      Less_than_HS_Edu=P_LESHSPCT_state,
-      Linguistic_Isolation=P_LNGISPCT_state,
-      Age_Under_5=P_UNDR5PCT_state,
-      Age_Over_64=P_OVR64PCT_state) %>%
+      Minority_S=P_MINORPCT_state,
+      Low_Income_S=P_LWINCPCT_state,
+      Less_than_HS_Edu_S=P_LESHSPCT_state,
+      Linguistic_Isolation_S=P_LNGISPCT_state,
+      Age_Under_5_S=P_UNDR5PCT_state,
+      Age_Over_64_S=P_OVR64PCT_state,
+
+      Minority_N=P_MINORPCT,
+      Low_Income_N=P_LWINCPCT,
+      Less_than_HS_Edu_N=P_LESHSPCT,
+      Linguistic_Isolation_N=P_LNGISPCT,
+      Age_Under_5_N=P_UNDR5PCT,
+      Age_Over_64_N=P_OVR64PCT) %>%
     # mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),as.numeric) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
     mutate(potential_issues_count = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV")))) %>%
@@ -46,81 +55,119 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
                   P_RESP_state, P_PTRAF_state, P_PWDIS_state, P_PNPL_state,
                   P_PRMP_state, P_PTSDF_state, P_OZONE_state, P_PM25_state, P_VULEOPCT_state) %>%
     rename(
-      Lead_Paint=P_LDPNT_state,
-      Diesel_PM=P_DSLPM_state,
-      Air_Toxics_Cancer_Risk=P_CANCR_state,
-      Air_Toxics_Respiratory_Hazard=P_RESP_state,
-      Traffic_Proximity=P_PTRAF_state,
-      Major_WW_Dischargers=P_PWDIS_state,
-      Nation_Priorities_List=P_PNPL_state,
-      Risk_Mgmt_Plan_Facilities=P_PRMP_state,
-      Treatment_Storage_Disposal_Facilities=P_PTSDF_state,
-      Ozone_Level=P_OZONE_state,
-      PM=P_PM25_state,
-      Demographic_Index=P_VULEOPCT_state) %>%
+      Lead_Paint_S=P_LDPNT_state,
+      Diesel_PM_S=P_DSLPM_state,
+      Air_Toxics_Cancer_Risk_S=P_CANCR_state,
+      Air_Toxics_Respiratory_Hazard_S=P_RESP_state,
+      Traffic_Proximity_S=P_PTRAF_state,
+      Major_WW_Dischargers_S=P_PWDIS_state,
+      Nation_Priorities_List_S=P_PNPL_state,
+      Risk_Mgmt_Plan_Facilities_S=P_PRMP_state,
+      Treatment_Storage_Disposal_Facilities_S=P_PTSDF_state,
+      Ozone_Level_S=P_OZONE_state,
+      PM_S=P_PM25_state,
+      Demographic_Index_S=P_VULEOPCT_state,
+
+      Lead_Paint_N=P_LDPNT,
+      Diesel_PM_N=P_DSLPM,
+      Air_Toxics_Cancer_Risk_N=P_CANCR,
+      Air_Toxics_Respiratory_Hazard_N=P_RESP,
+      Traffic_Proximity_N=P_PTRAF,
+      Major_WW_Dischargers_N=P_PWDIS,
+      Nation_Priorities_List_N=P_PNPL,
+      Risk_Mgmt_Plan_Facilities_N=P_PRMP,
+      Treatment_Ntorage_Disposal_Facilities_N=P_PTSDF,
+      Ozone_Level_N=P_OZONE,
+      PM_N=P_PM25,
+      Demographic_Index_N=P_VULEOPCT,
+      ) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
     mutate(potential_issues_count = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV")))) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),replace.zeros)
 
+
+  geo_levels <- c("state","national")
+  for(geo_level in geo_levels){
+    if(geo_level=="state"){
+      print("state")
+    } else{
+      print("national")
+    }
+  }
+
+
+
+  geo_levels <- c("state","national")
   datasets <- c("demo_indexes", "ej_indexes")
-  for(dataset in datasets){
-    step1 <- get(dataset)
+  for(geo_level in geo_levels){
+    for(dataset in datasets){
+
+      if(geo_level=="state"){
+        print("state")
+        step1 <- get(dataset) %>%
+          select(-c(dplyr::ends_with("_N")))
+      } else{
+        print("national")
+        step1 <- get(dataset) %>%
+          select(-c(dplyr::ends_with("_S")))
+      }
 
 
-    w <- which(step1==1,arr.ind=TRUE)
-    step1[w] <- names(step1)[w[,"col"]]
+      w <- which(step1==1,arr.ind=TRUE)
+      step1[w] <- names(step1)[w[,"col"]]
 
-    `%notin%` = Negate(`%in%`)
-    colsNOT2paste <- c("ID","STATE_NAME","ST_ABBREV", "potential_issues_count", "overlap")
-    step1$overlap <- do.call(paste, c(step1[, which(names(step1) %notin% colsNOT2paste)], sep=","))
+      `%notin%` = Negate(`%in%`)
+      colsNOT2paste <- c("ID","STATE_NAME","ST_ABBREV", "potential_issues_count", "overlap")
+      step1$overlap <- do.call(paste, c(step1[, which(names(step1) %notin% colsNOT2paste)], sep=","))
 
-    step1.1 <- step1[, which(names(step1) %notin% colsNOT2paste)]
-    step1$overlap <- apply(step1.1, 1, function(x) toString(na.omit(x)))
+      step1.1 <- step1[, which(names(step1) %notin% colsNOT2paste)]
+      step1$overlap <- apply(step1.1, 1, function(x) toString(na.omit(x)))
 
-    step2 <- step1 %>%
-      dplyr::select(ID,STATE_NAME,ST_ABBREV,potential_issues_count, overlap) %>%
-      mutate(potential_issues_count = ifelse(is.na(potential_issues_count),0, potential_issues_count),
-             potential_issues_count = ifelse(potential_issues_count=="potential_issues_count",1,potential_issues_count)) %>%
-      filter(!is.na(ID))
+      step2 <- step1 %>%
+        dplyr::select(ID,STATE_NAME,ST_ABBREV,potential_issues_count, overlap) %>%
+        mutate(potential_issues_count = ifelse(is.na(potential_issues_count),0, potential_issues_count),
+               potential_issues_count = ifelse(potential_issues_count=="potential_issues_count",1,potential_issues_count)) %>%
+        filter(!is.na(ID))
 
-    assign(paste0("step2_",dataset),step2)
+      assign(paste0("step2_",dataset),step2)
 
-    tryCatch(
-      {
-        step3 <- step2 %>%
-          dplyr::select(ID, overlap) %>%
-          distinct() %>%
-          filter(!is.na(ID)) %>%
-          separate_rows(overlap,sep=", ") %>%
-          mutate(value=1)  %>%
-          filter(overlap!="")  %>%
-          pivot_wider(values_from=value, names_from=overlap,  values_fill=0)  %>%
-          dplyr::select(-ID) %>%
-          cor()
+      tryCatch(
+        {
+          step3 <- step2 %>%
+            dplyr::select(ID, overlap) %>%
+            distinct() %>%
+            filter(!is.na(ID)) %>%
+            separate_rows(overlap,sep=", ") %>%
+            mutate(value=1)  %>%
+            filter(overlap!="")  %>%
+            pivot_wider(values_from=value, names_from=overlap,  values_fill=0)  %>%
+            dplyr::select(-ID) %>%
+            cor()
 
-        if(dataset=="demo_indexes"){
-           txt.size=480
-         } else {
-           txt.size=900
-         }
+          if(dataset=="demo_indexes"){
+             txt.size=480
+           } else {
+             txt.size=900
+           }
 
-        jpeg(file=paste0("plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,".jpeg"), width = txt.size, height = txt.size)
-        col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-        corrplot::corrplot(step3, method="color",
-                 type="upper", order="hclust",
-                 addCoef.col = "black", # Add coefficient of correlation
-                 tl.col="black", tl.srt=45, #Text label color and rotation
-                 diag=FALSE, # hide correlation coefficient on the principal diagonal,
-                 tl.cex=1.25
-        )
-        dev.off()
+          jpeg(file=paste0("plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_geolevel",geo_level,".jpeg"), width = txt.size, height = txt.size)
+          col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+          corrplot::corrplot(step3, method="color",
+                   type="upper", order="hclust",
+                   addCoef.col = "black", # Add coefficient of correlation
+                   tl.col="black", tl.srt=45, #Text label color and rotation
+                   diag=FALSE, # hide correlation coefficient on the principal diagonal,
+                   tl.cex=1.25
+          )
+          dev.off()
 
-      },
-      warning=function(cond){
-        message(paste0("Only ",length(unique(step2$ID))," block groups for ",length(unique(step2$shape_ID))," locations.
-                       No correlation plots will be outputted"))
-      })
+        },
+        warning=function(cond){
+          message(paste0("Only ",length(unique(step2$ID))," block groups for ",length(unique(step2$shape_ID))," locations.
+                         No correlation plots will be outputted"))
+        })
 
+    }
   }
 
   step2 <- step2_demo_indexes %>%
