@@ -107,13 +107,13 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       if(geo_level=="state"){
         print("state")
         step1 <- get(dataset) %>%
-          select(-c(dplyr::ends_with("_US")))
+          select(-c(tidyselect::ends_with("_US")))
       } else{
         print("national")
         step1 <- get(dataset) %>%
-          select(-c(dplyr::ends_with("_S")))
+          select(-c(tidyselect::ends_with("_S")))
       }
-
+?ends_with
 
       w <- which(step1==1,arr.ind=TRUE)
       step1[w] <- names(step1)[w[,"col"]]
