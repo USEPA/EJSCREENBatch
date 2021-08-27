@@ -37,12 +37,12 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       Age_Under_5_S=P_UNDR5PCT_state,
       Age_Over_64_S=P_OVR64PCT_state,
 
-      Minority_N=P_MINORPCT,
-      Low_Income_N=P_LWINCPCT,
-      Less_than_HS_Edu_N=P_LESHSPCT,
-      Linguistic_Isolation_N=P_LNGISPCT,
-      Age_Under_5_N=P_UNDR5PCT,
-      Age_Over_64_N=P_OVR64PCT) %>%
+      Minority_US=P_MINORPCT_US,
+      Low_Income_US=P_LWINCPCT_US,
+      Less_than_HS_Edu_US=P_LESHSPCT_US,
+      Linguistic_Isolation_US=P_LNGISPCT_US,
+      Age_Under_5_US=P_UNDR5PCT_US,
+      Age_Over_64_US=P_OVR64PCT_US) %>%
     # mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),as.numeric) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
     mutate(potential_issues_count = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV")))) %>%
@@ -68,18 +68,18 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       PM_S=P_PM25_state,
       Demographic_Index_S=P_VULEOPCT_state,
 
-      Lead_Paint_N=P_LDPNT,
-      Diesel_PM_N=P_DSLPM,
-      Air_Toxics_Cancer_Risk_N=P_CANCR,
-      Air_Toxics_Respiratory_Hazard_N=P_RESP,
-      Traffic_Proximity_N=P_PTRAF,
-      Major_WW_Dischargers_N=P_PWDIS,
-      Nation_Priorities_List_N=P_PNPL,
-      Risk_Mgmt_Plan_Facilities_N=P_PRMP,
-      Treatment_Ntorage_Disposal_Facilities_N=P_PTSDF,
-      Ozone_Level_N=P_OZONE,
-      PM_N=P_PM25,
-      Demographic_Index_N=P_VULEOPCT,
+      Lead_Paint_US=P_LDPNT_US,
+      Diesel_PM_US=P_DSLPM_US,
+      Air_Toxics_Cancer_Risk_US=P_CANCR_US,
+      Air_Toxics_Respiratory_Hazard_US=P_RESP_US,
+      Traffic_Proximity_US=P_PTRAF_US,
+      Major_WW_Dischargers_US=P_PWDIS_US,
+      Nation_Priorities_List_US=P_PNPL_US,
+      Risk_Mgmt_Plan_Facilities_US=P_PRMP_US,
+      Treatment_Ntorage_Disposal_Facilities_US=P_PTSDF_US,
+      Ozone_Level_US=P_OZONE_US,
+      PM_US=P_PM25_US,
+      Demographic_Index_US=P_VULEOPCT_US,
       ) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
     mutate(potential_issues_count = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV")))) %>%
@@ -105,7 +105,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       if(geo_level=="state"){
         print("state")
         step1 <- get(dataset) %>%
-          select(-c(dplyr::ends_with("_N")))
+          select(-c(dplyr::ends_with("_US")))
       } else{
         print("national")
         step1 <- get(dataset) %>%
