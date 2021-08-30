@@ -4,10 +4,10 @@
 \alias{EJCountTable}
 \title{EJ Count Table}
 \usage{
-EJCountTable(input.data, save.option = F)
+EJCountTable(input_data, save_option = F)
 }
 \arguments{
-\item{save.option}{}
+\item{save_option}{}
 }
 \value{
 
@@ -17,5 +17,5 @@ Creates a two-way table that summaries the number and percentage of locations
 to examine overlap in demographic and environmental indicators of concern.
 }
 \examples{
-count.table <- EJCountTable(input.data = z, save.option = F)
+count.table <- EJCountTable(input_data = z, save_option = F)
 }

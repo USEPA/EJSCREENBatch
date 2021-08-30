@@ -14,7 +14,15 @@ EJfunction(
   state = NULL,
   ds_mode = NULL,
   ds_dist = NULL,
-  save_option = F,
+  produce_ancillary_tables = NULL,
+  heat_table_type = NULL,
+  heat_table_geog_lvl = NULL,
+  heat_table_keepid = NULL,
+  heat_table_topN = NULL,
+  rank_type = NULL,
+  rank_geography_type = NULL,
+  rank_count = NULL,
+  maps_perc_geog = "US",
   input_name = NULL,
   attains = NULL,
   raster_data = "data/US Census Grid_SF2010_TIFF"
@@ -25,7 +33,7 @@ EJfunction(
 
 \item{facility_data}{Required.}
 
-\item{input_type}{Requried. Input must be "sf" object or list of catchments (ComIDs)}
+\item{input_type}{Required if data_type == "waterbased". Input must be "sf" object or list of catchments (ComIDs)}
 
 \item{gis_option}{User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.}
 
@@ -39,11 +47,27 @@ EJfunction(
 
 \item{ds_dist}{Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.}
 
+\item{produce_ancillary_tables}{Option to return secondary tables/figures. Default is FALSE.}
+
+\item{heat_table_type}{Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.}
+
+\item{heat_table_geog_lvl}{State or US.}
+
+\item{heat_table_keepid}{shape_ID to keep if type = 'single'}
+
+\item{heat_table_topN}{Number of locations to include in Heat table.}
+
+\item{rank_type}{Ranking table type--"location" or "cbg".}
+
+\item{rank_geography_type}{State or US.}
+
+\item{rank_count}{Number of locations to include in ranking table.}
+
 \item{input_name}{Vector of names for facilities}
 
 \item{attains}{Option to pull data from the attains database. Default is FALSE.}
 
-\item{raster_data}{Dasymetric raster data. Default is to use 1kmX1km raster
+\item{raster_data}{Path to dasymetric raster data. Recommend using 1kmX1km raster
 data from NASA's Socioeconomic Data and Applications Center (SEDAC)}
 }
 \value{

@@ -5,7 +5,7 @@
 \title{EJ Return Water Catchment Buffers}
 \usage{
 EJWaterReturnCatchmentBuffers(
-  input.data,
+  input_data,
   ds_us_mode,
   ds_us_dist,
   buff_dist,
@@ -31,4 +31,7 @@ EJWaterReturnCatchmentBuffers(
 This function returns:
 (1) a SF data.frame containing user-specified buffers around catchments
 (2) a data.table containing raw ATTAINs API data (OPTIONAL)
+}
+\examples{
+
 }

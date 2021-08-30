@@ -6,16 +6,19 @@
 \usage{
 EJHeatTables(
   input_data,
-  type,
-  geog_lvl = NULL,
-  keepid = NULL,
-  topN = NULL,
-  topN_dta_idx = NULL,
+  heat_table_type,
+  heat_table_geog_lvl = NULL,
+  heat_table_keepid = NULL,
+  heat_table_topN = NULL,
   save_option = F
 )
 }
 \arguments{
-\item{save_option}{}
+\item{heat_table_type}{All facilities, single facility, top N facilities. If top N facilities, must specify topN.}
+
+\item{heat_table_geog_lvl}{state or US}
+
+\item{save_option}{Option to save heat table to a folder in working directory. Default is FALSE.}
 }
 \value{
 
@@ -27,13 +30,11 @@ Produces one of three possible heat tables.
 3) Summary of median CBG values for "top N" facilities ('topn')
 }
 \details{
-geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
-when type = 'single, keepid must be set by user, denotes the (integer) rowid of the facility
+heat_table_geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
+when type = 'single, heat_table_keepid must be set by user, denotes the (integer) rowid of the facility
 topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
-topN_dta_idx denotes which EJfunction() output data to use (e.g. when there are mult. buff. distances)
--> it is an integer. Default setting is 1
 }
 \examples{
-y1 <- EJHeatTables(input_data = y, type = 'topn', topN = 5, topN_dta_idx = 3)
-y2 <- EJHeatTables(input_data = y, type = 'all', geog_lvl = 'state')
+y1 <- EJHeatTables(input_data = y, heat_table_type = 'topn', heat_table_topN = 5)
+y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
 }

@@ -10,6 +10,8 @@ EJdemographics(data, gis_method, buffer, threshold)
 \item{gis_method}{User specified method of creating buffers around areas of interest (intersect, centroid, intersection).}
 
 \item{buffer}{Distance(s) used to create buffers.}
+
+\item{threshold}{User-selected threshold - 80th percentile is default.}
 }
 \value{
 

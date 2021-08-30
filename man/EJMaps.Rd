@@ -4,14 +4,14 @@
 \alias{EJMaps}
 \title{EJ Maps}
 \usage{
-EJMaps(input_data, indic_option = NULL, perc_geog = NULL, save_options = F)
+EJMaps(input_data, indic_option = NULL, perc_geog = NULL, save_option = F)
 }
 \arguments{
 \item{indic_option}{Options are 'total', 'environmental','demographic'. 'total' is default.}
 
 \item{perc_geog}{Options are 'US' or 'state'.}
 
-\item{save_options}{}
+\item{save_option}{}
 }
 \value{
 

@@ -9,6 +9,7 @@ ejscreen.download.local(
   file,
   yr = NULL,
   ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
+  state = NULL,
   justreadname = NULL,
   addflag = FALSE,
   cutoff = 80

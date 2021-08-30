@@ -4,7 +4,7 @@
 \alias{EJIndexes}
 \title{EJ Indexes}
 \usage{
-EJIndexes(data, gis_method, buffer)
+EJIndexes(data, gis_method, buffer, threshold)
 }
 \arguments{
 \item{gis_method}{User specified method of creating buffers around areas of interest (intersect, centroid, intersection).}
