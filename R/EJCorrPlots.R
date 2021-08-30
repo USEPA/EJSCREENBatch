@@ -45,7 +45,8 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       Age_Over_64_US=P_OVR64PCT_US) %>%
     # mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),as.numeric) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
-    mutate(potential_issues_count = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV")))) %>%
+    mutate(potential_issues_count_S = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_US")))),
+           potential_issues_count_US = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_S"))))) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),replace.zeros)
 
 
@@ -56,6 +57,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
                   starts_with("P_RESP"), starts_with("P_PTRAF"), starts_with("P_PWDIS"),
                   starts_with("P_PNPL"), starts_with("P_PRMP"), starts_with("P_PTSDF"),
                   starts_with("P_OZONE"), starts_with("P_PM25"), starts_with("P_VULEOPCT")) %>%
+    dplyr::select(-c(contains("D2"))) %>%
     rename(
       Lead_Paint_S=P_LDPNT_state,
       Diesel_PM_S=P_DSLPM_state,
@@ -84,22 +86,14 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       Demographic_Index_US=P_VULEOPCT_US,
       ) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
-    mutate(potential_issues_count = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV")))) %>%
+    mutate(potential_issues_count_S = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_US")))),
+           potential_issues_count_US = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_S"))))) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),replace.zeros)
 
 
-  geo_levels <- c("state","national")
-  for(geo_level in geo_levels){
-    if(geo_level=="state"){
-      print("state")
-    } else{
-      print("national")
-    }
-  }
 
 
-
-  geo_levels <- c("state","national")
+  geo_levels <- c("state","US")
   datasets <- c("demo_indexes", "ej_indexes")
   for(geo_level in geo_levels){
     for(dataset in datasets){
@@ -109,17 +103,25 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_US")))
       } else{
-        print("national")
+        print("US")
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_S")))
       }
+
+      step1 <- step1 %>%
+        rename_all(
+          funs(
+            stringr::str_replace_all(.,'_S','') %>%
+            stringr::str_replace_all(.,'_US','')
+          )
+        )
 
 
       w <- which(step1==1,arr.ind=TRUE)
       step1[w] <- names(step1)[w[,"col"]]
 
       `%notin%` = Negate(`%in%`)
-      colsNOT2paste <- c("ID","STATE_NAME","ST_ABBREV", "potential_issues_count", "overlap")
+      colsNOT2paste <- c("ID","STATE_NAME","ST_ABBREV", "potential_issues_count","potential_issues_count", "overlap")
       step1$overlap <- do.call(paste, c(step1[, which(names(step1) %notin% colsNOT2paste)], sep=","))
 
       step1.1 <- step1[, which(names(step1) %notin% colsNOT2paste)]
@@ -152,7 +154,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
              txt.size=900
            }
 
-          jpeg(file=paste0("plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_geolevel",geo_level,".jpeg"), width = txt.size, height = txt.size)
+          jpeg(file=paste0("plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
                    type="upper", order="hclust",
