@@ -80,7 +80,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       Major_WW_Dischargers_US=P_PWDIS_US,
       Nation_Priorities_List_US=P_PNPL_US,
       Risk_Mgmt_Plan_Facilities_US=P_PRMP_US,
-      Treatment_Ntorage_Disposal_Facilities_US=P_PTSDF_US,
+      Treatment_Storage_Disposal_Facilities_US=P_PTSDF_US,
       Ozone_Level_US=P_OZONE_US,
       PM_US=P_PM25_US,
       Demographic_Index_US=P_VULEOPCT_US,
