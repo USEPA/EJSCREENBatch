@@ -1,6 +1,6 @@
 #' EJ Count Table
 #'
-#' Creates a two-way table that summaries the number and percentage of locations
+#' Creates a two-way table that summarizes the number and percentage of locations
 #' to examine overlap in demographic and environmental indicators of concern.
 #'
 #' @param input_data
