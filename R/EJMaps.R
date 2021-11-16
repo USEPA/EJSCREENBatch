@@ -4,9 +4,9 @@
 #' defined) are displayed for each facility. Use national or state percentiles (default: US)
 #'
 #' @param input_data
-#' @param indic_option Options are 'total', 'environmental','demographic'. 'total' is default.
-#' @param perc_geog Options are 'US' or 'state'.
-#' @param save_option
+#' @param indic_option 'total', 'environmental','demographic'. 'total' is default.
+#' @param perc_geog State or US. Default is US.
+#' @param save_option Option to save map to a folder in working directory. Default is FALSE.
 #'
 #' @return
 #' @export
