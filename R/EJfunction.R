@@ -3,25 +3,25 @@
 #' Main function that performs screening (land and water-based).
 #' Input must be an SF object! User must make this transformation.
 #'
-#' @param data_type Required. Either "landbased" or "waterbased"
-#' @param facility_data Required.
-#' @param input_type Required if data_type == "waterbased". Input must be "sf" object or list of catchments (ComIDs)
+#' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments). 
+#' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.  
+#' @param input_type Required if data_type == "waterbased". Input must be "sf" object(s) or list of catchments (ComIDs)
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
-#' @param buff_dist Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
-#' @param threshold User specified threshold to represent potential concern. Default is 80\%.
+#' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
+#' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
-#' @param ds_mode Set Upstream/downstream option for water-based screening. Default is downstream.
-#' @param ds_dist Set distance to examine areas upstream/downstream for water-based screening. Default is 50 miles.
+#' @param ds_mode Set "upstream" or "downstream" flow direction for water-based screening. Default is "downstream".
+#' @param ds_dist Set distance upstream/downstream along flow path for water-based screening. Default is 50 miles.
 #' @param input_name Vector of names for facilities
-#' @param attains Option to pull data from the attains database. Default is FALSE.
+#' @param attains Option to return impairment data for flow path from ATTAINS database. Default is F.
 #' @param produce_ancillary_tables Option to return secondary tables/figures. Default is FALSE.
 #' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
-#' @param heat_table_geog_lvl State or US.
-#' @param heat_table_keepid shape_ID to keep if type = 'single'
-#' @param heat_table_topN Number of locations to include in Heat table.
-#' @param rank_type Ranking table type--"location" or "cbg".
-#' @param rank_geography_type State or US.
-#' @param rank_count Number of locations to include in ranking table.
+#' @param heat_table_geog_lvl "State" or "US". Default is "US". 
+#' @param heat_table_keepid shape_ID Option to keep row ID number of location. Recommednd if type = 'single'
+#' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
+#' @param rank_type Ranking table type, either "location" or "cbg".
+#' @param rank_geography_type "State" or "US".
+#' @param rank_count Number of locations or CBGs to return in ranking table.
 #' @param raster_data Path to dasymetric raster data. Recommend using 1kmX1km raster
 #'                    data from NASA's Socioeconomic Data and Applications Center (SEDAC)
 #'
@@ -40,12 +40,12 @@
 #' # options to consider
 #' # 1) gis_option. Three options available: intersect, centroid, intersection.
 #' #    Instersection is default.
-#' # 2) buff_dist. Radius to use around facilities
+#' # 2) buffer. Radius to use around facilities
 #' # 3) Threshold for EJ consideration. EJScreen uses 80 as default.
 #' # 4) states. Can restrict analysis to specific states.
 #' # bring in data for contiguous US
-#' a1 <- EJfunction(data_type="landbased", facility_data = facilities, gis_option="centroid",
-#'                 buff_dist = 5)
+#' a1 <- EJfunction(data_type="landbased", LOI_data = facilities, gis_option="centroid",
+#'                 buffer = 5)
 #'
 #' #===============================================================================
 #' #=======================FEATURE 2: WATER-BASED ANALYSIS=========================
@@ -61,10 +61,10 @@
 #' # 3) buff.dist. Buffer distance around catchments in miles. 1 mile is default.
 #' # 4) Attains. Call attains API for data? (T/F). Default is False
 #'
-#' c <- EJfunction(data_type="waterbased", facility_data=facilities,
+#' c <- EJfunction(data_type="waterbased", LOI_data=facilities,
 #'                 input_type = 'sf', attains = F)
 #'
-EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=NULL, buff_dist=NULL,
+EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
@@ -164,8 +164,8 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
       if (!is.null(input_name)){
         stop("When input_type == 'catchment', provision of an input_name is not permitted. ComID serves as the identifying name. Please set input_name = NULL.")
       }
-      facility_data <- as.data.frame(facility_data)
-      names(facility_data) <- 'catchment_ID'
+      LOI_data <- as.data.frame(LOI_data)
+      names(LOI_data) <- 'catchment_ID'
     }
   } else {
     in.type <- 'sf'
@@ -185,29 +185,29 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
   # Create internal function facility ID (in case user doesn't)
   # Create internal function facility ID (in case user doesn't)
   if(data_type == 'waterbased' & in.type == 'catchment') {
-    facility_data <- facility_data %>%
+    LOI_data <- LOI_data %>%
       tibble::rowid_to_column("shape_ID")
-    facility_name <- facility_data
+    facility_name <- LOI_data
   } else {
-    facility_data <- facility_data %>%
+    LOI_data <- LOI_data %>%
       tibble::rowid_to_column("shape_ID") %>%
       st_transform("ESRI:102005")
   }
 
   # Create internal facility name mapping (if provided by user)
-  if (!is.null(input_name)){  #& (length(input_name) == dim(facility_data)[1])
-    if(input_name %notin% colnames(facility_data)){
-      stop('Input_name must be a variable in facility_data.')
+  if (!is.null(input_name)){  #& (length(input_name) == dim(LOI_data)[1])
+    if(input_name %notin% colnames(LOI_data)){
+      stop('Input_name must be a variable in LOI_data.')
     }
-    facility_name <- facility_data %>%
+    facility_name <- LOI_data %>%
       as.data.frame() %>%
       dplyr::select(input_name,shape_ID, -geometry)
   }
 
   # Determine most common geometry type in the input sf dataframe
   if (in.type != 'catchment'){
-    facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
-    facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(facility_data), facil.geom.type)))]
+    facil.geom.type <- unique(as.character(st_geometry_type(LOI_data)))
+    facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(LOI_data), facil.geom.type)))]
   }
   #set threshold
   if(is.null(threshold)){
@@ -228,21 +228,21 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     }
 
     # Determine most common geometry type in the input sf dataframe
-    facil.geom.type <- unique(as.character(st_geometry_type(facility_data)))
-    facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(facility_data), facil.geom.type)))]
+    facil.geom.type <- unique(as.character(st_geometry_type(LOI_data)))
+    facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(LOI_data), facil.geom.type)))]
 
     #set radii to draw around areas/points of interest
-    if(is.null(buff_dist) &
+    if(is.null(buffer) &
        facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
       buffers <-  c(1,3,5)  #default values: points
-    } else if(is.null(buff_dist) &
+    } else if(is.null(buffer) &
               facil.geom.type %in% c('POLYGON', 'MULTIPOLYGON')){
       buffers <- 0 #default value: polygons
     } else if(facil.geom.type %notin% c('POINT','LINESTRING','MULTIPOINT',
                                         'MULTILINESTRING','POLYGON', 'MULTIPOLYGON')){
       stop('All geometries must be (multi-) points, lines, or polygons.')
     } else {
-      buffers <- buff_dist  #user inputted values that override default
+      buffers <- buffer  #user inputted values that override default
     }
 
     #create empty lists to store lists/DFs/DTs
@@ -260,17 +260,17 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
       #if polygon provided, default is to use polygon without buffer but can add buffer if desired
       if(facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
         if (i > 0){
-          facility_buff <- st_buffer(facility_data,
+          facility_buff <- st_buffer(LOI_data,
                                      dist = units::set_units(i,"mi"))
         } else {
           stop('Buffer around points required.')
         }
       } else if(facil.geom.type %in% c('POLYGON', 'MULTIPOLYGON')){
         if (i > 0){
-          facility_buff <- st_buffer(facility_data,
+          facility_buff <- st_buffer(LOI_data,
                                      dist = units::set_units(i,"mi"))
         } else if (i == 0) {
-          facility_buff <- facility_data
+          facility_buff <- LOI_data
         } else {
           stop('Buffer distance(s) must be numeric and non-negative.')
         }
@@ -296,13 +296,13 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(facility_data, crs = 4326)) %>%
+                         facil_data = st_transform(LOI_data, crs = 4326)) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(facility_data, crs = 4326))
+                         facil_data = st_transform(LOI_data, crs = 4326))
         }
       }
 
@@ -327,13 +327,13 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(facility_data, crs = 4326)) %>%
+                         facil_data = st_transform(LOI_data, crs = 4326)) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(facility_data, crs = 4326))
+                         facil_data = st_transform(LOI_data, crs = 4326))
         }
       }
 
@@ -362,7 +362,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           st_transform(crs="ESRI:102005") %>%
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
-        facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
+        facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects) %>%
           st_buffer(dist = units::set_units(i,"mi"))
 
         rm(state.shapes)
@@ -371,7 +371,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
             areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                 facility_buff = facility_buff,
-                                facil_data = facility_data,
+                                facil_data = LOI_data,
                                 path_raster_layer = raster_data) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
@@ -379,7 +379,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
             areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                 facility_buff = facility_buff,
-                                facil_data = facility_data,
+                                facil_data = LOI_data,
                                 path_raster_layer = raster_data)
         }
       }
@@ -439,10 +439,10 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
     }
 
     # Set buffer distance
-    if(is.null(buff_dist)){
+    if(is.null(buffer)){
       buffer <- 1  #default value
     } else {
-      buffer <-  buff_dist  #user inputted values that overrides default
+      buffer <-  buffer  #user inputted values that overrides default
     }
 
     #ATTAINS
@@ -468,13 +468,13 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
       #(3) summary of attains data
       #(4) if input is catchment#, the lat/lon coords of segment centroid
       print(paste0('Calculating for buffer distance: ', i))
-      catchment.polygons <- EJWaterReturnCatchmentBuffers(facility_data, ds.us.mode, ds.us.dist,
+      catchment.polygons <- EJWaterReturnCatchmentBuffers(LOI_data, ds.us.mode, ds.us.dist,
                                                           i, in.type, attains.check)
 
       if (in.type == 'sf') {
         catch.facil.data <- catchment.polygons[[1]] %>%
           as.data.frame() %>%
-          inner_join(dplyr::select(as.data.frame(facility_data), -geometry),
+          inner_join(dplyr::select(as.data.frame(LOI_data), -geometry),
                      by = 'shape_ID') %>%
           st_as_sf()
       } else {
@@ -514,18 +514,18 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           if (!is.null(input_name)) {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
               EJFacilLevel(list_data = area,
-                           facil_data = st_transform(facility_data, crs = 4326)) %>%
+                           facil_data = st_transform(LOI_data, crs = 4326)) %>%
               dplyr::inner_join(facility_name, by = 'shape_ID') %>%
               dplyr::relocate(input_name)
           } else {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
               EJFacilLevel(list_data = area,
-                           facil_data = st_transform(facility_data, crs = 4326))
+                           facil_data = st_transform(LOI_data, crs = 4326))
           }
         } else if (in.type == 'catchment'){
           temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(facility_data, by = c('comid' = 'catchment_ID')) %>%
+            inner_join(LOI_data, by = c('comid' = 'catchment_ID')) %>%
             st_as_sf()
 
           EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
@@ -547,7 +547,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           rename(facility_state = NAME)
 
         if(in.type == 'sf'){
-          facility_buff <- st_join(facility_data, state.shapes, join=st_intersects) %>%
+          facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects) %>%
             dplyr::select(shape_ID, facility_state) %>%
             st_drop_geometry() %>%
             inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
@@ -558,7 +558,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
               EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
               areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                   facility_buff = facility_buff,
-                                  facil_data = facility_data,
+                                  facil_data = LOI_data,
                                   path_raster_layer = raster_data) %>%
               dplyr::inner_join(facility_name, by = 'shape_ID') %>%
               dplyr::relocate(input_name)
@@ -567,7 +567,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
               EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
               areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                   facility_buff = facility_buff,
-                                  facil_data = facility_data,
+                                  facil_data = LOI_data,
                                   path_raster_layer = raster_data)
           }
 
@@ -576,7 +576,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           ## Shapefile for downstream (/upstream?) buffer
           facility_buff <- catchment.polygons[[4]] %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(facility_data, by = c('comid' = 'catchment_ID')) %>%
+            inner_join(LOI_data, by = c('comid' = 'catchment_ID')) %>%
             dplyr::select(shape_ID, facility_state) %>%
             st_drop_geometry() %>%
             inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
@@ -585,7 +585,7 @@ EJfunction <- function(data_type, facility_data, input_type = NULL, gis_option=N
           ## Shapefile with lat/lon of catchmentID waterbody centroid
           temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(facility_data, by = c('comid' = 'catchmentID')) %>%
+            inner_join(LOI_data, by = c('comid' = 'catchmentID')) %>%
             st_as_sf() %>%
             st_transform(crs = 4326)
 
