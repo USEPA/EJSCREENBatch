@@ -13,8 +13,8 @@
 #' @param input_data
 #' @param heat_table_type  All facilities, single facility, top N facilities. If top N facilities, must specify topN.
 #' @param heat_table_geog_lvl state or US
-#' @param heat_table_keepid
-#' @param heat_table_topN
+#' @param heat_table_keepid Option to keep row ID number of location
+#' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
 #' @param save_option Option to save heat table to a folder in working directory. Default is FALSE.
 #'
 #' @return
