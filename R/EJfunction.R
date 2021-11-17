@@ -13,6 +13,7 @@
 #' @param ds_mode Set "upstream" or "downstream" flow direction for water-based screening. Default is "downstream".
 #' @param ds_dist Set distance upstream/downstream along flow path for water-based screening. Default is 50 miles.
 #' @param input_name Vector of names for facilities
+#' @param maps_perc_geog State or US. Default is US.
 #' @param attains Option to return impairment data for flow path from ATTAINS database. Default is F.
 #' @param produce_ancillary_tables Option to return secondary tables/figures. Default is FALSE.
 #' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
