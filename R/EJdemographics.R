@@ -6,7 +6,7 @@
 #' @param data
 #' @param gis_method User specified method of creating buffers around areas of interest (intersect, centroid, intersection).
 #' @param buffer Distance(s) used to create buffers.
-#' @param threshold User-selected threshold - 80th percentile is default.
+#' @param threshold User specified threshold to represent potential concern. Default is 80%
 #'
 #' @return
 #' @export
