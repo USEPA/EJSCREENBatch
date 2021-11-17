@@ -4,10 +4,10 @@
 #' of indicators that exceed the 80th percentile.
 #'
 #' @param input_data
-#' @param rank_type Required. Either 'location' or 'CBG'
-#' @param rank_count Required.
-#' @param rank_geography_type Either 'US' or 'state
-#' @param save_option
+#' @param rank_type 'location' or 'CBG'. Default is 'location'. 
+#' @param rank_count Number of locations or CBGs to return. Default is 10.
+#' @param rank_geography_type State or US. Default is US.
+#' @param save_option Option to save rank table to a folder in working directory. Default is FALSE.
 #'
 #' @return
 #' @export
