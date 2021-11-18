@@ -253,7 +253,7 @@ EJHeatTables(input_data = my.EJ.data.named, heat_table_type = 'topn',
 
 ### Count tables
 
-Finally, the EJCountTables() function allows users to explore the extent to which environmental indices above the threshold percentile overlap with demographic indices above the threshold percentile. Locations with elevated counts of environmental AND demographic indices are likely of high EJ concern. The function produces a two-way count table that summarizes the number of locations with average environmental and/or demographic indicators above the 80th percentile national threshold.
+Finally, the EJCountTable() function allows users to explore the extent to which environmental indices above the threshold percentile overlap with demographic indices above the threshold percentile. Locations with elevated counts of environmental AND demographic indices are likely of high EJ concern. The function produces a two-way count table that summarizes the number of locations with average environmental and/or demographic indicators above the 80th percentile national threshold.
 
 ```{r}
 EJCountTable(input_data = my.EJ.data.named, save_option = F)[[1]]
