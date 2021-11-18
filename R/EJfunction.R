@@ -65,13 +65,13 @@
 #' c <- EJfunction(data_type="waterbased", LOI_data=facilities,
 #'                 input_type = 'sf', attains = F)
 #'
-EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option="intersection", buffer=NULL,
+EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_option="intersection", buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
                        maps_perc_geog='US',
-                       input_name=NULL, attains=NULL, raster_data = "data/US Census Grid_SF2010_TIFF"){
+                       input_name=NULL, attains=NULL, raster_data = NULL){
 
 
   #default to using API
@@ -154,7 +154,7 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option="inter
       }
 
   } else {
-    data.state.uspr <- fetch_data_ej(state)
+    data.state.uspr <- fetch_data_ej(working_dir, state)
     assign("data.state.uspr", data.state.uspr, envir=globalenv())
   }
 
