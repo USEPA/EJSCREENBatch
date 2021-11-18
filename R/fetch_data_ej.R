@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @examples
- fetch_data_ej <- function(state_filter){
+fetch_data_ej <- function(state_filter){
   #first check if data folder exists
   ifelse(!dir.exists("EJSCREEN data"), dir.create("EJSCREEN data"), FALSE)
 
@@ -29,11 +29,11 @@
       if(state_filter %in% unique(data$ST_ABBREV)){
         data <- data %>%
           filter((ST_ABBREV %in% state_filter)) %>%
-          filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
+          dplyr::filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
       }
     } else {
       data <- data %>%
-        filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
+        dplyr::filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
     }
   }
 
@@ -75,7 +75,7 @@
   data.state.uspr <- gdb_stpctile %>%
     left_join(csv_uspr, by=c("ID"="ID")) %>%
     filter_state(state_filter=state_filter) %>%
-    filter(!(ACSTOTPOP==0))
+    dplyr::filter(!(ACSTOTPOP==0))
 
   return(data.state.uspr)
 
