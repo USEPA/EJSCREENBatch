@@ -73,12 +73,6 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_
                        maps_perc_geog='US',
                        input_name=NULL, attains=NULL, raster_data = NULL){
 
-
-  #default to using API
-  # put in wrapper to use API
-  #Option for raster (in development)
-
-
   `%notin%` = Negate(`%in%`)
   #check to make sure data type is currently supported in tool
   if(data_type %notin% c("landbased", "waterbased")){
@@ -157,6 +151,15 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_
     data.state.uspr <- fetch_data_ej(working_dir, state)
     assign("data.state.uspr", data.state.uspr, envir=globalenv())
   }
+  
+  # Bring in ACS Data
+  if ("acs.cbg.data" %in% ls(envir = .GlobalEnv)) {
+    get('acs.cbg.data', env = .GlobalEnv)
+  } else {
+    acs.cbg.data <- fetch_acs_data(state)
+    assign('acs.cbg.data', acs.cbg.data)
+  }
+  
 
   #If conducting waterbased analysis, need to know input type
   if(data_type=="waterbased"){
