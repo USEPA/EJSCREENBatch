@@ -134,7 +134,7 @@ my.EJ.data$EJ.list.data[[1]] %>%
   dplyr::filter(name == 'facility_name_1')
 ```
 
-Second, the location-level percentile summaries are returned as *EJ.facil.data*. The dataframe includes both national and state percentiles for each EJSCREEN indicator. Under the default GIS option ("intersection"), these are the percentiles for a population-weighted average of a location's indicator values.^[For other GIS options, a location's returned values are the median percentile across all of its CBGs.] Here, we call a return of the summary for the first two locations in our list:
+Second, the location-level percentile summaries are returned as *EJ.facil.data*. The dataframe includes both national and state percentiles for each EJSCREEN indicator. Under the default GIS option ("intersection"), these are the percentiles for a population-weighted average of a location's indicator values.^[For other GIS options, a location's returned values are the median percentile across all of its CBGs.] Here, we call a return of the summary for the first two locations in our list. Four rows are returned, one for U.S. and one for state percentiles, per location:
 
 ```{r}
 my.EJ.data$EJ.facil.data[[1]] %>%
