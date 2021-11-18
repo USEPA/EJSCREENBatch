@@ -6,7 +6,7 @@
 #' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments).
 #' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.
 #' @param input_type Required if data_type == "waterbased". Input must be "sf" object(s) or list of catchments (ComIDs)
-#' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
+#' @param gis_option User specified method of creating buffers around areas of interest (intersect, intersection). Default is intersection.
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
@@ -39,13 +39,13 @@
 #' # How it works:
 #' # Provide lat lons to tool and specify data type (facility_latlons)
 #' # options to consider
-#' # 1) gis_option. Three options available: intersect, centroid, intersection.
+#' # 1) gis_option. Three options available: intersect, intersection.
 #' #    Instersection is default.
 #' # 2) buffer. Radius to use around facilities
 #' # 3) Threshold for EJ consideration. EJScreen uses 80 as default.
 #' # 4) states. Can restrict analysis to specific states.
 #' # bring in data for contiguous US
-#' a1 <- EJfunction(data_type="landbased", LOI_data = facilities, gis_option="centroid",
+#' a1 <- EJfunction(data_type="landbased", LOI_data = facilities, gis_option="intersect",
 #'                 buffer = 5)
 #'
 #' #===============================================================================
@@ -65,7 +65,7 @@
 #' c <- EJfunction(data_type="waterbased", LOI_data=facilities,
 #'                 input_type = 'sf', attains = F)
 #'
-EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, buffer=NULL,
+EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option="intersection", buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
@@ -231,8 +231,8 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
     if(is.na(gis_option)){gis_option=="intersection"}
 
     #users can specify alternative options.
-    if(gis_option %notin% c("all", "intersect", "centroid", "intersection")){
-      stop("Please provide one of the following buffer options: all, intersect, centroid, intersection")
+    if(gis_option %notin% c("all", "intersect", "intersection")){
+      stop("Please provide one of the following buffer options: all, intersect, intersection")
     }
 
     # Determine most common geometry type in the input sf dataframe
@@ -314,36 +314,7 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
         }
       }
 
-      if(gis_option %in% c("all", "centroid")){
-        print('Centroid method...')
-        j=j+1
-        area2_centroid <- facility_buff %>%
-          st_join(st_centroid(data.state.uspr), join=st_contains) %>%
-          as.data.frame() %>%
-          dplyr::select(-geometry)
 
-        EJ.list.data[[j]] <- area2_centroid
-        names(EJ.list.data)[j] = paste0("area2_centroid_radius",i,"mi")
-
-        EJ.index.data[[paste0("Indexes_centroid_radius",i,"mi")]] <-
-          EJIndexes(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
-        EJ.demographics.data[[paste0("demographics_centroid_radius",i,"mi")]] <-
-          EJdemographics(area2_centroid, gis_method="centroid" , buffer=i, threshold=Thresh)
-        EJ.corrplots.data[[paste0("corrplots_centroid_radius",i,"mi")]] <-
-          EJCorrPlots(area2_centroid, gis_method ="centroid" , buffer=i, threshold=Thresh)
-
-        if (!is.null(input_name)) {
-          EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
-            EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(LOI_data, crs = 4326)) %>%
-            dplyr::inner_join(facility_name, by = 'shape_ID') %>%
-            dplyr::relocate(input_name)
-        } else {
-          EJ.facil.data[[paste0('facil_centroid_radius',i,'mi')]] <-
-            EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(LOI_data, crs = 4326))
-        }
-      }
 
       if(gis_option %in% c("all", "intersection")){
         print('Intersection method...')
@@ -428,7 +399,7 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
 
     ## Can come back and add all option later if demand exists.
     if(gis_option == 'all'){
-      stop('Please choose ONLY ONE of (centroid, intersect, intersection) for water-based analysis.')
+      stop('Please choose ONLY ONE of (intersect, intersection) for water-based analysis.')
     }
 
     # Set Upstream/downstream option
@@ -498,10 +469,6 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
           filter(!is.na(shape_ID)) %>%
           st_drop_geometry()
         #            dplyr::select(-starts_with('Shape', ignore.case = F))
-      } else if (gis_option %in% c('centroid')){
-        area <- catchment.polygons[[1]] %>%
-          st_join(st_centroid(data.state.uspr), join=st_contains) %>%
-          st_drop_geometry()
       }
 
       EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- area
@@ -517,7 +484,7 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
 
       #############
       ## This returns facility level summaries for
-      if(gis_option %in% c('intersect','centroid')){
+      if(gis_option %in% c('intersect')){
         if (in.type == 'sf'){
           if (!is.null(input_name)) {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
