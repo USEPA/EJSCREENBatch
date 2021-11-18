@@ -42,7 +42,7 @@ install_github(repo = "USEPA/EJSCREENbatch")
 ```
 
 
-Then load the package, and set your working directory to that of your input data. (Note: as of V1.0, you must also create an object with the filepath housing the SEDAC raster.)
+Then load the package, and set your working directory to that of your input data. You will also need to download a dasymetric population raster. This package is currently built to use [NASA's Socioeconomic Data and Application Center (SEDAC) 1kmX1km raster] (https://sedac.ciesin.columbia.edu/data/set/usgrid-summary-file1-2010). As of v2.0 you must also create an object with the filepath housing the SEDAC raster.
 ```{r, eval = F}
 library(EJSCREENbatch)
 setwd('~/DIRECTORY_NAME_HERE')
