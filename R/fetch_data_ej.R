@@ -28,7 +28,8 @@
     if(!is.null(state_filter)){
       if(state_filter %in% unique(data$ST_ABBREV)){
         data <- data %>%
-          filter(!(ST_ABBREV %in% state_filter))
+          filter((ST_ABBREV %in% state_filter)) %>%
+          filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
       }
     } else {
       data <- data %>%
@@ -46,7 +47,6 @@
     ##newer data, user should remove existing data from local directory.
     calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0("EJSCREEN data/"), pattern="StatePctile.gdb"))))
     gdb_stpctile <- sf::st_read(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer =st_layers(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"))[[1]]) %>%
-      filter_state(state_filter=state_filter) %>%
       st_transform("ESRI:102005") %>%
       mutate(area_bg = st_area(Shape)) %>%
       rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
@@ -74,6 +74,7 @@
 
   data.state.uspr <- gdb_stpctile %>%
     left_join(csv_uspr, by=c("ID"="ID")) %>%
+    filter_state(state_filter=state_filter) %>%
     filter(!(ACSTOTPOP==0))
 
   return(data.state.uspr)
