@@ -4,7 +4,7 @@
 #' of indicators that exceed the 80th percentile.
 #'
 #' @param input_data
-#' @param rank_type 'location' or 'CBG'. Default is 'location'. 
+#' @param rank_type 'location' or 'CBG'. Default is 'location'.
 #' @param rank_count Number of locations or CBGs to return. Default is 10.
 #' @param rank_geography_type State or US. Default is US.
 #' @param save_option Option to save rank table to a folder in working directory. Default is FALSE.
@@ -19,7 +19,7 @@
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 'US',
-                      rank_count = 10, save_option = F){
+                      rank_count = 10, save_option = F, working_dir){
 
   `%notin%` = Negate(`%in%`)
   if (!(rank_geography_type %in% c('US','state'))){
@@ -67,11 +67,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
         flextable::colformat_num(big.mark = '')
 
       if (save_option == T){
-        ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
-               dir.create(file.path(getwd(),"ranktables/")), FALSE)
+        ifelse(!dir.exists(file.path(working_dir,"ranktables/")),
+               dir.create(file.path(working_dir,"ranktables/")), FALSE)
         flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                    start = 7)[i]]],
-                                 path = paste0('ranktables/location_',
+                                 path = paste0(working_dir,'/ranktables/location_',
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[i],".png"))
       }
@@ -154,11 +154,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
           flextable::colformat_num(big.mark = '')
 
         if (save_option == T){
-          ifelse(!dir.exists(file.path(getwd(),"ranktables/")),
-                 dir.create(file.path(getwd(),"ranktables/")), FALSE)
+          ifelse(!dir.exists(file.path(working_dir,"ranktables/")),
+                 dir.create(file.path(working_dir,"ranktables/")), FALSE)
           flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
-                        path = paste0('ranktables/cbg_',
+                        path = paste0(working_dir,'/ranktables/cbg_',
                                       stringr::str_sub(names(input_data$EJ.facil.data),
                                                        start = 7)[i],".png"))
         }

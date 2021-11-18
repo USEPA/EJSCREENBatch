@@ -24,7 +24,7 @@
 #' y1 <- EJHeatTables(input_data = y, heat_table_type = 'topn', heat_table_topN = 5)
 #' y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
 EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL, heat_table_keepid = NULL, heat_table_topN = NULL,
-                         save_option = F){
+                         save_option = F, working_dir){
 
   # Set default geography level @ nat'l scale
   if(is.null(heat_table_geog_lvl)){
@@ -132,9 +132,9 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
     ## Save if option selected.
     if (save_option == T){
-      ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
-             dir.create(file.path(getwd(),"heattabs/")), FALSE)
-      flextable::save_as_image(x = heat.table, path = "heattabs/ht_all.png")
+      ifelse(!dir.exists(file.path(working_dir,"heattabs/")),
+             dir.create(file.path(working_dir,"heattabs/")), FALSE)
+      flextable::save_as_image(x = heat.table, path = paste0(working_dir,"/heattabs/ht_all.png"))
     }
 
   } else if (heat_table_type == 'single') { #This returns HeatTable for user-specified facil
@@ -191,9 +191,9 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
     ## Save if option selected.
     if (save_option == T){
-      ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
-             dir.create(file.path(getwd(),"heattabs/")), FALSE)
-      flextable::save_as_image(x = heat.table, path = paste0('heattabs/ht_single_',
+      ifelse(!dir.exists(file.path(working_dir,"heattabs/")),
+             dir.create(file.path(working_dir,"heattabs/")), FALSE)
+      flextable::save_as_image(x = heat.table, path = paste0(working_dir,'/heattabs/ht_single_',
                                                              heat_table_keepid,".png"))
     }
 
@@ -264,10 +264,10 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
       ## Save if option selected.
       if (save_option == T){
-        ifelse(!dir.exists(file.path(getwd(),"heattabs/")),
-               dir.create(file.path(getwd(),"heattabs/")), FALSE)
+        ifelse(!dir.exists(file.path(working_dir,"heattabs/")),
+               dir.create(file.path(working_dir,"heattabs/")), FALSE)
         flextable::save_as_image(x = ht,
-                                 path = paste0("heattabs/ht_topN_",
+                                 path = paste0(working_dir,"/heattabs/ht_topN_",
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[k],
                                                ".png"))

@@ -376,14 +376,14 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_keepid = heat_table_keepid,
-                   heat_table_topN = heat_table_topN, save_option=T)
+                   heat_table_topN = heat_table_topN, save_option=T, working_dir=working_dir)
 
 
       EJRanking(input_data = return.me,
                 rank_type = rank_type,
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
-                save_option=T)
+                save_option=T, working_dir=working_dir)
 
       EJCountTable(input_data = return.me, save_option = T)
 
