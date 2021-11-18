@@ -3,8 +3,8 @@
 #' Main function that performs screening (land and water-based).
 #' Input must be an SF object! User must make this transformation.
 #'
-#' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments). 
-#' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.  
+#' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments).
+#' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.
 #' @param input_type Required if data_type == "waterbased". Input must be "sf" object(s) or list of catchments (ComIDs)
 #' @param gis_option User specified method of creating buffers around areas of interest (intersect, centroid, intersection). Default is intersection.
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
@@ -17,7 +17,7 @@
 #' @param attains Option to return impairment data for flow path from ATTAINS database. Default is F.
 #' @param produce_ancillary_tables Option to return secondary tables/figures. Default is FALSE.
 #' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
-#' @param heat_table_geog_lvl "State" or "US". Default is "US". 
+#' @param heat_table_geog_lvl "State" or "US". Default is "US".
 #' @param heat_table_keepid shape_ID Option to keep row ID number of location. Recommednd if type = 'single'
 #' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
 #' @param rank_type Ranking table type, either "location" or "cbg".
@@ -145,7 +145,7 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
 
   # Bring in EJ Screen Data
   if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
-    get("data.state.uspr", envir = .GlobalEnv)
+    data.state.uspr <- get("data.state.uspr", envir = .GlobalEnv)
   } else {
     data.state.uspr <- fetch_data_ej(state)
     assign("data.state.uspr", data.state.uspr, envir=globalenv())
