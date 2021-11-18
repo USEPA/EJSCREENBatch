@@ -145,7 +145,14 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
 
   # Bring in EJ Screen Data
   if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
-    data.state.uspr <- get("data.state.uspr", envir = .GlobalEnv)
+    data <- get("data.state.uspr", envir = .GlobalEnv)
+      if(!is.null(state)){
+        data.state.uspr <- data %>%
+          filter(ST_ABBREV %in% state)
+      } else {
+        data.state.uspr <- data
+      }
+
   } else {
     data.state.uspr <- fetch_data_ej(state)
     assign("data.state.uspr", data.state.uspr, envir=globalenv())
