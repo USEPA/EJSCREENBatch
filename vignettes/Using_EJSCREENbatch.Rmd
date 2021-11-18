@@ -169,7 +169,7 @@ my.EJ.data.named <- EJfunction(data_type = "landbased",
 
 # Canned visualizations
 
-The package also includes several sub-functions that produce visualizations of potential interest in an initial EJ screening.
+The package also includes several sub-functions that produce visualizations of potential interest in an initial EJ screening. Users should note that these visualizations are a starting point for a screening analysis and users are highly encouraged to produce their own figures tailored to their locations of interest. 
 
 Two visualizations are created by default in EJfunction(). The first is a set of boxplots displaying the range of indicator percentiles across all CBGs included in the screening. These plots provide a multivariate sense of potential EJ correlations. Our running example, for instance, returns the following (using national percentiles):
 
