@@ -65,12 +65,14 @@
 #' c <- EJfunction(data_type="waterbased", LOI_data=facilities,
 #'                 input_type = 'sf', attains = F)
 #'
-EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_option="intersection", buffer=NULL,
+EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, 
+                       gis_option="intersection", buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
-                       heat_table_type=NULL, heat_table_geog_lvl=NULL, heat_table_keepid=NULL, heat_table_topN=NULL,
-                       rank_type = NULL, rank_geography_type = NULL,  rank_count = NULL,
-                       maps_perc_geog='US',
+                       heat_table_type=NULL, heat_table_geog_lvl=NULL, 
+                       heat_table_keepid=NULL, heat_table_topN=NULL,
+                       rank_type = NULL, rank_geography_type = NULL,  
+                       rank_count = NULL, maps_perc_geog='US',
                        input_name=NULL, attains=NULL, raster_data = NULL){
 
   `%notin%` = Negate(`%in%`)
@@ -135,8 +137,6 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_
     rank_count = 10
   }
 
-
-
   # Bring in EJ Screen Data
   if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
     data <- get("data.state.uspr", envir = .GlobalEnv)
@@ -191,9 +191,6 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL, gis_
     }
   }
 
-
-
-  # Create internal function facility ID (in case user doesn't)
   # Create internal function facility ID (in case user doesn't)
   if(data_type == 'waterbased' & in.type == 'catchment') {
     LOI_data <- LOI_data %>%
