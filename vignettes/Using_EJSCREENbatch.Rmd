@@ -118,7 +118,7 @@ my.EJ.data <- EJfunction(data_type = "landbased",
            raster_data = raster.path)
 ```
 
-This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'intersection')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's. We rely on a [NASA-produced](https://sedac.ciesin.columbia.edu/data/collection/usgrid) 1km$^2$ population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
+This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'intersection')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's because we rely on the SEDAC population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
 
 The object returned as *my.EJ.data* is a list of data sub-objects.
 
@@ -225,7 +225,7 @@ Users can further adjust the output tables through two other arguments. *rank_ge
 
 ### Heat tables
 
-The EJHeatTables() function creates tables that report a single location’s (or set of locations’) summarized state or national percentile values for all 16 EJ indicators. Table cells with values that fall over the 80th, 90th, and 95th percentiles are highlighted in yellow, orange, and red, respectively. We illustrate three flavors of these tables below.
+The EJHeatTables() function creates tables that report a single location’s (or set of locations’) summarized state or national percentile values for all 17 EJ indicators. Table cells with values that fall over the 80th, 90th, and 95th percentiles are highlighted in yellow, orange, and red, respectively. We illustrate three flavors of these tables below.
 
 The first option, set with the argument *type = 'all'*, returns a heat table for the median CBG value across ALL locations. This option may be especially useful for comparing results across an EJfunction run that includes several buffer distances or GIS methods. Using our running example again, we obtain:
 
