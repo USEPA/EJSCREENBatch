@@ -56,7 +56,8 @@ fetch_acs_data <- function(state_filter){
     fwrite(acs.cbg.data, 'ACS_data/acs_ejstats.csv')
     
   } else {
-    acs.cbg.data <- fread('ACS_data/acs_ejstats.csv') 
+    acs.cbg.data <- fread('ACS_data/acs_ejstats.csv', 
+                          colClasses = c('GEOID'='character')) 
   }
   
   # Filter down to user-requested state

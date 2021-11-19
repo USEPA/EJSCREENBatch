@@ -160,7 +160,9 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL,
     assign('acs.cbg.data', acs.cbg.data)
   }
   
-
+  # Join EJSCREEN + ACS Data
+  data.state.uspr <- data.state.uspr %>% left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
+  
   #If conducting waterbased analysis, need to know input type
   if(data_type=="waterbased"){
     if(input_type %notin% c("sf", "catchment")){
@@ -226,7 +228,6 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL,
 
   #For each data type, make sure GIS methods make sense.
   if(data_type=="landbased"){
-
     #set default to intersection method
     if(is.na(gis_option)){gis_option=="intersection"}
 
@@ -314,14 +315,12 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL,
         }
       }
 
-
-
       if(gis_option %in% c("all", "intersection")){
         print('Intersection method...')
         j=j+1
-        area3_intersection <- st_intersection(facility_buff, st_buffer(data.state.uspr,0)) %>%
-          mutate(area_geo = st_area(geometry)) %>%
-          mutate(percent_area = area_geo/area_bg*100) %>%
+        area3_intersection <- sf::st_intersection(facility_buff, sf::st_buffer(data.state.uspr,0)) %>%
+          dplyr::mutate(area_geo = sf::st_area(geometry)) %>%
+          dplyr::mutate(percent_area = area_geo/area_bg*100) %>%
           dplyr::select(-geometry) %>%
           as.data.frame()
 
@@ -359,25 +358,27 @@ EJfunction <- function(data_type, LOI_data, working_dir, input_type = NULL,
             areal_apportionment(ejscreen_bgs_data = data.state.uspr,
                                 facility_buff = facility_buff,
                                 facil_data = LOI_data,
-                                path_raster_layer = raster_data)
+                                path_raster_layer = raster_data,
+                                thrshld = Thresh)
         }
       }
       j=j+1
     }
-
+    
+    # Clean up table
     EJ.list.data <- Filter(Negate(is.null), EJ.list.data)
     EJ.facil.data <- Filter(Negate(is.null), EJ.facil.data)
 
+    # Return these objects as functional output
     return.me <- sapply(objects(pattern="^EJ", envir = environment()),get, envir = environment(), simplify=F, USE.NAMES=T)
     return.me <- return.me[unlist(lapply(return.me,class))!="function"]
 
-
+    # If user wants all tables/figures returned, then:
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_keepid = heat_table_keepid,
                    heat_table_topN = heat_table_topN, save_option=T, working_dir=working_dir)
-
 
       EJRanking(input_data = return.me,
                 rank_type = rank_type,

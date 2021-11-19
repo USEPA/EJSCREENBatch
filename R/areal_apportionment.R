@@ -10,12 +10,14 @@
 #' @param facility_buff Polygons representing buffered areas of interest
 #' @param facil_data Original facility-level data (for non-buffered shapes)
 #' @param path_raster_layer
+#' @param thrshld
 #'
 #' @return
 #' @export
 #'
 #' @examples
-areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, path_raster_layer){
+areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, path_raster_layer,
+                                thrshld){
 
   print('Importing rasters for spatial weighting...')
   layers <- list.files(path=path_raster_layer, pattern= "((pop)).*\\.tif$", full.names = TRUE )
@@ -68,12 +70,18 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                   PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
                   PTSDF, PWDIS, VULEOPCT,
                   MINORPCT, LOWINCPCT, UNDER5PCT,
-                  LESSHSPCT, OVER64PCT, LINGISOPCT) %>%
+                  LESSHSPCT, OVER64PCT, LINGISOPCT,
+                  med_inc, frac_white, frac_black, frac_amerind,
+                  frac_asian, frac_pacisl, frac_hisp,
+                  frac_pov50, frac_pov99) %>%
     dplyr::group_by(shape_ID) %>%
     dplyr::mutate(across(c(PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
                            PTSDF, PWDIS, VULEOPCT,
                            MINORPCT, LOWINCPCT, UNDER5PCT,
-                           LESSHSPCT, OVER64PCT, LINGISOPCT),
+                           LESSHSPCT, OVER64PCT, LINGISOPCT,
+                           med_inc, frac_white, frac_black, frac_amerind,
+                           frac_asian, frac_pacisl, frac_hisp,
+                           frac_pov50, frac_pov99),
                          list(~ifelse(!is.na(ID) & is.na(shape_ID), ., (sum(fraction*ACSTOTPOP*., na.rm=T)/sum(fraction*ACSTOTPOP,na.rm=T)))  )  ,
                          .names="raw_{.col}")) %>%
     dplyr::select(shape_ID, sum.uspop10.intersection, ID, facility_state, STATE_NAME, starts_with("raw_"), ends_with("state"), ends_with("US")) %>%
@@ -104,6 +112,12 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
   #computes state percentiles--looping to make sure distribution is used so that we get percentiles by state
   #Can parallelize for speed
   print('Computing state percentiles...')
+  rename_cols <- c("PM25","OZONE","DSLPM","CANCER","RESP","PTRAF","PNPL",
+                   "PRMP","PRE1960PCT","PTSDF","PWDIS","VULEOPCT","MINORPCT",
+                   "LOWINCPCT","UNDER5PCT","LESSHSPCT","OVER64PCT","LINGISOPCT",
+                   "med_inc","frac_white","frac_black","frac_amerind","frac_asian",          
+                   "frac_pacisl","frac_hisp","frac_pov50","frac_pov99")
+  
   facility_level_estimates <- do.call(rbind,lapply(states, function(x){
     iterm <- facility_level %>%
       dplyr::filter(STATE_NAME==x) %>%
@@ -119,7 +133,8 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                            .names="P_{.col}_state"))  %>%
       dplyr::rename_with(~ sub("raw_", "", .x), everything())
   })) %>%
-    dplyr::select(shape_ID, `Pop. Count`, starts_with("P_")) %>%
+    rename_with(.fn = ~paste0('P_',paste0(., '_raw')), .cols = all_of(rename_cols)) %>%
+    dplyr::select(shape_ID, `Pop. Count`, starts_with("P_"),count_bgs_radius) %>%
     dplyr::rename(shapeID = shape_ID) %>%
     tidyr::pivot_longer(cols=starts_with("P_"),
                         names_to="variable",
@@ -146,6 +161,15 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                   'Ling. Isol.'       = P_LINGISOPCT,
                   'Age Under 5'       = P_UNDER5PCT,
                   'Age Over 64'       = P_OVER64PCT,
+                  'Median Income'     = P_med_inc,
+                  'Caucasian (%)'     = P_frac_white,
+                  'Black (%)'         = P_frac_black,
+                  'Amer. Ind. (%)'    = P_frac_amerind,
+                  'Asian (%)'             = P_frac_asian,
+                  'Pac. Isl (%)'      = P_frac_pacisl,
+                  'Hispanic (%)'      = P_frac_hisp,
+                  '<50% P.L. (%)'     = P_frac_pov50,
+                  '<100% P.L. (%)'    = P_frac_pov99,
                   shape_ID            = shapeID)
 
   df.latlon <- facil_data %>%
@@ -159,16 +183,32 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                     `Low Income`, `Minority`, `Less HS Educ`, `Ling. Isol.`,
                     `Age Under 5`, `Age Over 64`, `Air, Cancer`, `Diesel PM`,
                     Lead, Ozone, PM, NPL, `RMP Facility`, Traffic, `TSD Facility`,
-                    `WW Discharge`, `Resp. Hazard` )
+                    `WW Discharge`, `Resp. Hazard` #,
+                    #`Median Income`, `Caucasian (%)`, `Black (%)`, `Amer. Ind. (%)`,
+                    #`Asian (%)`, `Pac. Isl (%)`, `Hispanic (%)`,
+                    #`<50% P.L. (%)`, `<100% P.L. (%)`
+                    )
+  
   together.sf <- together.sf %>%
-    dplyr::mutate(`Env. indicators above 80th %ile` =
+    dplyr::mutate(!!paste0('Env. indicators above ',thrshld,'th %ile') :=
                     as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                    `Air, Cancer`:`Resp. Hazard`) > 80))) %>%
-    dplyr::mutate(`Demo. indicators above 80th %ile` =
+                                                    `Air, Cancer`:`Resp. Hazard`) > thrshld))) %>%
+    dplyr::mutate(!!paste0('Demo. indicators above ',thrshld,'th %ile') :=
                     as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                    `Low Income`:`Age Over 64`) > 80))) %>%
-    dplyr::mutate_if(is.numeric, round) %>%
-    st_as_sf(crs = 4326)
+                                                    `Low Income`:`Age Over 64`) > thrshld))) 
+  together.perc <- together.sf %>%
+    dplyr::filter(geography != 'raw') %>%
+    dplyr::mutate_if(is.numeric, round)
+  
+  together.sf <- together.sf %>%
+    dplyr::filter(geography == 'raw') %>%
+    dplyr::mutate(`Pop. Count` = round(`Pop. Count`),
+                  !!paste0('Env. indicators above ',thrshld,'th %ile') := NA,
+                  !!paste0('Demo. indicators above ',thrshld,'th %ile') := NA
+                  )
+  
+  together.sf <- rbind(together.sf, together.perc) %>%
+    arrange(shape_ID, geography)
 
   return(together.sf)
 }
