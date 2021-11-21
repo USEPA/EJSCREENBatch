@@ -1,7 +1,24 @@
-fetch_acs_data <- function(state_filter){
+#' Fetch data from ACS
+#'
+#' This function looks for demographic data from ACS. First checks if this data is
+#' in working directory. If not, it creates a directory and downloads most recent
+#' data.
+#'
+#' @param working_dir
+#' @param state_filter Users may restrict screening to a particular state in the
+#' contiguous US. If so, users can specify a state. Default is to conduct
+#' screening for the entire contiguous US.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
+fetch_acs_data <- function(working_dir, state_filter){
   
   # Create directory if needed.
-  ifelse(!dir.exists("ACS_data"), dir.create("ACS_data"), FALSE)
+  ifelse(!dir.exists(paste0(working_dir,"/ACS_data")), 
+         dir.create(paste0(working_dir,"/ACS_data")), FALSE)
   
   # Function to extract relevant CBG dataframe
   parallel.api <- function(st){
@@ -25,7 +42,7 @@ fetch_acs_data <- function(state_filter){
       tidyr::pivot_wider(id_cols = c(GEOID), names_from = variable, values_from = estimate)
   }
   
-  if(identical(list.files(path="ACS_data", pattern="acs_ejstats.csv"), 
+  if(identical(list.files(path=paste0(working_dir,"/ACS_data"), pattern="acs_ejstats.csv"), 
                character(0))){
     
     ## State lists 
@@ -53,10 +70,10 @@ fetch_acs_data <- function(state_filter){
     rm(convert.cols, cbg.list, cbg.together)
     
     # Write file for future use
-    fwrite(acs.cbg.data, 'ACS_data/acs_ejstats.csv')
+    fwrite(acs.cbg.data, paste0(working_dir,'/ACS_data/acs_ejstats.csv'))
     
   } else {
-    acs.cbg.data <- fread('ACS_data/acs_ejstats.csv', 
+    acs.cbg.data <- fread(paste0(working_dir,'/ACS_data/acs_ejstats.csv'), 
                           colClasses = c('GEOID'='character')) 
   }
   

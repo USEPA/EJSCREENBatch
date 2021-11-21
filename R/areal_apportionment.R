@@ -63,7 +63,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                        dplyr::rename(sum.uspop10.intersection = sum.uspop10.tif),
                      by = c("ID", "shape_ID")) %>%
     dplyr::mutate(fraction = as.numeric(sum.uspop10.intersection/sum.uspop10.tif*100, options(scipen=999))) %>%
-    dplyr::right_join(data.state.uspr, by=c("ID"="ID")) %>%
+    dplyr::right_join(ejscreen_bgs_data, by=c("ID"="ID")) %>%
     dplyr::select(ID, shape_ID, sum.uspop10.tif, sum.uspop10.intersection,
                   fraction, count_bgs_radius, #count_fac_radius,
                   facility_state, STATE_NAME, ACSTOTPOP,
@@ -90,7 +90,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
     dplyr::distinct() %>%
     dplyr::ungroup() %>%
     dplyr::mutate(across(c(starts_with("raw_")),
-                         list(~round(ecdf(data.state.uspr %>%
+                         list(~round(ecdf(ejscreen_bgs_data %>%
                                             as.data.frame() %>%
                                             dplyr::select(as.name(str_replace(cur_column(), c("raw_") ,""))) %>%
                                             unlist() %>%
@@ -123,7 +123,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
       dplyr::filter(STATE_NAME==x) %>%
       dplyr::filter(!is.na(shape_ID))  %>%
       dplyr::mutate(across(c(starts_with("raw_")),
-                           list(~round(ecdf(na.omit(data.state.uspr %>%
+                           list(~round(ecdf(na.omit(ejscreen_bgs_data %>%
                                                       as.data.frame() %>%
                                                       dplyr::filter(STATE_NAME==x) %>%
                                                       dplyr::select(as.name(str_replace(cur_column(), c("raw_"),""))) %>%
@@ -165,7 +165,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                   'Caucasian (%)'     = P_frac_white,
                   'Black (%)'         = P_frac_black,
                   'Amer. Ind. (%)'    = P_frac_amerind,
-                  'Asian (%)'             = P_frac_asian,
+                  'Asian (%)'         = P_frac_asian,
                   'Pac. Isl (%)'      = P_frac_pacisl,
                   'Hispanic (%)'      = P_frac_hisp,
                   '<50% P.L. (%)'     = P_frac_pov50,
