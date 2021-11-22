@@ -45,8 +45,8 @@ fetch_data_ej <- function(working_dir, state_filter){
     #if data exist in local directory, load data for the latest year available
     #if user does not want to use data already in directory and wants to re-download
     ##newer data, user should remove existing data from local directory.
-    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0(working_dir,"EJSCREEN data/"), pattern="StatePctile.gdb"))))
-    gdb_stpctile <- sf::st_read(dsn = paste0(working_dir,"/EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer =st_layers(dsn = paste0("EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"))[[1]]) %>%
+    calendar_year <- max(as.numeric(gsub("[^0-9]", "", list.files(path=paste0(working_dir,"/EJSCREEN data/"), pattern="StatePctile.gdb"))))
+    gdb_stpctile <- sf::st_read(dsn = paste0(working_dir,"/EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"), layer =st_layers(dsn = paste0(working_dir,"/EJSCREEN data/EJSCREEN_",calendar_year,"_StatePctile.gdb"))[[1]]) %>%
       st_transform("ESRI:102005") %>%
       mutate(area_bg = st_area(Shape)) %>%
       rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
