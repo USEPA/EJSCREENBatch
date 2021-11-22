@@ -362,13 +362,19 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(LOI_data, crs = 4326)) %>%
+                         facil_data = st_transform(LOI_data, crs = 4326),
+                         ejscreen_data = data.state.uspr,
+                         acs_data = acs.cbg.data,
+                         thrshld = Thresh) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
-                         facil_data = st_transform(LOI_data, crs = 4326))
+                         facil_data = st_transform(LOI_data, crs = 4326),
+                         ejscreen_data = data.state.uspr,
+                         acs_data = acs.cbg.data,
+                         thrshld = Thresh)
         }
       }
 
@@ -641,13 +647,19 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           if (!is.null(input_name)) {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
               EJFacilLevel(list_data = area,
-                           facil_data = st_transform(LOI_data, crs = 4326)) %>%
+                           facil_data = st_transform(LOI_data, crs = 4326),
+                           ejscreen_data = data.state.uspr,
+                           acs_data = acs.cbg.data,
+                           thrshld = Thresh) %>%
               dplyr::inner_join(facility_name, by = 'shape_ID') %>%
               dplyr::relocate(input_name)
           } else {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
               EJFacilLevel(list_data = area,
-                           facil_data = st_transform(LOI_data, crs = 4326))
+                           facil_data = st_transform(LOI_data, crs = 4326),
+                           ejscreen_data = data.state.uspr,
+                           acs_data = acs.cbg.data,
+                           thrshld = Thresh)
           }
         } else if (in.type == 'catchment'){
           temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
@@ -657,7 +669,10 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
           EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
             EJFacilLevel(list_data = area,
-                         facil_data = st_transform(temp.mat, crs = 4326)) %>%
+                         facil_data = st_transform(temp.mat, crs = 4326),
+                         ejscreen_data = data.state.uspr,
+                         acs_data = acs.cbg.data,
+                         thrshld = Thresh) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(catchment_ID)
 
