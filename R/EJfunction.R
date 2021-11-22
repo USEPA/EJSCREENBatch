@@ -325,7 +325,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                .names="P_{.col}_US"))
 
         # State percentiles
-        states <- unique(temp_intersect$ST_ABBREV)
+        states <- na.omit(unique(temp_intersect$ST_ABBREV))
         temp_state <- lapply(states, function(x){
           temp_intersect2 <- temp_intersect %>%
             dplyr::filter(ST_ABBREV==x) %>%
@@ -404,7 +404,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                .names="P_{.col}_US"))
 
         # State percentiles
-        states <- unique(temp_intersect$ST_ABBREV)
+        states <- na.omit(unique(temp_intersect$ST_ABBREV))
         temp_state <- lapply(states, function(x){
           temp_intersect2 <- temp_intersect %>%
             dplyr::filter(ST_ABBREV==x) %>%
@@ -599,7 +599,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                              .names="P_{.col}_US"))
 
       # State percentiles
-      states <- unique(temp_intersect$ST_ABBREV)
+      states <- na.omit(unique(temp_intersect$ST_ABBREV))
       temp_state <- lapply(states, function(x){
         temp_intersect2 <- temp_intersect %>%
           dplyr::filter(ST_ABBREV==x) %>%
