@@ -312,7 +312,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         temp_intersect <- area1_intersect %>%
           dplyr::select(-contains('_D2_')) %>%
-          dplyr::select(list.keep, starts_with('P_')) %>%
+          dplyr::select(any_of(list.keep), starts_with('P_')) %>%
           dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
                                  'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                  'frac_pov99'),
