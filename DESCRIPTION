@@ -19,7 +19,7 @@ Imports:
   tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot,
   RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
   leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools,
-  rlist, exactextractr 
+  rlist, exactextractr, furr, tidycensus, future
 Depends: 
   tidyverse, sf, data.table
 LazyData: true
