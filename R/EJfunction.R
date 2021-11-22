@@ -571,15 +571,59 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       #############
       ## This section intersects/contains facility buffered areas and CBGs
-      if (gis_option %in% c('intersect', 'intersection')){
-        area <- catchment.polygons[[1]] %>%
-          st_join(data.tog, join = st_intersects) %>%
-          filter(!is.na(shape_ID)) %>%
-          st_drop_geometry()
-        #            dplyr::select(-starts_with('Shape', ignore.case = F))
-      }
-
-      EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- area
+      area <- catchment.polygons[[1]] %>%
+        sf::st_join(data.tog, join = st_intersects) %>%
+        dplyr::filter(!is.na(shape_ID)) %>%
+        sf::st_drop_geometry()
+      
+      # Trim down list.data to key variables.
+      list.keep <- c('shape_ID', 'ID', 'STATE_NAME', 'ST_ABBREV', 'ACSTOTPOP',
+                     'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP', 
+                     'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT', 
+                     'UNDER5PCT', 'LESSHSPCT', 'OVER64PCT', 'LINGISOPCT',
+                     'med_inc', 'frac_white', 'frac_black', 'frac_amerind',
+                     'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 'frac_pov99')
+      
+      temp_intersect <- area %>%
+        dplyr::select(-contains('_D2_')) %>%
+        dplyr::select(list.keep, starts_with('P_')) %>%
+        dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
+                               'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                               'frac_pov99'),
+                             list(~round(ecdf(acs.cbg.data %>%
+                                                as.data.frame() %>%
+                                                dplyr::select(cur_column()) %>%
+                                                unlist() %>%
+                                                as.numeric())(.)*100
+                                         ,0)),
+                             .names="P_{.col}_US")) 
+      
+      # State percentiles
+      states <- unique(temp_intersect$ST_ABBREV)
+      temp_state <- lapply(states, function(x){
+        temp_intersect2 <- temp_intersect %>%
+          dplyr::filter(ST_ABBREV==x) %>%
+          dplyr::filter(!is.na(shape_ID))  %>%
+          dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
+                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                                 'frac_pov99'),
+                               list(~round(ecdf(na.omit(acs.cbg.data %>%
+                                                          as.data.frame() %>%
+                                                          dplyr::filter(state==x) %>%
+                                                          dplyr::select(cur_column())) %>%
+                                                  unlist() %>%
+                                                  as.numeric())(.)*100
+                                           ,0)),
+                               .names="P_{.col}_state"))
+      })
+      
+      #Merge together, join back to facility data
+      temp_intersect <- data.table::rbindlist(temp_state) %>%
+        dplyr::left_join(LOI_data %>%
+                           sf::st_drop_geometry(),
+                         by = 'shape_ID')
+      
+      EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- temp_intersect
 
       EJ.index.data[[paste0("Indexes_",gis_option,"_buffer",i,"mi")]] <-
         EJIndexes(area, gis_method = gis_option, buffer=i, threshold=Thresh)
@@ -682,7 +726,6 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         }
         rm(state.shapes)
 
-
       }
 
       if (attains.check == T){
@@ -713,13 +756,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
     }
 
-
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_keepid = heat_table_keepid,
                    heat_table_topN = heat_table_topN, save_option=T)
-
 
       EJRanking(input_data = return.me,
                 rank_type = rank_type,
