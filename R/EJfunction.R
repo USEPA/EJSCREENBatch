@@ -65,13 +65,13 @@
 #' c <- EJfunction(data_type="waterbased", LOI_data=facilities,
 #'                 input_type = 'sf', attains = F)
 #'
-EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL, 
+EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                        gis_option="intersection", buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
-                       heat_table_type=NULL, heat_table_geog_lvl=NULL, 
+                       heat_table_type=NULL, heat_table_geog_lvl=NULL,
                        heat_table_keepid=NULL, heat_table_topN=NULL,
-                       rank_type = NULL, rank_geography_type = NULL,  
+                       rank_type = NULL, rank_geography_type = NULL,
                        rank_count = NULL, maps_perc_geog='US',
                        input_name=NULL, attains=NULL, raster_data = NULL){
 
@@ -81,7 +81,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     stop("Data type not supported. Please specify one of the following data types:
          landbased OR waterbased.")
   }
-  
+
   #check whether user-requested working directory exists
   if(!is.null(working_dir)){
     if(dir.exists(working_dir) == FALSE){
@@ -95,7 +95,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   if(is.null(produce_ancillary_tables)){
     produce_ancillary_tables = FALSE
   }
-  
+
   #heat table checks
   if(!is.null(heat_table_type)){
     if(heat_table_type  %notin% c("all","single","topn")){
@@ -160,7 +160,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     data.state.uspr <- fetch_data_ej(working_dir, state)
     assign("data.state.uspr", data.state.uspr, envir=globalenv())
   }
-  
+
   # Bring in ACS Data
   if ("acs.cbg.data" %in% ls(envir = .GlobalEnv)) {
     data <- get('acs.cbg.data', env = .GlobalEnv)
@@ -169,10 +169,10 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     acs.cbg.data <- fetch_acs_data(working_dir,state)
     assign('acs.cbg.data', acs.cbg.data, envir=globalenv())
   }
-  
+
   # Join EJSCREEN + ACS Data
   data.tog <- data.state.uspr %>% left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
-  
+
   #If conducting waterbased analysis, need to know input type
   if(data_type=="waterbased"){
     if(input_type %notin% c("sf", "catchment")){
@@ -279,14 +279,14 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       #if polygon provided, default is to use polygon without buffer but can add buffer if desired
       if(facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
         if (i > 0){
-          facility_buff <- st_buffer(LOI_data,
+          facility_buff <- st_buffer(LOI_data %>%  st_transform("ESRI:102005"),
                                      dist = units::set_units(i,"mi"))
         } else {
           stop('Buffer around points required.')
         }
       } else if(facil.geom.type %in% c('POLYGON', 'MULTIPOLYGON')){
         if (i > 0){
-          facility_buff <- st_buffer(LOI_data,
+          facility_buff <- st_buffer(LOI_data %>%  st_transform("ESRI:102005"),
                                      dist = units::set_units(i,"mi"))
         } else if (i == 0) {
           facility_buff <- LOI_data
@@ -301,20 +301,20 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           sf::st_join(data.tog, join=st_intersects) %>%
           dplyr::select(-geometry) %>%
           as.data.frame()
-        
+
         # Trim down list.data to key variables.
         list.keep <- c('shape_ID', 'ID', 'STATE_NAME', 'ST_ABBREV', 'ACSTOTPOP',
-                       'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP', 
-                       'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT', 
+                       'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP',
+                       'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT',
                        'UNDER5PCT', 'LESSHSPCT', 'OVER64PCT', 'LINGISOPCT',
                        'med_inc', 'frac_white', 'frac_black', 'frac_amerind',
                        'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 'frac_pov99')
-        
+
         temp_intersect <- area1_intersect %>%
           dplyr::select(-contains('_D2_')) %>%
           dplyr::select(list.keep, starts_with('P_')) %>%
           dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
-                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                  'frac_pov99'),
                                list(~round(ecdf(acs.cbg.data %>%
                                                   as.data.frame() %>%
@@ -322,8 +322,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                                   unlist() %>%
                                                   as.numeric())(.)*100
                                            ,0)),
-                               .names="P_{.col}_US")) 
-        
+                               .names="P_{.col}_US"))
+
         # State percentiles
         states <- unique(temp_intersect$ST_ABBREV)
         temp_state <- lapply(states, function(x){
@@ -331,7 +331,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             dplyr::filter(ST_ABBREV==x) %>%
             dplyr::filter(!is.na(shape_ID))  %>%
             dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
-                                   'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                                   'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                    'frac_pov99'),
                                  list(~round(ecdf(na.omit(acs.cbg.data %>%
                                                             as.data.frame() %>%
@@ -342,13 +342,13 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                              ,0)),
                                  .names="P_{.col}_state"))
         })
-        
+
         #Merge together, join back to facility data
         temp_intersect <- data.table::rbindlist(temp_state) %>%
           dplyr::left_join(LOI_data %>%
                              sf::st_drop_geometry(),
                            by = 'shape_ID')
-        
+
         EJ.list.data[[j]] <- temp_intersect
         names(EJ.list.data)[j] = paste0("area1_intersect_radius",i,"mi")
 
@@ -380,20 +380,20 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           dplyr::mutate(percent_area = area_geo/area_bg*100) %>%
           dplyr::select(-geometry) %>%
           as.data.frame()
-        
+
         # Trim down list.data to key variables.
         list.keep <- c('shape_ID', 'ID', 'STATE_NAME', 'ST_ABBREV', 'ACSTOTPOP',
-                       'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP', 
-                       'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT', 
+                       'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP',
+                       'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT',
                        'UNDER5PCT', 'LESSHSPCT', 'OVER64PCT', 'LINGISOPCT',
                        'med_inc', 'frac_white', 'frac_black', 'frac_amerind',
                        'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 'frac_pov99')
-        
+
         temp_intersect <- area3_intersection %>%
           dplyr::select(-contains('_D2_')) %>%
-          dplyr::select(list.keep, starts_with('P_')) %>%
+          dplyr::select(any_of(list.keep), starts_with('P_')) %>%
           dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
-                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                  'frac_pov99'),
                                list(~round(ecdf(acs.cbg.data %>%
                                                   as.data.frame() %>%
@@ -401,8 +401,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                                   unlist() %>%
                                                   as.numeric())(.)*100
                                            ,0)),
-                               .names="P_{.col}_US")) 
-        
+                               .names="P_{.col}_US"))
+
         # State percentiles
         states <- unique(temp_intersect$ST_ABBREV)
         temp_state <- lapply(states, function(x){
@@ -410,7 +410,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             dplyr::filter(ST_ABBREV==x) %>%
             dplyr::filter(!is.na(shape_ID))  %>%
             dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
-                                   'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                                   'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                    'frac_pov99'),
                                  list(~round(ecdf(na.omit(acs.cbg.data %>%
                                                             as.data.frame() %>%
@@ -421,7 +421,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                              ,0)),
                                  .names="P_{.col}_state"))
         })
-        
+
         #Merge together, join back to facility data
         temp_intersect <- data.table::rbindlist(temp_state) %>%
           dplyr::left_join(LOI_data %>%
@@ -468,11 +468,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       }
       j=j+1
     }
-    
+
     # Clean up table
     EJ.list.data <- Filter(Negate(is.null), EJ.list.data)
     EJ.facil.data <- Filter(Negate(is.null), EJ.facil.data)
-    
+
     # Drop unnecessary lists for final output.
     rm(EJ.demographics.data, EJ.index.data, EJ.corrplots.data)
 
@@ -575,20 +575,20 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         sf::st_join(data.tog, join = st_intersects) %>%
         dplyr::filter(!is.na(shape_ID)) %>%
         sf::st_drop_geometry()
-      
+
       # Trim down list.data to key variables.
       list.keep <- c('shape_ID', 'ID', 'STATE_NAME', 'ST_ABBREV', 'ACSTOTPOP',
-                     'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP', 
-                     'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT', 
+                     'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP',
+                     'PRE1960PCT', 'PTSDF', 'PWDIS', 'VULEOPCT', 'MINORPCT', 'LOWINCPCT',
                      'UNDER5PCT', 'LESSHSPCT', 'OVER64PCT', 'LINGISOPCT',
                      'med_inc', 'frac_white', 'frac_black', 'frac_amerind',
                      'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 'frac_pov99')
-      
+
       temp_intersect <- area %>%
         dplyr::select(-contains('_D2_')) %>%
         dplyr::select(list.keep, starts_with('P_')) %>%
         dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
-                               'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                               'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                'frac_pov99'),
                              list(~round(ecdf(acs.cbg.data %>%
                                                 as.data.frame() %>%
@@ -596,8 +596,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                                 unlist() %>%
                                                 as.numeric())(.)*100
                                          ,0)),
-                             .names="P_{.col}_US")) 
-      
+                             .names="P_{.col}_US"))
+
       # State percentiles
       states <- unique(temp_intersect$ST_ABBREV)
       temp_state <- lapply(states, function(x){
@@ -605,7 +605,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           dplyr::filter(ST_ABBREV==x) %>%
           dplyr::filter(!is.na(shape_ID))  %>%
           dplyr::mutate(across(c('med_inc', 'frac_white', 'frac_black', 'frac_amerind',
-                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50', 
+                                 'frac_asian', 'frac_pacisl', 'frac_hisp', 'frac_pov50',
                                  'frac_pov99'),
                                list(~round(ecdf(na.omit(acs.cbg.data %>%
                                                           as.data.frame() %>%
@@ -616,13 +616,13 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                            ,0)),
                                .names="P_{.col}_state"))
       })
-      
+
       #Merge together, join back to facility data
       temp_intersect <- data.table::rbindlist(temp_state) %>%
         dplyr::left_join(LOI_data %>%
                            sf::st_drop_geometry(),
                          by = 'shape_ID')
-      
+
       EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- temp_intersect
 
       EJ.index.data[[paste0("Indexes_",gis_option,"_buffer",i,"mi")]] <-
@@ -743,14 +743,14 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     if(attains.check == F){
       return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes)
       #EJ.demographics.data, EJ.corrplots.data, EJ.index.data,
-      
+
       names(return.me) <- c('EJ.facil.data', 'EJ.list.data','EJ.buffer.summary')
       #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
     } else {
-      return.me <- list(EJ.facil.data, EJ.list.data, 
+      return.me <- list(EJ.facil.data, EJ.list.data,
                         EJ.buffer.shapes, EJ.attains.data)
       #EJ.demographics.data, EJ.corrplots.data, EJ.index.data,
-      
+
       names(return.me) <- c('EJ.facil.data', 'EJ.list.data',
                             'EJ.buffer.summary','EJ.attainsdata.raw')
       #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
