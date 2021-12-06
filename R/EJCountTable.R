@@ -6,7 +6,7 @@
 #' @param input_data Required.
 #' @param geography_type State or US. Default is US.
 #' @param save_option Option to save rank table to a folder in working directory. Default is FALSE.
-#' @param working_dir
+#' @param directory
 #'
 #' @return
 #' @export
@@ -14,15 +14,15 @@
 #' @examples
 #' count.table <- EJCountTable(input_data = z, save_option = F)
 EJCountTable <- function(input_data, geography_type = 'US',
-                         working_dir, save_option = F){
+                         directory, save_option = F){
 
   # #check whether user-requested working directory exists
-  # if(!is.null(working_dir)){
-  #   if(dir.exists(working_dir) == FALSE){
+  # if(!is.null(directory)){
+  #   if(dir.exists(directory) == FALSE){
   #     stop("Working directory requested by user does not exist. Check directory name.")
   #   }
   # } else {
-  #   working_dir <- getwd()
+  #   directory <- getwd()
   # }
 
   EJ.count.tables <- list()
@@ -50,11 +50,11 @@ EJCountTable <- function(input_data, geography_type = 'US',
                           ref_symbols = '')
 
     if (save_option == T){
-      ifelse(!dir.exists(file.path(working_dir,Sys.time(),"counttables")),
-             dir.create(file.path(working_dir,Sys.time(),"counttables")), FALSE)
+      ifelse(!dir.exists(file.path(directory,"counttables")),
+             dir.create(file.path(directory,"counttables")), FALSE)
       flextable::save_as_image(x = EJ.count.tables[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
-                    path = paste0(working_dir,"/",Sys.time(),'/counttables/ct_',
+                    path = paste0(directory,'/counttables/ct_',
                                   geography_type, '_',
                                   stringr::str_sub(names(input_data$EJ.facil.data),
                                                    start = 7)[i], ".png"))

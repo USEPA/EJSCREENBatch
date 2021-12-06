@@ -8,7 +8,7 @@
 #' @param rank_count Number of locations or CBGs to return. Default is 10.
 #' @param rank_geography_type State or US. Default is US.
 #' @param save_option Option to save rank table to a folder in working directory. Default is FALSE.
-#' @param working_dir
+#' @param directory
 #'
 #' @return
 #' @export
@@ -20,21 +20,14 @@
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 'US',
-                      rank_count = 10, save_option = F, working_dir){
+                      rank_count = 10, save_option = F, directory){
 
   `%notin%` = Negate(`%in%`)
   if (!(rank_geography_type %in% c('US','state'))){
     stop('Geography type must be either -US- or -state-.')
   }
 
-  # #check whether user-requested working directory exists
-  # if(!is.null(working_dir)){
-  #   if(dir.exists(working_dir) == FALSE){
-  #     stop("Working directory requested by user does not exist. Check directory name.")
-  #   }
-  # } else {
-  #   working_dir <- getwd()
-  # }
+
 
   # Searching the variable name string by character index to extract threshold
   thrshld <- as.numeric(
@@ -83,11 +76,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
         flextable::colformat_num(big.mark = '')
 
       if (save_option == T){
-        ifelse(!dir.exists(file.path(working_dir,Sys.time(),"ranktables")),
-               dir.create(file.path(working_dir,Sys.time(),"ranktables")), FALSE)
+        ifelse(!dir.exists(file.path(directory,"ranktables")),
+               dir.create(file.path(directory,"ranktables")), FALSE)
         flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                    start = 7)[i]]],
-                                 path = paste0(working_dir,"/",Sys.time(),'/ranktables/location_',
+                                 path = paste0(directory,'/ranktables/location_',
                                                rank_geography_type, '_',
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[i],".png"))
@@ -170,11 +163,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
           flextable::colformat_num(big.mark = '')
 
         if (save_option == T){
-          ifelse(!dir.exists(file.path(working_dir,Sys.time(),"ranktables")),
-                 dir.create(file.path(working_dir,Sys.time(),"ranktables")), FALSE)
+          ifelse(!dir.exists(file.path(directory,"ranktables")),
+                 dir.create(file.path(directory,"ranktables")), FALSE)
           flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
-                        path = paste0(working_dir,"/",Sys.time(),'/ranktables/cbg_',
+                        path = paste0(directory,'/ranktables/cbg_',
                                       rank_geography_type, '_',
                                       stringr::str_sub(names(input_data$EJ.facil.data),
                                                        start = 7)[i],".png"))

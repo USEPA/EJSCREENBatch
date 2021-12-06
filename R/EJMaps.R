@@ -7,13 +7,14 @@
 #' @param indic_option 'total', 'environmental','demographic'. 'total' is default.
 #' @param perc_geog State or US. Default is US.
 #' @param save_option Option to save map to a folder in working directory. Default is FALSE.
+#' @param directory
 #'
 #' @return
 #' @export
 #'
 #' @examples
 #' maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
-EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F, working_dir){
+EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F, directory){
 
   ## 3 possible color schemes: by env., demo. or total above 80th
   if(is.null(indic_option)){
@@ -123,17 +124,17 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
 
     # Save me
     if (save_option == T) {
-      ifelse(!dir.exists(working_dir,Sys.time(),"EJmaps"),
-             dir.create(file.path(working_dir,Sys.time(),"EJmaps")), FALSE)
+      ifelse(!dir.exists(directory,"EJmaps"),
+             dir.create(file.path(directory,"EJmaps")), FALSE)
 
       htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                         start = 7)[i]]],
-                 file= paste0(Sys.time(),'/EJmaps/',indic_option,'_map_',
+                 file= paste0(directory,'/EJmaps/',indic_option,'_map_',
                               stringr::str_sub(names(input_data$EJ.facil.data),
                                                start = 7)[i],'.html'))
       mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                  start = 7)[i]]],
-              file = paste0(Sys.time(),'/EJmaps/',indic_option,'_map_',
+              file = paste0(directory,'/EJmaps/',indic_option,'_map_',
                             stringr::str_sub(names(input_data$EJ.facil.data),
                                              start = 7)[i],".png"))
     }

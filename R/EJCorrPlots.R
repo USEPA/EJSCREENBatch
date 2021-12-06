@@ -7,13 +7,14 @@
 #' @param gis_method User specified method of creating buffers around areas of interest (intersect, centroid, intersection).
 #' @param buffer Distance(s) used to create buffers.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
+#' @param directory
 #'
 #' @return
 #' @export
 #'
 #' @examples
-EJCorrPlots <- function(data, gis_method, buffer, threshold, working_dir){
-  ifelse(!dir.exists(file.path(working_dir,"plots")), dir.create(file.path(working_dir,"plots")), FALSE)
+EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
+  ifelse(!dir.exists(file.path(directory,"plots")), dir.create(file.path(directory,"plots")), FALSE)
 
   exceed.threshold <- function(x) {
     ifelse(as.numeric(x)>threshold, 1, 0)

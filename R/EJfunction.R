@@ -25,7 +25,7 @@
 #' @param rank_count Number of locations or CBGs to return in ranking table.
 #' @param raster_data Path to dasymetric raster data. Recommend using 1kmX1km raster
 #'                    data from NASA's Socioeconomic Data and Applications Center (SEDAC)
-#'
+#' @param directory
 #'
 #' @return
 #' @export
@@ -93,6 +93,10 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
   ifelse(!dir.exists(file.path(working_dir,Sys.time())),
          dir.create(file.path(working_dir,Sys.time())), FALSE)
+
+  output_path <- file.path(working_dir,Sys.time())
+
+
 
   #produce heat table and ranking table?
   if(is.null(produce_ancillary_tables)){
@@ -356,11 +360,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         names(EJ.list.data)[j] = paste0("area1_intersect_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_intersect_radius",i,"mi")]] <-
-          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, working_dir = working_dir)
+          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, directory = output_path)
         EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
-          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, working_dir = working_dir)
+          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, directory = output_path)
         EJ.corrplots.data[[paste0("corrplots_intersect_radius",i,"mi")]] <-
-          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh, working_dir=working_dir)
+          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh, directory = output_path)
 
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
@@ -441,11 +445,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         names(EJ.list.data)[j] = paste0("area3_intersection_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_intersection_radius",i,"mi")]] <-
-          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, working_dir = working_dir)
+          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, directory = output_path)
         EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
-          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, working_dir = working_dir)
+          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, directory = output_path)
         EJ.corrplots.data[[paste0("corrplots_intersection_radius",i,"mi")]] <-
-          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh, working_dir = working_dir)
+          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh, directory = output_path)
 
         ### Areal apportionment using circular buffers around facilities
         # Extract the state associated with each facility
@@ -494,15 +498,15 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_input_name = heat_table_input_name,
-                   heat_table_topN = heat_table_topN, save_option=T, working_dir=working_dir)
+                   heat_table_topN = heat_table_topN, save_option=T, directory = output_path)
 
       EJRanking(input_data = return.me,
                 rank_type = rank_type,
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
-                save_option=T, working_dir=working_dir)
+                save_option=T,directory = output_path)
 
-      EJCountTable(input_data = return.me, save_option = T, working_dir = working_dir)
+      EJCountTable(input_data = return.me, save_option = T, directory = output_path)
 
       EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }
@@ -635,13 +639,13 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- temp_intersect
 
       EJ.index.data[[paste0("Indexes_",gis_option,"_buffer",i,"mi")]] <-
-        EJIndexes(area, gis_method = gis_option, buffer=i, threshold=Thresh, working_dir = working_dir)
+        EJIndexes(area, gis_method = gis_option, buffer=i, threshold=Thresh, directory = output_path)
 
       EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
-        EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh, working_dir = working_dir)
+        EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh, directory = output_path)
 
       EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
-        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, working_dir = working_dir)
+        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, directory = output_path)
 
       #############
       ## This returns facility level summaries for
@@ -784,9 +788,9 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                 rank_type = rank_type,
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
-                save_option=T, working_dir=working_dir)
+                save_option=T, directory = output_path)
 
-      EJCountTable(input_data = return.me, save_option = T, working_dir=working_dir)
+      EJCountTable(input_data = return.me, save_option = T, directory = output_path)
 
       EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }

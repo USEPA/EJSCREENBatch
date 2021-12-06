@@ -16,6 +16,7 @@
 #' @param heat_table_input_name Option to keep row ID number of location
 #' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
 #' @param save_option Option to save heat table to a folder in working directory. Default is FALSE.
+#' @param directory
 #' @param threshold
 #'
 #' @return
@@ -26,16 +27,9 @@
 #' y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
 EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                          heat_table_input_name = NULL, heat_table_topN = NULL,
-                         save_option = F, working_dir, threshold = NULL){
+                         save_option = F, directory, threshold = NULL){
 
-  #check whether user-requested working directory exists
-  # if(!is.null(working_dir)){
-  #   if(dir.exists(working_dir) == FALSE){
-  #     stop("Working directory requested by user does not exist. Check directory name.")
-  #   }
-  # } else {
-  #   working_dir <- getwd()
-  # }
+
 
   #set heat table thresholds
   if(!is.null(threshold)){
@@ -170,9 +164,9 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                           ref_symbols = '')
     ## Save if option selected.
     if (save_option == T){
-      ifelse(!dir.exists(file.path(working_dir,Sys.time(),"heattabs")),
-             dir.create(file.path(working_dir,Sys.time(),"heattabs")), FALSE)
-      flextable::save_as_image(x = heat.table, path = paste0(working_dir,"/",Sys.time(),"/heattabs/",Sys.time(),"/ht_all.png"))
+      ifelse(!dir.exists(file.path(directory,"heattabs")),
+             dir.create(file.path(directory,"heattabs")), FALSE)
+      flextable::save_as_image(x = heat.table, path = paste0(directory,"/heattabs/ht_all.png"))
     }
 
   } else if (heat_table_type == 'single') { #This returns HeatTable for user-specified facil
@@ -230,9 +224,9 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
     ## Save if option selected.
     if (save_option == T){
-      ifelse(!dir.exists(file.path(working_dir,Sys.time(),"heattabs")),
-             dir.create(file.path(working_dir,Sys.time(),"heattabs")), FALSE)
-      flextable::save_as_image(x = heat.table, path = paste0(working_dir,"/",Sys.time(),'/heattabs/ht_single_',
+      ifelse(!dir.exists(file.path(directory,"heattabs")),
+             dir.create(file.path(directory,"heattabs")), FALSE)
+      flextable::save_as_image(x = heat.table, path = paste0(directory,'/heattabs/ht_single_',
                                                              heat_table_input_name,".png"))
     }
 
@@ -304,10 +298,10 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
       ## Save if option selected.
       if (save_option == T){
-        ifelse(!dir.exists(file.path(working_dir,Sys.time(),"heattabs")),
-               dir.create(file.path(working_dir,Sys.time(),"heattabs")), FALSE)
+        ifelse(!dir.exists(file.path(directory,"heattabs")),
+               dir.create(file.path(directory,"heattabs")), FALSE)
         flextable::save_as_image(x = ht,
-                                 path = paste0(working_dir,"/",Sys.time(),"/heattabs/ht_topN_",
+                                 path = paste0(directory,"/heattabs/ht_topN_",
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[k],
                                                ".png"))
