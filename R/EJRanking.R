@@ -8,7 +8,7 @@
 #' @param rank_count Number of locations or CBGs to return. Default is 10.
 #' @param rank_geography_type State or US. Default is US.
 #' @param save_option Option to save rank table to a folder in working directory. Default is FALSE.
-#' @param working_dir 
+#' @param working_dir
 #'
 #' @return
 #' @export
@@ -20,22 +20,22 @@
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 'US',
-                      rank_count = 10, save_option = F, working_dir = NULL){
+                      rank_count = 10, save_option = F, working_dir){
 
   `%notin%` = Negate(`%in%`)
   if (!(rank_geography_type %in% c('US','state'))){
     stop('Geography type must be either -US- or -state-.')
   }
-  
-  #check whether user-requested working directory exists
-  if(!is.null(working_dir)){
-    if(dir.exists(working_dir) == FALSE){
-      stop("Working directory requested by user does not exist. Check directory name.")
-    }
-  } else {
-    working_dir <- getwd()
-  }
-  
+
+  # #check whether user-requested working directory exists
+  # if(!is.null(working_dir)){
+  #   if(dir.exists(working_dir) == FALSE){
+  #     stop("Working directory requested by user does not exist. Check directory name.")
+  #   }
+  # } else {
+  #   working_dir <- getwd()
+  # }
+
   # Searching the variable name string by character index to extract threshold
   thrshld <- as.numeric(
     substr(
@@ -44,7 +44,7 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
       str_length(names(input_data$EJ.facil.data[[1]])[length(names(input_data$EJ.facil.data[[1]]))])-7
     )
   )
-    
+
   if (rank_type == 'location'){
 
     # Create an empty list for rankings (one for each dist and buffer method)
@@ -63,10 +63,10 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
         as.data.frame() %>%
         dplyr::filter(geography == rank_geography_type) %>%
         dplyr::mutate_at(vars(dplyr::ends_with('%ile')), funs(as.integer(as.character(.)))) %>%
-        dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') := 
+        dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') :=
                         rowSums(select(., dplyr::ends_with('%ile')))) %>%
-        dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'), 
-                               dplyr::starts_with('Env. indicators')), 
+        dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'),
+                               dplyr::starts_with('Env. indicators')),
                           desc) %>%
         dplyr::select_if(names(.) %in% c(keep.id,
                                          paste0('Total indicators above ',thrshld,'th %ile') ,
@@ -83,11 +83,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
         flextable::colformat_num(big.mark = '')
 
       if (save_option == T){
-        ifelse(!dir.exists(file.path(working_dir,"/ranktables/")),
-               dir.create(file.path(working_dir,"/ranktables/")), FALSE)
+        ifelse(!dir.exists(file.path(working_dir,Sys.time(),"ranktables")),
+               dir.create(file.path(working_dir,Sys.time(),"ranktables")), FALSE)
         flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                    start = 7)[i]]],
-                                 path = paste0(working_dir,'/ranktables/location_',
+                                 path = paste0(working_dir,"/",Sys.time(),'/ranktables/location_',
                                                rank_geography_type, '_',
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[i],".png"))
@@ -150,11 +150,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
           dplyr::mutate(!!paste0('Demo. indicators above ',thrshld,'th %ile')  := rowSums(dplyr::select(as.data.frame(cbg),
                                                                      `Low Income`:`Age Over 64`) > thrshld)) %>%
           dplyr::mutate_if(is.numeric, round) %>%
-          dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') := 
+          dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') :=
                            rowSums(select(., ends_with('%ile'))))%>%
           dplyr::filter(geography == rank_geography_type) %>%
-          dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'), 
-                                 dplyr::starts_with('Env. indicators')), 
+          dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'),
+                                 dplyr::starts_with('Env. indicators')),
                              dplyr::desc) %>%
           dplyr::select(ID,
                         paste0('Total indicators above ',thrshld,'th %ile') ,
@@ -170,11 +170,11 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
           flextable::colformat_num(big.mark = '')
 
         if (save_option == T){
-          ifelse(!dir.exists(file.path(working_dir,"/ranktables/")),
-                 dir.create(file.path(working_dir,"/ranktables/")), FALSE)
+          ifelse(!dir.exists(file.path(working_dir,Sys.time(),"ranktables")),
+                 dir.create(file.path(working_dir,Sys.time(),"ranktables")), FALSE)
           flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
-                        path = paste0(working_dir,'/ranktables/cbg_',
+                        path = paste0(working_dir,"/",Sys.time(),'/ranktables/cbg_',
                                       rank_geography_type, '_',
                                       stringr::str_sub(names(input_data$EJ.facil.data),
                                                        start = 7)[i],".png"))

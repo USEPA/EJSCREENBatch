@@ -13,18 +13,18 @@
 #'
 #' @examples
 #' count.table <- EJCountTable(input_data = z, save_option = F)
-EJCountTable <- function(input_data, geography_type = 'US', 
-                         working_dir = NULL, save_option = F){
-  
-  #check whether user-requested working directory exists
-  if(!is.null(working_dir)){
-    if(dir.exists(working_dir) == FALSE){
-      stop("Working directory requested by user does not exist. Check directory name.")
-    }
-  } else {
-    working_dir <- getwd()
-  }
-  
+EJCountTable <- function(input_data, geography_type = 'US',
+                         working_dir, save_option = F){
+
+  # #check whether user-requested working directory exists
+  # if(!is.null(working_dir)){
+  #   if(dir.exists(working_dir) == FALSE){
+  #     stop("Working directory requested by user does not exist. Check directory name.")
+  #   }
+  # } else {
+  #   working_dir <- getwd()
+  # }
+
   EJ.count.tables <- list()
   for (i in 1:length(input_data$EJ.facil.data)){
     varname1 <- input_data$EJ.facil.data[[i]] %>%
@@ -33,7 +33,7 @@ EJCountTable <- function(input_data, geography_type = 'US',
     varname2 <- input_data$EJ.facil.data[[i]] %>%
       dplyr::select(dplyr::starts_with('Demo. indicators')) %>%
       names()
-    EJ.count.tables[[stringr::str_sub(names(input_data$EJ.facil.data), 
+    EJ.count.tables[[stringr::str_sub(names(input_data$EJ.facil.data),
                                       start = 7)[i]]] <-
       flextable::proc_freq(filter(input_data$EJ.facil.data[[i]], geography == geography_type),
                            varname1, varname2,
@@ -43,20 +43,20 @@ EJCountTable <- function(input_data, geography_type = 'US',
       flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
       flextable::footnote(i = 1, j = 1,
                           value = flextable::as_paragraph(paste0('Values generated using a buffer distance of ',
-                                         gsub(".*radius(.+)mi.*", "\\1", 
+                                         gsub(".*radius(.+)mi.*", "\\1",
                                               names(input_data$EJ.facil.data)[i]),
                                          ' miles.')),
                           part = 'header',
                           ref_symbols = '')
 
     if (save_option == T){
-      ifelse(!dir.exists(file.path(working_dir,"/counttables/")),
-             dir.create(file.path(working_dir,"/counttables/")), FALSE)
-      flextable::save_as_image(x = EJ.count.tables[[stringr::str_sub(names(input_data$EJ.facil.data), 
+      ifelse(!dir.exists(file.path(working_dir,Sys.time(),"counttables")),
+             dir.create(file.path(working_dir,Sys.time(),"counttables")), FALSE)
+      flextable::save_as_image(x = EJ.count.tables[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
-                    path = paste0(working_dir,'/counttables/ct_',
+                    path = paste0(working_dir,"/",Sys.time(),'/counttables/ct_',
                                   geography_type, '_',
-                                  stringr::str_sub(names(input_data$EJ.facil.data), 
+                                  stringr::str_sub(names(input_data$EJ.facil.data),
                                                    start = 7)[i], ".png"))
     }
   }

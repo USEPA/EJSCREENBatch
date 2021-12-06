@@ -18,7 +18,7 @@
 #' @param produce_ancillary_tables Option to return secondary tables/figures. Default is FALSE.
 #' @param heat_table_type Locations to include in Heat Table. Options include "all", "single", or "topn". If "topn", user must also provide a value for parameter heat_table_topN.
 #' @param heat_table_geog_lvl "State" or "US". Default is "US".
-#' @param heat_table_keepid shape_ID Option to keep row ID number of location. Recommednd if type = 'single'
+#' @param heat_table_input_name shape_ID Option to keep row ID number of location. Recommednd if type = 'single'
 #' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
 #' @param rank_type Ranking table type, either "location" or "cbg".
 #' @param rank_geography_type "State" or "US".
@@ -70,7 +70,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL,
-                       heat_table_keepid=NULL, heat_table_topN=NULL,
+                       heat_table_input_name=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,
                        rank_count = NULL, maps_perc_geog='US',
                        input_name=NULL, attains=NULL, raster_data = NULL){
@@ -90,6 +90,9 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   } else {
     working_dir <- getwd()
   }
+
+  ifelse(!dir.exists(file.path(working_dir,Sys.time())),
+         dir.create(file.path(working_dir,Sys.time())), FALSE)
 
   #produce heat table and ranking table?
   if(is.null(produce_ancillary_tables)){
@@ -353,11 +356,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         names(EJ.list.data)[j] = paste0("area1_intersect_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_intersect_radius",i,"mi")]] <-
-          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
+          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, working_dir = working_dir)
         EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
-          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh)
+          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, working_dir = working_dir)
         EJ.corrplots.data[[paste0("corrplots_intersect_radius",i,"mi")]] <-
-          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh)
+          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh, working_dir=working_dir)
 
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
@@ -438,11 +441,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         names(EJ.list.data)[j] = paste0("area3_intersection_radius",i,"mi")
 
         EJ.index.data[[paste0("Indexes_intersection_radius",i,"mi")]] <-
-          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
+          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, working_dir = working_dir)
         EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
-          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh)
+          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, working_dir = working_dir)
         EJ.corrplots.data[[paste0("corrplots_intersection_radius",i,"mi")]] <-
-          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh)
+          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh, working_dir = working_dir)
 
         ### Areal apportionment using circular buffers around facilities
         # Extract the state associated with each facility
@@ -490,7 +493,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
-                   heat_table_keepid = heat_table_keepid,
+                   heat_table_input_name = heat_table_input_name,
                    heat_table_topN = heat_table_topN, save_option=T, working_dir=working_dir)
 
       EJRanking(input_data = return.me,
@@ -499,7 +502,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                 rank_count = rank_count,
                 save_option=T, working_dir=working_dir)
 
-      EJCountTable(input_data = return.me, save_option = T)
+      EJCountTable(input_data = return.me, save_option = T, working_dir = working_dir)
 
       EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }
@@ -632,13 +635,13 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       EJ.list.data[[paste0('area1_',gis_option,'_radius',i,'mi')]] <- temp_intersect
 
       EJ.index.data[[paste0("Indexes_",gis_option,"_buffer",i,"mi")]] <-
-        EJIndexes(area, gis_method = gis_option, buffer=i, threshold=Thresh)
+        EJIndexes(area, gis_method = gis_option, buffer=i, threshold=Thresh, working_dir = working_dir)
 
       EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
-        EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh)
+        EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh, working_dir = working_dir)
 
       EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
-        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh)
+        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, working_dir = working_dir)
 
       #############
       ## This returns facility level summaries for
@@ -774,16 +777,16 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     if(produce_ancillary_tables==TRUE){
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
-                   heat_table_keepid = heat_table_keepid,
+                   heat_table_input_name = heat_table_input_name,
                    heat_table_topN = heat_table_topN, save_option=T)
 
       EJRanking(input_data = return.me,
                 rank_type = rank_type,
                 rank_geography_type = rank_geography_type,
                 rank_count = rank_count,
-                save_option=T)
+                save_option=T, working_dir=working_dir)
 
-      EJCountTable(input_data = return.me, save_option = T)
+      EJCountTable(input_data = return.me, save_option = T, working_dir=working_dir)
 
       EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
     }

@@ -13,7 +13,7 @@
 #'
 #' @examples
 #' maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
-EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F){
+EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F, working_dir){
 
   ## 3 possible color schemes: by env., demo. or total above 80th
   if(is.null(indic_option)){
@@ -123,17 +123,17 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
 
     # Save me
     if (save_option == T) {
-      ifelse(!dir.exists(file.path(getwd(),"EJmaps/")),
-             dir.create(file.path(getwd(),"EJmaps/")), FALSE)
+      ifelse(!dir.exists(working_dir,Sys.time(),"EJmaps"),
+             dir.create(file.path(working_dir,Sys.time(),"EJmaps")), FALSE)
 
       htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                         start = 7)[i]]],
-                 file= paste0('EJmaps/',indic_option,'_map_',
+                 file= paste0(Sys.time(),'/EJmaps/',indic_option,'_map_',
                               stringr::str_sub(names(input_data$EJ.facil.data),
                                                start = 7)[i],'.html'))
       mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                  start = 7)[i]]],
-              file = paste0('EJmaps/',indic_option,'_map_',
+              file = paste0(Sys.time(),'/EJmaps/',indic_option,'_map_',
                             stringr::str_sub(names(input_data$EJ.facil.data),
                                              start = 7)[i],".png"))
     }

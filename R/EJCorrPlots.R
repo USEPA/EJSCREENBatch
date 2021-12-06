@@ -12,8 +12,8 @@
 #' @export
 #'
 #' @examples
-EJCorrPlots <- function(data, gis_method, buffer, threshold){
-  ifelse(!dir.exists(file.path(getwd(),"plots")), dir.create(file.path(getwd(),"plots")), FALSE)
+EJCorrPlots <- function(data, gis_method, buffer, threshold, working_dir){
+  ifelse(!dir.exists(file.path(working_dir,"plots")), dir.create(file.path(working_dir,"plots")), FALSE)
 
   exceed.threshold <- function(x) {
     ifelse(as.numeric(x)>threshold, 1, 0)
@@ -154,7 +154,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
              txt.size=900
            }
 
-          jpeg(file=paste0("plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
+          jpeg(file=paste0(Sys.time(),"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
                    type="upper", order="hclust",

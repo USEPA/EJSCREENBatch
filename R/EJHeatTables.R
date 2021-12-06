@@ -6,14 +6,14 @@
 #' 3) Summary of median CBG values for "top N" facilities ('topn')
 #'
 #' heat_table_geog_lvl denotes whether to use nat'l/state percentiles (nat'l default): options 'US'/'state'
-#' when type = 'single, heat_table_keepid must be set by user, denotes the (integer) rowid of the facility
+#' when type = 'single, heat_table_input_name must be set by user, denotes the (integer) rowid of the facility
 #' topN is an integer set by user when using ranking table. (Default is 5 for fit, min is 0, max is 10.)
 
 #'
 #' @param input_data
 #' @param heat_table_type  All facilities, single facility, top N facilities. If top N facilities, must specify topN.
 #' @param heat_table_geog_lvl state or US
-#' @param heat_table_keepid Option to keep row ID number of location
+#' @param heat_table_input_name Option to keep row ID number of location
 #' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
 #' @param save_option Option to save heat table to a folder in working directory. Default is FALSE.
 #' @param threshold
@@ -24,19 +24,19 @@
 #' @examples
 #' y1 <- EJHeatTables(input_data = y, heat_table_type = 'topn', heat_table_topN = 5)
 #' y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
-EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL, 
-                         heat_table_keepid = NULL, heat_table_topN = NULL,
-                         save_option = F, working_dir = NULL, threshold = NULL){
+EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
+                         heat_table_input_name = NULL, heat_table_topN = NULL,
+                         save_option = F, working_dir, threshold = NULL){
 
   #check whether user-requested working directory exists
-  if(!is.null(working_dir)){
-    if(dir.exists(working_dir) == FALSE){
-      stop("Working directory requested by user does not exist. Check directory name.")
-    }
-  } else {
-    working_dir <- getwd()
-  }
-  
+  # if(!is.null(working_dir)){
+  #   if(dir.exists(working_dir) == FALSE){
+  #     stop("Working directory requested by user does not exist. Check directory name.")
+  #   }
+  # } else {
+  #   working_dir <- getwd()
+  # }
+
   #set heat table thresholds
   if(!is.null(threshold)){
     if(threshold > 0 & threshold < 100){
@@ -47,7 +47,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
   } else if (is.null(threshold)){
     thrshld <- 80
   }
-  
+
   # Set default geography level @ nat'l scale
   if(is.null(heat_table_geog_lvl)){
     geog <- 'US'  #default values
@@ -123,7 +123,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
       # Write to dt.list
       dt[[i]] <- data.table::melt(df.var.wm)[,2]
-      names(dt[[i]]) <- paste0(gsub(".*radius(.+)mi.*", "\\1", 
+      names(dt[[i]]) <- paste0(gsub(".*radius(.+)mi.*", "\\1",
                                     names(input_data$EJ.facil.data)[i]),
                                ' mile radius')
     }
@@ -143,7 +143,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
       flextable::bg(bg = function(x){
         out <- rep("transparent", length(x))
         out[is.numeric(x) & (x >= (thrshld + .75*(100-thrshld)))] <- "red1"
-        out[is.numeric(x) & (x >= (thrshld + (100-thrshld)/2)) & 
+        out[is.numeric(x) & (x >= (thrshld + (100-thrshld)/2)) &
               (x < (thrshld + .75*(100-thrshld)))] <- "orange1"
         out[is.numeric(x) & x >= thrshld & (x < (thrshld + (100-thrshld)/2))] <- 'yellow1'
         out
@@ -170,17 +170,17 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                           ref_symbols = '')
     ## Save if option selected.
     if (save_option == T){
-      ifelse(!dir.exists(file.path(working_dir,"/heattabs/")),
-             dir.create(file.path(working_dir,"/heattabs/")), FALSE)
-      flextable::save_as_image(x = heat.table, path = paste0(working_dir,"/heattabs/ht_all.png"))
+      ifelse(!dir.exists(file.path(working_dir,Sys.time(),"heattabs")),
+             dir.create(file.path(working_dir,Sys.time(),"heattabs")), FALSE)
+      flextable::save_as_image(x = heat.table, path = paste0(working_dir,"/",Sys.time(),"/heattabs/",Sys.time(),"/ht_all.png"))
     }
 
   } else if (heat_table_type == 'single') { #This returns HeatTable for user-specified facil
 
-    if (is.null(heat_table_keepid) | !is.numeric(heat_table_keepid)){
-      stop('Must include a numeric row ID (heat_table_keepid) of single facility for this table type.')
+    if (is.null(heat_table_input_name) | !is.numeric(heat_table_input_name)){
+      stop('Must include a numeric row ID (heat_table_input_name) of single facility for this table type.')
     } else {
-      shape.keep <- heat_table_keepid
+      shape.keep <- heat_table_input_name
     }
 
     # Preallocate list
@@ -198,7 +198,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
           dplyr::select(.SD, `Low Income`:`Resp. Hazard`)
           ][, lapply(.SD, round)]
       dt[[i]] <- data.table::melt(dt[[i]])[,2]
-      names(dt[[i]]) <- paste0(gsub(".*radius(.+)mi.*", "\\1", 
+      names(dt[[i]]) <- paste0(gsub(".*radius(.+)mi.*", "\\1",
                                     names(input_data$EJ.facil.data)[i]),
                                ' mile radius')
     }
@@ -230,10 +230,10 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
     ## Save if option selected.
     if (save_option == T){
-      ifelse(!dir.exists(file.path(working_dir,"/heattabs/")),
-             dir.create(file.path(working_dir,"/heattabs/")), FALSE)
-      flextable::save_as_image(x = heat.table, path = paste0(working_dir,'/heattabs/ht_single_',
-                                                             heat_table_keepid,".png"))
+      ifelse(!dir.exists(file.path(working_dir,Sys.time(),"heattabs")),
+             dir.create(file.path(working_dir,Sys.time(),"heattabs")), FALSE)
+      flextable::save_as_image(x = heat.table, path = paste0(working_dir,"/",Sys.time(),'/heattabs/ht_single_',
+                                                             heat_table_input_name,".png"))
     }
 
   } else if (heat_table_type == 'topn') { #Return HeatTable summary for Top10 facilities
@@ -304,10 +304,10 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
       ## Save if option selected.
       if (save_option == T){
-        ifelse(!dir.exists(file.path(working_dir,"heattabs/")),
-               dir.create(file.path(working_dir,"heattabs/")), FALSE)
+        ifelse(!dir.exists(file.path(working_dir,Sys.time(),"heattabs")),
+               dir.create(file.path(working_dir,Sys.time(),"heattabs")), FALSE)
         flextable::save_as_image(x = ht,
-                                 path = paste0(working_dir,"/heattabs/ht_topN_",
+                                 path = paste0(working_dir,"/",Sys.time(),"/heattabs/ht_topN_",
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[k],
                                                ".png"))
