@@ -8,6 +8,7 @@
 #' @param rank_count Number of locations or CBGs to return. Default is 10.
 #' @param rank_geography_type State or US. Default is US.
 #' @param save_option Option to save rank table to a folder in working directory. Default is FALSE.
+#' @param working_dir 
 #'
 #' @return
 #' @export
@@ -19,13 +20,31 @@
 #'
 #' cbg.ranking <- EJRanking(input_data = a2, rank_type = 'cbg')
 EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 'US',
-                      rank_count = 10, save_option = F, working_dir){
+                      rank_count = 10, save_option = F, working_dir = NULL){
 
   `%notin%` = Negate(`%in%`)
   if (!(rank_geography_type %in% c('US','state'))){
     stop('Geography type must be either -US- or -state-.')
   }
-
+  
+  #check whether user-requested working directory exists
+  if(!is.null(working_dir)){
+    if(dir.exists(working_dir) == FALSE){
+      stop("Working directory requested by user does not exist. Check directory name.")
+    }
+  } else {
+    working_dir <- getwd()
+  }
+  
+  # Searching the variable name string by character index to extract threshold
+  thrshld <- as.numeric(
+    substr(
+      names(input_data$EJ.facil.data[[1]])[length(names(input_data$EJ.facil.data[[1]]))],
+      24,
+      str_length(names(input_data$EJ.facil.data[[1]])[length(names(input_data$EJ.facil.data[[1]]))])-7
+    )
+  )
+    
   if (rank_type == 'location'){
 
     # Create an empty list for rankings (one for each dist and buffer method)
@@ -40,22 +59,19 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
       # Use name or shape_ID?
       keep.id <- names(input_data$EJ.facil.data[[i]])[1]
 
-      locay <- input_data$EJ.facil.data[[i]] %>%
+      locay <- batch.datalist$EJ.facil.data$facil_intersect_radius3mi %>%
         as.data.frame() %>%
         dplyr::filter(geography == rank_geography_type) %>%
-        dplyr::mutate(`Total indicators above 80th %ile` =
-                        as.numeric(as.character(`Env. indicators above 80th %ile`)) +
-                        as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
-        dplyr::arrange(desc(`Total indicators above 80th %ile`),
-                       desc(`Env. indicators above 80th %ile`)) %>%
+        dplyr::mutate_at(vars(dplyr::ends_with('%ile')), funs(as.integer(as.character(.)))) %>%
+        dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') := 
+                        rowSums(select(., dplyr::ends_with('%ile')))) %>%
+        dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'), 
+                               dplyr::starts_with('Env. indicators')), 
+                          desc) %>%
         dplyr::select_if(names(.) %in% c(keep.id,
-                                         "Total indicators above 80th %ile",
-                                         "Env. indicators above 80th %ile",
-                                         "Demo. indicators above 80th %ile")) %>%
-        dplyr::mutate(`Env. indicators above 80th %ile` =
-                        as.numeric(as.character(`Env. indicators above 80th %ile`))) %>%
-        dplyr::mutate(`Demo. indicators above 80th %ile` =
-                        as.numeric(as.character(`Demo. indicators above 80th %ile`))) %>%
+                                         paste0('Total indicators above ',thrshld,'th %ile') ,
+                                         paste0('Env. indicators above ',thrshld,'th %ile') ,
+                                         paste0('Demo. indicators above ',thrshld,'th %ile') )) %>%
         dplyr::mutate(Rank = row_number()) %>%
         dplyr::relocate(Rank) %>%
         dplyr::slice_head(n = rank_count)
@@ -67,11 +83,12 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
         flextable::colformat_num(big.mark = '')
 
       if (save_option == T){
-        ifelse(!dir.exists(file.path(working_dir,"ranktables/")),
-               dir.create(file.path(working_dir,"ranktables/")), FALSE)
+        ifelse(!dir.exists(file.path(working_dir,"/ranktables/")),
+               dir.create(file.path(working_dir,"/ranktables/")), FALSE)
         flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                    start = 7)[i]]],
                                  path = paste0(working_dir,'/ranktables/location_',
+                                               rank_geography_type, '_',
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[i],".png"))
       }
@@ -96,7 +113,7 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
                  P_DSLPM_state, P_CANCR_state, P_RESP_state, P_PTRAF_state, P_PWDIS_state,
                  P_PNPL_state, P_PRMP_state, P_PTSDF_state, P_OZONE_state,
                  P_PM25_state, ID) %>%
-          as.data.table()
+          data.table::as.data.table()
 
         cbg <- data.table::melt(unique(cbg), id = 'ID'
         )[, variable := stringi::stri_replace_last_fixed(variable,'_','|')
@@ -128,22 +145,21 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
                    `WW Discharge`, `Resp. Hazard` )
 
          cbg <- cbg %>%
-          dplyr::mutate(`Env. indicators above 80th %ile` = rowSums(dplyr::select(as.data.frame(cbg),
-                                                                    `Air, Cancer`:`Resp. Hazard`) > 80)) %>%
-          dplyr::mutate(`Demo. indicators above 80th %ile` = rowSums(dplyr::select(as.data.frame(cbg),
-                                                                     `Low Income`:`Age Over 64`) > 80)) %>%
+          dplyr::mutate(!!paste0('Env. indicators above ',thrshld,'th %ile')  := rowSums(dplyr::select(as.data.frame(cbg),
+                                                                    `Air, Cancer`:`Resp. Hazard`) > thrshld)) %>%
+          dplyr::mutate(!!paste0('Demo. indicators above ',thrshld,'th %ile')  := rowSums(dplyr::select(as.data.frame(cbg),
+                                                                     `Low Income`:`Age Over 64`) > thrshld)) %>%
           dplyr::mutate_if(is.numeric, round) %>%
-          dplyr::mutate(`Total indicators above 80th %ile` =
-                   `Env. indicators above 80th %ile` +
-                   `Demo. indicators above 80th %ile`) %>%
-          dplyr::arrange(desc(`Total indicators above 80th %ile`)) %>%
+          dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') := 
+                           rowSums(select(., ends_with('%ile'))))%>%
           dplyr::filter(geography == rank_geography_type) %>%
-          dplyr::arrange(desc(`Total indicators above 80th %ile`),
-                  desc(`Env. indicators above 80th %ile`)) %>%
+          dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'), 
+                                 dplyr::starts_with('Env. indicators')), 
+                             dplyr::desc) %>%
           dplyr::select(ID,
-                 `Total indicators above 80th %ile`,
-                 `Env. indicators above 80th %ile`,
-                 `Demo. indicators above 80th %ile`) %>%
+                        paste0('Total indicators above ',thrshld,'th %ile') ,
+                        paste0('Env. indicators above ',thrshld,'th %ile') ,
+                        paste0('Demo. indicators above ',thrshld,'th %ile') ) %>%
           dplyr::rename(`CBG code` = ID) %>%
           dplyr::slice_head(n = rank_count)
 
@@ -154,11 +170,12 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
           flextable::colformat_num(big.mark = '')
 
         if (save_option == T){
-          ifelse(!dir.exists(file.path(working_dir,"ranktables/")),
-                 dir.create(file.path(working_dir,"ranktables/")), FALSE)
+          ifelse(!dir.exists(file.path(working_dir,"/ranktables/")),
+                 dir.create(file.path(working_dir,"/ranktables/")), FALSE)
           flextable::save_as_image(x = data_transf[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                                      start = 7)[i]]],
                         path = paste0(working_dir,'/ranktables/cbg_',
+                                      rank_geography_type, '_',
                                       stringr::str_sub(names(input_data$EJ.facil.data),
                                                        start = 7)[i],".png"))
         }
