@@ -147,6 +147,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             filter(overlap!="")  %>%
             pivot_wider(values_from=value, names_from=overlap,  values_fill=0)  %>%
             dplyr::select(-ID) %>%
+            dplyr::select(order(colnames(.))) %>%
             cor()
 
           if(dataset=="demo_indexes"){
