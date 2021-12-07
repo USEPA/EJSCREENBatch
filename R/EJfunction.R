@@ -91,10 +91,10 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     working_dir <- getwd()
   }
 
-  ifelse(!dir.exists(file.path(working_dir,Sys.time())),
-         dir.create(file.path(working_dir,Sys.time())), FALSE)
+  ifelse(!dir.exists(file.path(working_dir,str_remove_all(Sys.time(),":"))),
+         dir.create(file.path(working_dir,str_remove_all(Sys.time(),":"))), FALSE)
 
-  output_path <- file.path(working_dir,Sys.time())
+  output_path <- file.path(working_dir,str_remove_all(Sys.time(),":"))
 
 
 
