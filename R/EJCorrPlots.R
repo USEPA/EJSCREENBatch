@@ -158,11 +158,12 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
           jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
-                   type="upper", order="hclust",
-                   addCoef.col = "black", # Add coefficient of correlation
-                   tl.col="black", tl.srt=45, #Text label color and rotation
-                   diag=FALSE, # hide correlation coefficient on the principal diagonal,
-                   tl.cex=1.25
+                             order = 'original',
+                             type="upper", order="hclust",
+                             addCoef.col = "black", # Add coefficient of correlation
+                             tl.col="black", tl.srt=45, #Text label color and rotation
+                             diag=FALSE, # hide correlation coefficient on the principal diagonal,
+                             tl.cex=1.25
           )
           dev.off()
 
