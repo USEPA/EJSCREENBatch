@@ -13,4 +13,5 @@ export(EJfunction)
 export(areal_apportionment)
 export(ejscreen.download.local)
 export(fetch_data_ej)
+export(fetch_acs_ej)
 
