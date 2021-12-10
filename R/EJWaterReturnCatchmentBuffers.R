@@ -83,7 +83,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
         sf::st_transform("ESRI:102005") %>%
         sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
         sf::st_as_sf()
-
+      return.catchments <- nldi.temp[[2]]$nhdplus_comid #pulls out all ComIDs 
+      
       # Call ATTAINs database on all down/upstream catchments
       if (attains == T) {
         sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
@@ -135,18 +136,18 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
               unique() %>%
               dplyr::mutate_if(is.numeric, round, digits = 3)
     if (input_type == 'catchment'){
-      return.me <- list(feature.buff, nhd.attains, summary.attains, hold.together)
+      return.me <- list(feature.buff, return.catchments, nhd.attains, summary.attains, hold.together)
     } else {
-      return.me <- list(feature.buff, nhd.attains, summary.attains, NULL)
+      return.me <- list(feature.buff, return.catchments, nhd.attains, summary.attains, NULL)
     }
   } else {
     if (input_type == 'catchment'){
-      return.me <- list(feature.buff, NULL, NULL, hold.together)
+      return.me <- list(feature.buff, return.catchments, NULL, NULL, hold.together)
     } else {
-      return.me <- list(feature.buff, NULL, NULL, NULL)
+      return.me <- list(feature.buff, return.catchments, NULL, NULL, NULL)
     }
   }
-  names(return.me) <- c('buffer_geoms','attains_catchments', 'attains_summary',
+  names(return.me) <- c('buffer_geoms',"nhd_comids",'attains_catchmereturn.catchmentss', 'attains_summary',
                         'catchment_state')
   return(return.me)
 }
