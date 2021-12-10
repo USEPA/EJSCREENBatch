@@ -629,7 +629,7 @@ EJfunction <- function(data_type, LOI_data, input_type = NULL, gis_option=NULL, 
                         EJ.attains.data)
       names(return.me) <- c('EJ.demographics.data', 'EJ.corrplots.data',
                             'EJ.facil.data', 'EJ.list.data',
-                            'EJ.index.data', 'EJ.buffer.summary',
+                            'EJ.index.data', 'EJ.attains.buffer.summary',
                             'EJ.attainsdata.raw')
     }
 
