@@ -72,7 +72,7 @@ library(EJSCREENbatch)
   
 # Input data requirements
 
-First, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), boundary shapes (i.e. a set of polygons representing wetlands or lagoons), or a waterbody identifier from the NHDPlus database (more on this below).
+First, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), boundary shapes (i.e. a set of polygons representing wetlands or lagoons), or a waterbody identifier from the NHDPlus database (more on this below). We refer to analyses screening around specific coordinate locations as "land-based" and those focusing on surface waters as "water-based". 
 
 Here, we create a toy data set by drawing 20 random latitude/longitude coordinates from the continental USA. These points will serve as our "locations of interest" for the vignette's sample EJ analysis.
 
