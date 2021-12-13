@@ -26,17 +26,13 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
   if (!(rank_geography_type %in% c('US','state'))){
     stop('Geography type must be either -US- or -state-.')
   }
-
-
-
+  
   # Searching the variable name string by character index to extract threshold
-  thrshld <- as.numeric(
-    substr(
-      names(input_data$EJ.facil.data[[1]])[length(names(input_data$EJ.facil.data[[1]]))],
-      24,
-      str_length(names(input_data$EJ.facil.data[[1]])[length(names(input_data$EJ.facil.data[[1]]))])-7
-    )
-  )
+  thrshld <- input_data$EJ.facil.data[[1]] %>% 
+    dplyr::select(starts_with('Env. indicators')) %>% 
+    names() %>% 
+    gsub(".*above (.+)th.*",'\\1',.) %>% 
+    as.numeric()
 
   if (rank_type == 'location'){
 
@@ -44,7 +40,7 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
     data_transf <- list()
 
     for (i in 1:length(input_data$EJ.facil.data)){
-
+      
       if (rank_count > (dim(input_data$EJ.facil.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
       }
@@ -52,7 +48,7 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
       # Use name or shape_ID?
       keep.id <- names(input_data$EJ.facil.data[[i]])[1]
 
-      locay <- batch.datalist$EJ.facil.data$facil_intersect_radius3mi %>%
+      locay <- input_data$EJ.facil.data[[i]] %>%
         as.data.frame() %>%
         dplyr::filter(geography == rank_geography_type) %>%
         dplyr::mutate_at(vars(dplyr::ends_with('%ile')), funs(as.integer(as.character(.)))) %>%
@@ -61,10 +57,10 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
         dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'),
                                dplyr::starts_with('Env. indicators')),
                           desc) %>%
-        dplyr::select_if(names(.) %in% c(keep.id,
-                                         paste0('Total indicators above ',thrshld,'th %ile') ,
-                                         paste0('Env. indicators above ',thrshld,'th %ile') ,
-                                         paste0('Demo. indicators above ',thrshld,'th %ile') )) %>%
+        dplyr::select(all_of(keep.id),
+                         paste0('Total indicators above ',thrshld,'th %ile'),
+                         paste0('Env. indicators above ',thrshld,'th %ile'),
+                         paste0('Demo. indicators above ',thrshld,'th %ile')) %>%
         dplyr::mutate(Rank = row_number()) %>%
         dplyr::relocate(Rank) %>%
         dplyr::slice_head(n = rank_count)
@@ -95,6 +91,7 @@ EJRanking <- function(input_data, rank_type = 'location', rank_geography_type = 
       if (rank_count > (dim(input_data$EJ.list.data[[i]])[1]/2)){
         stop('Ranking list length can be no longer than location list.')
       } else {
+        
         cbg <- input_data$EJ.list.data[[i]] %>%
           as.data.frame() %>%
           dplyr::select(P_MINORPCT_US, P_LWINCPCT_US, P_LESHSPCT_US, P_LNGISPCT_US,

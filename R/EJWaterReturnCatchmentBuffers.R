@@ -77,7 +77,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
       nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                  mode = ds_us_mode,
-                                 distance_km = round(ds_us_dist*1.60934))$DD_flowlines
+                                 distance_km = round(ds_us_dist*1.60934))[[2]]
       feature.list[[i]] <- nldi.temp  %>%
         sf::st_union() %>%
         sf::st_transform("ESRI:102005") %>%

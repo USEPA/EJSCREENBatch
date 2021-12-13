@@ -17,7 +17,6 @@
 #' @param heat_table_topN Number of locations with highest median CBG values to return in Heat table.
 #' @param save_option Option to save heat table to a folder in working directory. Default is FALSE.
 #' @param directory
-#' @param threshold
 #'
 #' @return
 #' @export
@@ -27,21 +26,15 @@
 #' y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
 EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                          heat_table_input_name = NULL, heat_table_topN = NULL,
-                         save_option = F, directory, threshold = NULL){
-
-
+                         save_option = F, directory){
 
   #set heat table thresholds
-  if(!is.null(threshold)){
-    if(threshold > 0 & threshold < 100){
-      thrshld <- threshold
-    } else {
-      stop('Set threshold to numeric value between 0 and 100.')
-    }
-  } else if (is.null(threshold)){
-    thrshld <- 80
-  }
-
+  thrshld <- input_data$EJ.facil.data[[1]] %>% 
+    dplyr::select(starts_with('Env. indicators')) %>% 
+    names() %>% 
+    gsub(".*above (.+)th.*",'\\1',.) %>% 
+    as.numeric()
+  
   # Set default geography level @ nat'l scale
   if(is.null(heat_table_geog_lvl)){
     geog <- 'US'  #default values
@@ -166,7 +159,9 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
     if (save_option == T){
       ifelse(!dir.exists(file.path(directory,"heattabs")),
              dir.create(file.path(directory,"heattabs")), FALSE)
-      flextable::save_as_image(x = heat.table, path = paste0(directory,"/heattabs/ht_all.png"))
+      flextable::save_as_image(x = heat.table, path = paste0(directory,"/heattabs/ht_",
+                                                             geog,"_",
+                                                             "all.png"))
     }
 
   } else if (heat_table_type == 'single') { #This returns HeatTable for user-specified facil
@@ -211,27 +206,44 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
       flextable::align_text_col(align = 'left') %>%
       flextable::bg(bg = function(x){
         out <- rep("transparent", length(x))
-        out[is.numeric(x) & x >= 95] <- "red1"
-        out[is.numeric(x) & x >= 90 & x < 95] <- "orange1"
-        out[is.numeric(x) & x >= 80 & x < 90] <- 'yellow1'
+        out[is.numeric(x) & (x >= (thrshld + .75*(100-thrshld)))] <- "red1"
+        out[is.numeric(x) & (x >= (thrshld + (100-thrshld)/2)) &
+              (x < (thrshld + .75*(100-thrshld)))] <- "orange1"
+        out[is.numeric(x) & x >= thrshld & (x < (thrshld + (100-thrshld)/2))] <- 'yellow1'
         out
       }) %>%
       flextable::compose(j = 2, value = flextable::as_paragraph(''), part = 'head') %>%
       flextable::bold(bold = T, part = 'header') %>%
       flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
       flextable::bold(i = 8, j = 1, bold = T, part = 'body') %>%
-      flextable::colformat_num(big.mark = '')
+      flextable::colformat_num(big.mark = '') %>%
+      flextable::footnote(i = 1, j = 1,
+                          value = flextable::as_paragraph(paste0('Color code: Yellow (',
+                                                                 thrshld,
+                                                                 '-',
+                                                                 (thrshld + 0.5*(100-thrshld)),
+                                                                 '). Orange (',
+                                                                 (thrshld + 0.5*(100-thrshld)),
+                                                                 '-',
+                                                                 (thrshld + 0.75*(100-thrshld)),
+                                                                 '). Red (',
+                                                                 (thrshld + 0.75*(100-thrshld)),
+                                                                 '-100).'
+                          )),
+                          part = 'header',
+                          ref_symbols = '')
 
     ## Save if option selected.
     if (save_option == T){
       ifelse(!dir.exists(file.path(directory,"heattabs")),
              dir.create(file.path(directory,"heattabs")), FALSE)
       flextable::save_as_image(x = heat.table, path = paste0(directory,'/heattabs/ht_single_',
+                                                             geog,'_',
                                                              heat_table_input_name,".png"))
     }
 
   } else if (heat_table_type == 'topn') { #Return HeatTable summary for Top10 facilities
-
+    
     # How many facilities included in table?
     if(is.null(heat_table_topN)){
       n_rank <-  5 #default values
@@ -252,17 +264,21 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
       ##
       # Extract nat'l level data, keep only top N
-      dt <- as.data.table(input_data$EJ.facil.data[[k]]
-      )[geography == geog
-      ][, `Total indicators above 80th %ile` :=
-          as.numeric(as.character(`Env. indicators above 80th %ile`)) +
-          as.numeric(as.character(`Demo. indicators above 80th %ile`))
-      ][order(-`Total indicators above 80th %ile`)
-      ][1:n_rank,
-      ][, dplyr::select(.SD, c(tidyselect::all_of(facil.name),
-                               `Low Income`:`Resp. Hazard`))]
-      setcolorder(dt, neworder = facil.name)
-
+      
+      dt <- input_data$EJ.facil.data[[k]] %>%
+        as.data.frame() %>%
+        dplyr::filter(geography == geog) %>%
+        dplyr::mutate_at(vars(dplyr::ends_with('%ile')), funs(as.integer(as.character(.)))) %>%
+        dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') :=
+                        rowSums(select(., dplyr::ends_with('%ile')))) %>%
+        dplyr::arrange_at(vars(dplyr::starts_with('Total indicators'),
+                               dplyr::starts_with('Env. indicators')),
+                          desc) %>%
+        dplyr::slice_head(n = n_rank) %>%
+        dplyr::select(dplyr::all_of(facil.name),
+                      `Low Income`:`Resp. Hazard`) %>%
+        as.data.table()
+      
       # Reshape/transpose data
       new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
       setnames(new.dt, as.character(new.dt[1,]))
@@ -291,7 +307,22 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
         flextable::bold(bold = T, part = 'header') %>%
         flextable::bold(i = 1, j = 1, bold = T, part = "body") %>%
         flextable::bold(i = 8, j = 1, bold = T, part = 'body') %>%
-        flextable::colformat_num(big.mark = '')
+        flextable::colformat_num(big.mark = '') %>%
+        flextable::footnote(i = 1, j = 1,
+                            value = flextable::as_paragraph(paste0('Color code: Yellow (',
+                                                                   thrshld,
+                                                                   '-',
+                                                                   (thrshld + 0.5*(100-thrshld)),
+                                                                   '). Orange (',
+                                                                   (thrshld + 0.5*(100-thrshld)),
+                                                                   '-',
+                                                                   (thrshld + 0.75*(100-thrshld)),
+                                                                   '). Red (',
+                                                                   (thrshld + 0.75*(100-thrshld)),
+                                                                   '-100).'
+                            )),
+                            part = 'header',
+                            ref_symbols = '')
 
       heat.table[[stringr::str_sub(names(input_data$EJ.facil.data),
                                    start = 7)[k]]] <- ht
@@ -302,6 +333,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                dir.create(file.path(directory,"heattabs")), FALSE)
         flextable::save_as_image(x = ht,
                                  path = paste0(directory,"/heattabs/ht_topN_",
+                                               geog,'_',
                                                stringr::str_sub(names(input_data$EJ.facil.data),
                                                                 start = 7)[k],
                                                ".png"))

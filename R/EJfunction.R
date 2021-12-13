@@ -10,7 +10,7 @@
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
-#' @param ds_mode Set "upstream" or "downstream" flow direction for water-based screening. Default is "downstream".
+#' @param ds_mode Set upstream ('UM','UT') or downstream ('DD','DM') flow direction for water-based screening. Default is 'DD'.
 #' @param ds_dist Set distance upstream/downstream along flow path for water-based screening. Default is 50 miles.
 #' @param input_name Vector of names for facilities
 #' @param maps_perc_geog State or US. Default is US.
@@ -708,7 +708,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
               areal_apportionment(ejscreen_bgs_data = data.tog,
                                   facility_buff = facility_buff,
                                   facil_data = LOI_data,
-                                  path_raster_layer = raster_data) %>%
+                                  path_raster_layer = raster_data,
+                                  thrshld = Thresh) %>%
               dplyr::inner_join(facility_name, by = 'shape_ID') %>%
               dplyr::relocate(input_name)
           } else {
@@ -717,7 +718,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
               areal_apportionment(ejscreen_bgs_data = data.tog,
                                   facility_buff = facility_buff,
                                   facil_data = LOI_data,
-                                  path_raster_layer = raster_data)
+                                  path_raster_layer = raster_data,
+                                  thrshld = Thresh)
           }
 
         } else if (in.type == 'catchment') {
@@ -742,7 +744,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             areal_apportionment(ejscreen_bgs_data = data.tog,
                                 facility_buff = facility_buff,
                                 facil_data = temp.mat,
-                                path_raster_layer = raster_data) %>%
+                                path_raster_layer = raster_data,
+                                thrshld = Thresh) %>%
               dplyr::inner_join(facility_name, by = 'shape_ID') %>%
               dplyr::relocate(catchment_ID)
         }
