@@ -25,7 +25,7 @@
 #' @param rank_count Number of locations or CBGs to return in ranking table.
 #' @param raster_data Path to dasymetric raster data. Recommend using 1kmX1km raster
 #'                    data from NASA's Socioeconomic Data and Applications Center (SEDAC)
-#' @param directory
+#' @param working_dir
 #'
 #' @return
 #' @export
