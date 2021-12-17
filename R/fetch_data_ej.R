@@ -3,7 +3,7 @@
 #' This function looks for data from EJSCREEN. First checks if from EJSCREEN is
 #' in working directory. If not, it creates a directory and downloads most recent
 #' data.
-#'
+#' @param working_dir
 #' @param state_filter Users may restrict screening to a particular state in the
 #' contiguous US. If so, users can specify a state. Default is to conduct
 #' screening for the entire contiguous US.

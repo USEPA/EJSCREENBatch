@@ -5,15 +5,16 @@
 #'
 #' @param input_data
 #' @param indic_option 'total', 'environmental','demographic'. 'total' is default.
-#' @param perc_geog State or US. Default is US.
+#' @param perc_geog 'state' or 'US'. Default is 'US'.
 #' @param save_option Option to save map to a folder in working directory. Default is FALSE.
+#' @param directory
 #'
 #' @return
 #' @export
 #'
 #' @examples
 #' maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
-EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F){
+EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F, directory){
 
   ## 3 possible color schemes: by env., demo. or total above 80th
   if(is.null(indic_option)){
@@ -33,25 +34,37 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
   } else {
     stop('Accepted geographies are US and state.')
   }
+  
+  # Searching the variable name string by character index to extract threshold
+  thrshld <- input_data$EJ.facil.data[[1]] %>% 
+    dplyr::select(starts_with('Env. indicators')) %>% 
+    names() %>% 
+    gsub(".*above (.+)th.*",'\\1',.) %>% 
+    as.numeric()
 
   EJ.maps <- list()
 
   for (i in 1:length(input_data$EJ.facil.data)){
 
     map.data <- input_data$EJ.facil.data[[i]] %>%
-      dplyr::mutate(`Total indicators above 80th %ile` = as.factor(
-        as.numeric(as.character(`Env. indicators above 80th %ile`)) +
-          as.numeric(as.character(`Demo. indicators above 80th %ile`))
-      )) %>%
+      dplyr::mutate_at(vars(dplyr::ends_with('%ile')), funs(as.integer(as.character(.)))) %>%
+      dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') :=
+                      rowSums(dplyr::select(., dplyr::ends_with('%ile')))) %>%
       dplyr::filter(!is.na(geometry)) %>%
       dplyr::filter(geography == geog.ind) %>%
       st_as_sf(crs = 4326)
-
+    
     if (ind.option == 'total'){
+      
+      col.keep <- map.data %>% 
+        dplyr::select(starts_with('Total indicators')) %>% 
+        st_drop_geometry() %>%
+        names()
+      
       # Color palette
       pal <- leaflet::colorFactor(
         rev(RColorBrewer::brewer.pal(n=11, "Spectral")), # NOTE: brewer.pal can't go over 11 :(
-        domain = map.data$`Total indicators above 80th %ile`)
+        domain = map.data[[col.keep]])
 
       # Leaflet object
       EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
@@ -63,20 +76,26 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
                   lng2 = max(sf::st_coordinates(map.data)[,1]),
                   lat2 = max(sf::st_coordinates(map.data)[,2])) %>%
         leaflet::addCircleMarkers(radius = 5,
-                         color = ~ pal(`Total indicators above 80th %ile`),
+                         color = ~ pal(get(col.keep)),
                          opacity = 0.75,
                          popup = leafpop::popupTable(map.data,
                                             feature.id = F, row.numbers = F,
                                             zcol = names(map.data)[1:20])) %>%
-        leaflet::addLegend(pal = pal, values = ~`Total indicators above 80th %ile`, position = "bottomright")
+        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+                           title = col.keep, position = "bottomright")
     }
 
     if (ind.option == 'environmental'){
+      
+      col.keep <- map.data %>% 
+        dplyr::select(starts_with('Env. indicators')) %>% 
+        st_drop_geometry() %>%
+        names()
 
       # Color palette
       pal <- leaflet::colorFactor(
         rev(RColorBrewer::brewer.pal(n=11, "Spectral")),
-        domain = map.data$`Env. indicators above 80th %ile`)
+        domain = map.data[[col.keep]])
 
       # Leaflet object
       EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
@@ -88,20 +107,26 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
                            lng2 = max(sf::st_coordinates(map.data)[,1]),
                            lat2 = max(sf::st_coordinates(map.data)[,2])) %>%
         leaflet::addCircleMarkers(radius = 5,
-                         color = ~ pal(`Env. indicators above 80th %ile`),
-                         opacity = 0.75,
-                         popup = leafpop::popupTable(map.data,
-                                            feature.id = F, row.numbers = F,
-                                            zcol = names(map.data)[1:20])) %>%
-        leaflet::addLegend(pal = pal, values = ~`Env. indicators above 80th %ile`, position = "bottomright")
+                                  color = ~ pal(get(col.keep)),
+                                  opacity = 0.75,
+                                  popup = leafpop::popupTable(map.data,
+                                                              feature.id = F, row.numbers = F,
+                                                              zcol = names(map.data)[1:20])) %>%
+        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+                           title = col.keep, position = "bottomright")
     }
 
     if (ind.option == 'demographic'){
-
+      
+      col.keep <- map.data %>% 
+        dplyr::select(starts_with('Demo. indicators')) %>% 
+        st_drop_geometry() %>%
+        names()
+      
       # Color palette
       pal <- leaflet::colorFactor(
-        rev(RColorBrewer::brewer.pal(n=6, "Spectral")),
-        domain = map.data$`Demo. indicators above 80th %ile`)
+        rev(RColorBrewer::brewer.pal(n=11, "Spectral")),
+        domain = map.data[[col.keep]])
 
       # Leaflet object
       EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
@@ -113,27 +138,30 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
                            lng2 = max(sf::st_coordinates(map.data)[,1]),
                            lat2 = max(sf::st_coordinates(map.data)[,2])) %>%
         leaflet::addCircleMarkers(radius = 5,
-                         opacity = 0.75,
-                         color = ~ pal(`Demo. indicators above 80th %ile`),
-                         popup = leafpop::popupTable(map.data,
-                                            feature.id = F, row.numbers = F,
-                                            zcol = names(map.data)[1:20])) %>%
-        leaflet::addLegend(pal = pal, values = ~`Demo. indicators above 80th %ile`, position = "bottomright")
+                                  color = ~ pal(get(col.keep)),
+                                  opacity = 0.75,
+                                  popup = leafpop::popupTable(map.data,
+                                                              feature.id = F, row.numbers = F,
+                                                              zcol = names(map.data)[1:20])) %>%
+        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+                           title = col.keep, position = "bottomright")
     }
 
     # Save me
     if (save_option == T) {
-      ifelse(!dir.exists(file.path(getwd(),"EJmaps/")),
-             dir.create(file.path(getwd(),"EJmaps/")), FALSE)
+      ifelse(!dir.exists(file.path(directory,"EJmaps")),
+             dir.create(file.path(directory,"EJmaps")), FALSE)
 
       htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                         start = 7)[i]]],
-                 file= paste0('EJmaps/',indic_option,'_map_',
+                 file= paste0(directory,'/EJmaps/',indic_option,
+                              '_',geog.ind,'_map_',
                               stringr::str_sub(names(input_data$EJ.facil.data),
                                                start = 7)[i],'.html'))
       mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
                                                  start = 7)[i]]],
-              file = paste0('EJmaps/',indic_option,'_map_',
+              file = paste0(directory,'/EJmaps/',indic_option,
+                            '_',geog.ind,'_map_',
                             stringr::str_sub(names(input_data$EJ.facil.data),
                                              start = 7)[i],".png"))
     }

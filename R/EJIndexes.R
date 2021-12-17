@@ -6,19 +6,20 @@
 #' @param data
 #' @param gis_method User specified method of creating buffers around areas of interest (intersect, centroid, intersection).
 #' @param buffer  Distance(s) used to create buffers.
+#' @param directory
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-EJIndexes <- function(data, gis_method, buffer,threshold){
-  ifelse(!dir.exists(file.path(getwd(),"plots")), dir.create(file.path(getwd(),"plots")), FALSE)
+EJIndexes <- function(data, gis_method, buffer,threshold, directory){
+  ifelse(!dir.exists(file.path(directory,"plots")), dir.create(file.path(directory,"plots")), FALSE)
 
   data.list <- list()
   i=1
   for(percentile in c('state','US')){
-    jpeg(file=paste0("plots/Indexes_boxplot_gis_",gis_method,"_radius",buffer,"_",percentile,".jpeg"))
+    jpeg(file=paste0(directory,"/plots/Indexes_boxplot_gis_",gis_method,"_radius",buffer,"_",percentile,".jpeg"))
     demo.df <- data %>%
       as.data.frame() %>%
       dplyr::select(as.character(sprintf('P_LDPNT_%s', percentile)),

@@ -192,10 +192,12 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
   together.sf <- together.sf %>%
     dplyr::mutate(!!paste0('Env. indicators above ',thrshld,'th %ile') :=
                     as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                    `Air, Cancer`:`Resp. Hazard`) > thrshld))) %>%
+                                                    `Air, Cancer`:`Resp. Hazard`) > thrshld,
+                                      na.rm = TRUE))) %>%
     dplyr::mutate(!!paste0('Demo. indicators above ',thrshld,'th %ile') :=
                     as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
-                                                    `Low Income`:`Age Over 64`) > thrshld))) 
+                                                    `Low Income`:`Age Over 64`) > thrshld,
+                                      na.rm = TRUE))) 
   together.perc <- together.sf %>%
     dplyr::filter(geography != 'raw') %>%
     dplyr::mutate_if(is.numeric, round)
