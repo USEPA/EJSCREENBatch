@@ -76,6 +76,12 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                        input_name=NULL, attains=NULL, raster_data = NULL){
 
   `%notin%` = Negate(`%in%`)
+
+
+
+  #=============================================================================
+  #------------------------------CHECK INPUTS-----------------------------------
+  #=============================================================================
   #check to make sure data type is currently supported in tool
   if(data_type %notin% c("landbased", "waterbased")){
     stop("Data type not supported. Please specify one of the following data types:
@@ -153,32 +159,6 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     rank_count = 10
   }
 
-  # Bring in EJ Screen Data
-  if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
-    data <- get("data.state.uspr", envir = .GlobalEnv)
-      if(!is.null(state)){
-        data.state.uspr <- data %>%
-          filter(ST_ABBREV %in% state)
-      } else {
-        data.state.uspr <- data
-      }
-
-  } else {
-    data.state.uspr <- fetch_data_ej(working_dir, state)
-    assign("data.state.uspr", data.state.uspr, envir=globalenv())
-  }
-
-  # Bring in ACS Data
-  if ("acs.cbg.data" %in% ls(envir = .GlobalEnv)) {
-    data <- get('acs.cbg.data', env = .GlobalEnv)
-    acs.cbg.data <- data
-  } else {
-    acs.cbg.data <- fetch_acs_data(working_dir,state)
-    assign('acs.cbg.data', acs.cbg.data, envir=globalenv())
-  }
-
-  # Join EJSCREEN + ACS Data
-  data.tog <- data.state.uspr %>% left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
 
   #If conducting waterbased analysis, need to know input type
   if(data_type=="waterbased"){
@@ -210,12 +190,29 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     }
   }
 
+  #set threshold
+  if(is.null(threshold)){
+    Thresh <-  80 #default values
+  } else {
+    Thresh <- threshold   #user inputted values that override default
+  }
+
+
+  #=============================================================================
+  #-------------------------------CHECK DATA------------------------------------
+  #=============================================================================
+
   # Create internal function facility ID (in case user doesn't)
   if(data_type == 'waterbased' & in.type == 'catchment') {
     LOI_data <- LOI_data %>%
       tibble::rowid_to_column("shape_ID")
     facility_name <- LOI_data
   } else {
+    if((class(LOI_data)!="sf")[1]){
+      stop("User must provide a spatial object. Please check to make sure to convert the input into a sf object using st_as_sf().
+           See Vignette for more information.")
+    }
+
     LOI_data <- LOI_data %>%
       tibble::rowid_to_column("shape_ID") %>%
       st_transform("ESRI:102005")
@@ -236,13 +233,42 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     facil.geom.type <- unique(as.character(st_geometry_type(LOI_data)))
     facil.geom.type <- facil.geom.type[which.max(tabulate(match(st_geometry_type(LOI_data), facil.geom.type)))]
   }
-  #set threshold
-  if(is.null(threshold)){
-    Thresh <-  80 #default values
+
+  #=============================================================================
+  #-------------------------------BRING IN DATA---------------------------------
+  #=============================================================================
+
+  # Bring in EJ Screen Data
+  if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
+    data <- get("data.state.uspr", envir = .GlobalEnv)
+    if(!is.null(state)){
+      data.state.uspr <- data %>%
+        filter(ST_ABBREV %in% state)
+    } else {
+      data.state.uspr <- data
+    }
+
   } else {
-    Thresh <- threshold   #user inputted values that override default
+    data.state.uspr <- fetch_data_ej(working_dir, state)
+    assign("data.state.uspr", data.state.uspr, envir=globalenv())
   }
 
+  # Bring in ACS Data
+  if ("acs.cbg.data" %in% ls(envir = .GlobalEnv)) {
+    data <- get('acs.cbg.data', env = .GlobalEnv)
+    acs.cbg.data <- data
+  } else {
+    acs.cbg.data <- fetch_acs_data(working_dir,state)
+    assign('acs.cbg.data', acs.cbg.data, envir=globalenv())
+  }
+
+  # Join EJSCREEN + ACS Data
+  data.tog <- data.state.uspr %>% left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
+
+
+  #=============================================================================
+  #---------------------SCREENING ANALYSES--------------------------------------
+  #=============================================================================
   #For each data type, make sure GIS methods make sense.
   if(data_type=="landbased"){
     #set default to intersection method
