@@ -19,8 +19,8 @@ Imports:
   tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot,
   RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
   leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools,
-  rlist, exactextractr, furrr, tidycensus, future
+  rlist, exactextractr, furrr, tidycensus, future, purr, parallel
 Depends: 
-  tidyverse, sf, data.table
+  tidyverse, sf, data.table, tidycensus, future, purr, parallel
 LazyData: true
 RoxygenNote: 7.1.1
