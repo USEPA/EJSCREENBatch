@@ -36,8 +36,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
           return(as.integer(1))
         },
         warning=function(cond) {
-          message("Original warning message:")
-          message(cond)
+          message("Please check that all ComIDs are valid.") #edited
+          message(paste0("Original error message: ", cond)) #edited
           return(as.integer(1))
         }
         )
