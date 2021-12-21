@@ -55,6 +55,8 @@ and point the function towards where it is housed locally. Unfortunately
 this download requires creation of a (free) account; users should
 download the geotiff version of the raster files.
 
+Users should also note that when the package is installed, the most recent release of EJSCREEN data is downloaded. EJSCREEN is updated periodically so if users want to ensure that they are using the most recent release, they will need to delete their local copy to allow the package to automatically pull the most current version. This design choice was made to ensure reproducibility between runs.  
+
 ## Example
 
 An overview of the package, example use of its functions, and additional
