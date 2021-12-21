@@ -75,25 +75,17 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   for (i in 1:length(feature.id)){
     nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
     if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
-      nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
-                                 mode = ds_us_mode,
-                                 distance_km = round(ds_us_dist*1.60934))$DD_flowlines
-      feature.list[[i]] <- nldi.temp  %>%
-        sf::st_union() %>%
-        sf::st_transform("ESRI:102005") %>%
-        sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
-        sf::st_as_sf()
-      return.catchments <- nldi.temp[[2]]$nhdplus_comid #pulls out all ComIDs 
 
       tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                                         mode = ds_us_mode,
-                                                        distance_km = round(ds_us_dist*1.60934))[[2]]
+                                                        distance_km = round(ds_us_dist*1.60934))$DD_flowlines
 
                 feature.list[[i]] <- nldi.temp  %>%
                   sf::st_union() %>%
                   sf::st_transform("ESRI:102005") %>%
                   sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
                   sf::st_as_sf()
+                return.catchments <- nldi.temp[[2]]$nhdplus_comid #pulls out all ComIDs
 
                 # Call ATTAINs database on all down/upstream catchments
                 if (attains == T) {
