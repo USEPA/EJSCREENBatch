@@ -378,9 +378,15 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         #Merge together, join back to facility data
         temp_intersect <- data.table::rbindlist(temp_state) %>%
-          dplyr::left_join(LOI_data %>%
-                             sf::st_drop_geometry(),
+          dplyr::left_join(if(class(LOI_data)[1]=="sf"){
+                             LOI_data %>%
+                                 sf::st_drop_geometry()
+                            } else {
+                               LOI_data
+                            },
                            by = 'shape_ID')
+
+
 
         EJ.list.data[[j]] <- temp_intersect
         names(EJ.list.data)[j] = paste0("area1_intersect_radius",i,"mi")
