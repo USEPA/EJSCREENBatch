@@ -709,7 +709,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                            thrshld = Thresh)
           }
         } else if (in.type == 'catchment'){
-          temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
+          temp.mat <- as.data.frame(catchment.polygons$catchment_state)  %>%
             mutate(comid = as.numeric(comid)) %>%
             inner_join(LOI_data, by = c('comid' = 'catchment_ID')) %>%
             st_as_sf()
@@ -774,7 +774,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             st_as_sf()
 
           ## Shapefile with lat/lon of catchmentID waterbody centroid
-          temp.mat <- as.data.frame(catchment.polygons[[4]]) %>%
+          temp.mat <- as.data.frame(catchment.polygons$catchment_state) %>%
             mutate(comid = as.numeric(comid)) %>%
             inner_join(LOI_data, by = c('comid' = 'catchmentID')) %>%
             st_as_sf() %>%
