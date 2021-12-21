@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-#' 
+#'
 
 EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, buff_dist, input_type, attains){
   # Determine the input_data type:
@@ -37,7 +37,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
         },
         warning=function(cond) {
           message("Please check that all ComIDs are valid.") #edited
-          message(paste0("Original error message: ", cond)) #edited
+          message(paste0("Original warning message: ", cond)) #edited
           return(as.integer(1))
         }
         )
@@ -67,7 +67,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   }
 
   # Just a temporary comment to try and figure out what's preventing this update.
-  
+
   # Loop through catchment IDs to extract down/upstream buffer polygons
   geo.base <- 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3' #For ATTAINS API
   feature.list <- vector(mode = "list", length = length(feature.id))
@@ -84,7 +84,23 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
         sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
         sf::st_as_sf()
       return.catchments <- nldi.temp[[2]]$nhdplus_comid #pulls out all ComIDs 
-      
+
+      tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
+                                                        mode = ds_us_mode,
+                                                        distance_km = round(ds_us_dist*1.60934))[[2]]
+
+                feature.list[[i]] <- nldi.temp  %>%
+                  sf::st_union() %>%
+                  sf::st_transform("ESRI:102005") %>%
+                  sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
+                  sf::st_as_sf()
+
+               },
+               error=function(error){
+                 print(error)
+                 feature.list[[i]] <- NULL
+               })
+
       # Call ATTAINs database on all down/upstream catchments
       if (attains == T) {
         sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
@@ -95,6 +111,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
       }
     } else {
       feature.list[[i]] <- NULL
+      return.catchments <- NULL
     }
   }
 
@@ -147,7 +164,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
       return.me <- list(feature.buff, return.catchments, NULL, NULL, NULL)
     }
   }
-  names(return.me) <- c('buffer_geoms',"nhd_comids",'attains_catchmereturn.catchmentss', 'attains_summary',
+  names(return.me) <- c('buffer_geoms',"nhd_comids",'attains_catchments','attains_summary',
                         'catchment_state')
   return(return.me)
 }

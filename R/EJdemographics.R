@@ -6,19 +6,20 @@
 #' @param data
 #' @param gis_method User specified method of creating buffers around areas of interest (intersect, centroid, intersection).
 #' @param buffer Distance(s) used to create buffers.
-#' @param threshold User-selected threshold - 80th percentile is default.
+#' @param threshold User specified threshold to represent potential concern. Default is 80%
+#' @param directory
 #'
 #' @return
 #' @export
 #'
 #' @examples
-EJdemographics <- function(data, gis_method, buffer, threshold){
-  ifelse(!dir.exists(file.path(getwd(),"plots")), dir.create(file.path(getwd(),"plots")), FALSE)
+EJdemographics <- function(data, gis_method, buffer, threshold, directory){
+  ifelse(!dir.exists(file.path(directory,"plots")), dir.create(file.path(directory,"plots")), FALSE)
 
   data.list <- list()
   i=1
   for(percentile in c('state','US')){
-    jpeg(file=paste0("plots/demographics_boxplot_gis_",gis_method,"_radius",buffer,"_",percentile,".jpeg"))
+    jpeg(file=paste0(directory,"/plots/demographics_boxplot_gis_",gis_method,"_radius",buffer,"_",percentile,".jpeg"))
     demo.df <- data %>%
       as.data.frame() %>%
       dplyr::select(as.character(sprintf('P_MINORPCT_%s', percentile)),
