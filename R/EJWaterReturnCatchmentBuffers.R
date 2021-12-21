@@ -86,20 +86,21 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
                   sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
                   sf::st_as_sf()
 
+                # Call ATTAINs database on all down/upstream catchments
+                if (attains == T) {
+                  sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
+                  nhd.catchment[[i]] <- arcpullr::get_spatial_layer(geo.base, where = sql.statement)
+                  if (dim(nhd.catchment[[i]])[1] < 1) {
+                    nhd.catchment[[i]] <- NULL
+                  }
+                }
+
                },
                error=function(error){
                  print(error)
                  feature.list[[i]] <- NULL
                })
 
-      # Call ATTAINs database on all down/upstream catchments
-      if (attains == T) {
-        sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
-        nhd.catchment[[i]] <- arcpullr::get_spatial_layer(geo.base, where = sql.statement)
-        if (dim(nhd.catchment[[i]])[1] < 1) {
-          nhd.catchment[[i]] <- NULL
-        }
-      }
     } else {
       feature.list[[i]] <- NULL
     }
