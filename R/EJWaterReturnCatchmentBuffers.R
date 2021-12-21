@@ -36,8 +36,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
           return(as.integer(1))
         },
         warning=function(cond) {
-          message("Original warning message:")
-          message(cond)
+          message("Please check that all ComIDs are valid.") #edited
+          message(paste0("Original warning message: ", cond)) #edited
           return(as.integer(1))
         }
         )
@@ -75,6 +75,15 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   for (i in 1:length(feature.id)){
     nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
     if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
+      nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
+                                 mode = ds_us_mode,
+                                 distance_km = round(ds_us_dist*1.60934))$DD_flowlines
+      feature.list[[i]] <- nldi.temp  %>%
+        sf::st_union() %>%
+        sf::st_transform("ESRI:102005") %>%
+        sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
+        sf::st_as_sf()
+      return.catchments <- nldi.temp[[2]]$nhdplus_comid #pulls out all ComIDs 
 
       tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                                         mode = ds_us_mode,
@@ -103,6 +112,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
 
     } else {
       feature.list[[i]] <- NULL
+      return.catchments <- NULL
     }
   }
 
@@ -144,18 +154,18 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
               unique() %>%
               dplyr::mutate_if(is.numeric, round, digits = 3)
     if (input_type == 'catchment'){
-      return.me <- list(feature.buff, nhd.attains, summary.attains, hold.together)
+      return.me <- list(feature.buff, return.catchments, nhd.attains, summary.attains, hold.together)
     } else {
-      return.me <- list(feature.buff, nhd.attains, summary.attains, NULL)
+      return.me <- list(feature.buff, return.catchments, nhd.attains, summary.attains, NULL)
     }
   } else {
     if (input_type == 'catchment'){
-      return.me <- list(feature.buff, NULL, NULL, hold.together)
+      return.me <- list(feature.buff, return.catchments, NULL, NULL, hold.together)
     } else {
-      return.me <- list(feature.buff, NULL, NULL, NULL)
+      return.me <- list(feature.buff, return.catchments, NULL, NULL, NULL)
     }
   }
-  names(return.me) <- c('buffer_geoms','attains_catchments', 'attains_summary',
+  names(return.me) <- c('buffer_geoms',"nhd_comids",'attains_catchments','attains_summary',
                         'catchment_state')
   return(return.me)
 }

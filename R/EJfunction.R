@@ -6,8 +6,8 @@
 #' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments).
 #' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.
 #' @param input_type Required if data_type == "waterbased". Input must be "sf" object(s) or list of catchments (ComIDs)
-#' @param gis_option User specified method of creating buffers around areas of interest (intersect, intersection). Default is intersection.
-#' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles.
+#' @param gis_option User specified method of creating buffers around areas of interest ("intersect", "intersection", or "all"). Default is "intersection". Note: running multiple GIS options at a time is currently not available for water-based analyses.
+#' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points and 0 miles for polygons.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
 #' @param ds_mode Set upstream ('UM','UT') or downstream ('DD','DM') flow direction for water-based screening. Default is 'DD'.
@@ -59,7 +59,7 @@
 #' #    mode DD is ds w/ diversions, DM is ds mainstem, UT is us w/ tributaries, UM is us mainstem.
 #' #    Mode DD is default.
 #' # 2) ds.us.dist. Upstream/downstream distance. 50miles is default.
-#' # 3) buff.dist. Buffer distance around catchments in miles. 1 mile is default.
+#' # 3) buff.dist. Buffer distance around catchments in miles. 0 mile buffer is default.
 #' # 4) Attains. Call attains API for data? (T/F). Default is False
 #'
 #' c <- EJfunction(data_type="waterbased", LOI_data=facilities,
@@ -800,11 +800,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     } else {
       return.me <- list(EJ.facil.data, EJ.list.data,
                         EJ.buffer.shapes, EJ.attains.data)
-      #EJ.demographics.data, EJ.corrplots.data, EJ.index.data,
-
       names(return.me) <- c('EJ.facil.data', 'EJ.list.data',
                             'EJ.buffer.summary','EJ.attainsdata.raw')
-      #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
     }
 
     if(produce_ancillary_tables==TRUE){

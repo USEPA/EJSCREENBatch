@@ -40,9 +40,9 @@ To access the latest version of the package, simply install from the EPA's Githu
 library(devtools)
 install_github(repo = "USEPA/EJSCREENbatch")
 ```
+Users should note that when the package is installed, the most recent release of EJSCREEN data is downloaded. EJSCREEN is updated periodically so if users want to ensure that they are using the most recent release, they will need to delete their local copy to allow the package to automatically pull the most current version. This design choice was made to ensure reproducibility between runs.  
 
-
-Then load the package, and set your working directory to that of your input data. (Note: as of V1.0, you must also create an object with the filepath housing the SEDAC raster.)
+Then load the package, and set your working directory to that of your input data. You will also need to download a dasymetric population raster. This package is currently built to use [NASA's Socioeconomic Data and Application Center (SEDAC) 1kmX1km raster] (https://sedac.ciesin.columbia.edu/data/set/usgrid-summary-file1-2010). As of v2.0 you must also create an object with the filepath housing the SEDAC raster.
 ```{r, eval = F}
 library(EJSCREENbatch)
 setwd('~/DIRECTORY_NAME_HERE')
@@ -72,7 +72,7 @@ library(EJSCREENbatch)
   
 # Input data requirements
 
-First, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), boundary shapes (i.e. a set of polygons representing wetlands or lagoons), or a waterbody identifier from the NHDPlus database (more on this below).
+First, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), boundary shapes (i.e. a set of polygons representing wetlands or lagoons), or a waterbody identifier from the NHDPlus database (more on this below). We refer to analyses screening around specific coordinate locations as "land-based" and those focusing on surface waters as "water-based". 
 
 Here, we create a toy data set by drawing 20 random latitude/longitude coordinates from the continental USA. These points will serve as our "locations of interest" for the vignette's sample EJ analysis.
 
@@ -118,7 +118,7 @@ my.EJ.data <- EJfunction(data_type = "landbased",
            raster_data = raster.path)
 ```
 
-This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'intersection')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's. We rely on a [NASA-produced](https://sedac.ciesin.columbia.edu/data/collection/usgrid) 1km$^2$ population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
+This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'intersection')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's because we rely on the SEDAC population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
 
 The object returned as *my.EJ.data* is a list of data sub-objects.
 
@@ -126,7 +126,7 @@ The object returned as *my.EJ.data* is a list of data sub-objects.
 names(my.EJ.data)
 ```
 
-As described above, users are likely to be most interested in two of these sub-objects. First, the raw and complete CBG-level data are returned as *EJ.list.data*. This data may be of interest to users who want a within-location, "neighborhood"-level understanding of populations that may be affected by policy. ^[*EJ.list.data* and *EJ.facil.data* are both named lists of dataframes; this design choice was made to accommodate simultaneous runs of multiple distance buffers and/or GIS methods. Users doing ad-hoc analyses should account for this accordingly.] For a flavor of this data, we return the dataframe's first several columns (of 158) for the two block groups that fall within the distance buffer of the first location in our input list. Variable names and definitions can be downloaded [here](https://gaftp.epa.gov/EJSCREEN/2020/2020_EJSCREEEN_columns-explained.xlsx).
+As described above, users are likely to be most interested in two of these sub-objects. First, the raw, CBG-level data are returned as *EJ.list.data*. This data may be of interest to users who want a within-location, "neighborhood"-level understanding of populations that may be affected by policy, and may also be used for user's custom analyses. ^[*EJ.list.data* and *EJ.facil.data* are both named lists of dataframes; this design choice was made to accommodate simultaneous runs of multiple distance buffers and/or GIS methods. Users doing ad-hoc analyses should account for this accordingly.] For a flavor of this data, we return the dataframe's first several columns (of 158) for the two block groups that fall within the distance buffer of the first location in our input list. Variable names and definitions can be downloaded [here](https://gaftp.epa.gov/EJSCREEN/2020/2020_EJSCREEEN_columns-explained.xlsx).
 
 ```{r}
 my.EJ.data$EJ.list.data[[1]] %>%
@@ -134,7 +134,7 @@ my.EJ.data$EJ.list.data[[1]] %>%
   dplyr::filter(name == 'facility_name_1')
 ```
 
-Second, the location-level percentile summaries are returned as *EJ.facil.data*. The dataframe includes both national and state percentiles for each EJSCREEN indicator. Under the default GIS option ("intersection"), these are the percentiles for a population-weighted average of a location's indicator values.^[For other GIS options, a location's returned values are the median percentile across all of its CBGs.] Here, we call a return of the summary for the first two locations in our list:
+Second, the location-level percentile summaries are returned as *EJ.facil.data*. The dataframe includes both national and state percentiles for each EJSCREEN indicator. Under the default GIS option ("intersection"), these are the percentiles for a population-weighted average of a location's indicator values.^[For other GIS options, a location's returned values are the median percentile across all of its CBGs.] Here, we call a return of the summary for the first two locations in our list. Four rows are returned, one for U.S. and one for state percentiles, per location:
 
 ```{r}
 my.EJ.data$EJ.facil.data[[1]] %>%
@@ -169,7 +169,7 @@ my.EJ.data.named <- EJfunction(data_type = "landbased",
 
 # Canned visualizations
 
-The package also includes several sub-functions that produce visualizations of potential interest in an initial EJ screening.
+The package also includes several sub-functions that produce visualizations of potential interest in an initial EJ screening. Users should note that these visualizations are a starting point for a screening analysis and users are highly encouraged to produce their own figures tailored to their locations of interest. Also, users should be aware that it is not appropriate to compute aggregated statistics using the EJ Index percentile and thus this index is not included in these canned visualizations. 
 
 Two visualizations are created by default in EJfunction(). The first is a set of boxplots displaying the range of indicator percentiles across all CBGs included in the screening. These plots provide a multivariate sense of potential EJ correlations. Our running example, for instance, returns the following (using national percentiles):
 
@@ -225,7 +225,7 @@ Users can further adjust the output tables through two other arguments. *rank_ge
 
 ### Heat tables
 
-The EJHeatTables() function creates tables that report a single location’s (or set of locations’) summarized state or national percentile values for all 16 EJ indicators. Table cells with values that fall over the 80th, 90th, and 95th percentiles are highlighted in yellow, orange, and red, respectively. We illustrate three flavors of these tables below.
+The EJHeatTables() function creates tables that report a single location’s (or set of locations’) summarized state or national percentile values for all 17 EJ indicators. Table cells with values that fall over the 80th, 90th, and 95th percentiles are highlighted in yellow, orange, and red, respectively. We illustrate three flavors of these tables below.
 
 The first option, set with the argument *type = 'all'*, returns a heat table for the median CBG value across ALL locations. This option may be especially useful for comparing results across an EJfunction run that includes several buffer distances or GIS methods. Using our running example again, we obtain:
 
@@ -253,7 +253,7 @@ EJHeatTables(input_data = my.EJ.data.named, heat_table_type = 'topn',
 
 ### Count tables
 
-Finally, the EJCountTables() function allows users to explore the extent to which environmental indices above the threshold percentile overlap with demographic indices above the threshold percentile. Locations with elevated counts of environmental AND demographic indices are likely of high EJ concern. The function produces a two-way count table that summarizes the number of locations with average environmental and/or demographic indicators above the 80th percentile national threshold.
+Finally, the EJCountTable() function allows users to explore the extent to which environmental indices above the threshold percentile overlap with demographic indices above the threshold percentile. Locations with elevated counts of environmental AND demographic indices are likely of high EJ concern. The function produces a two-way count table that summarizes the number of locations with average environmental and/or demographic indicators above the 80th percentile national threshold.
 
 ```{r}
 EJCountTable(input_data = my.EJ.data.named, save_option = F)[[1]]
@@ -282,9 +282,9 @@ my.EJ.data.onestop <- EJfunction(data_type = "landbased",
 
 # Water-based EJ screening analysis
 
-All of the above batch analyses can also be completed using water-based buffering. This package leverages the surface water network established in the [National Hydrology Dataset](https://www.usgs.gov/core-science-systems/ngp/national-hydrography). 
+All of the above batch analyses can also be completed using water feature-based buffering. This package leverages the surface water network established in the [National Hydrology Dataset](https://www.usgs.gov/core-science-systems/ngp/national-hydrography) (NHD), which incorporates the NHD, the National Elevation Dataset, and the National Watershed Boundary Dataset. Flowlines and catchments in this context therefore refer those established in the [NHDPlusV2](https://s3.amazonaws.com/edap-nhdplus/NHDPlusV21/Documentation/NHDPlusV2_User_Guide.pdf) (medium resolution), and users should note that these catchments are smaller in area than HUC12s.
 
-Users can supply an *sf* dataframe of locations or a list of catchment IDs, and the tool will identify catchments that lie within a specified distance up- or downstream of these starting locations. The tool then creates a shapefile of each starting location's associated flowline through these catchments. Next, EJfunction() draws a user-defined buffer around each flowline and extracts EJSCREEN's environmental and demographic data for all CBGs that intersect the buffer. From here, data processing and visualizations follow identically to the land-based approach described above. To illustrate this water-based buffering and data extraction, the following figure maps the buffer area and associated CBGs for a flowline up to 50 miles downstream from a single starting location (outflow) point:
+Users can supply an *sf* dataframe of locations or a list of catchment IDs (ComIDs), and the tool will identify catchments that lie within a specified distance up- or downstream (in river miles) of these starting locations.  The tool then creates a shapefile of each starting location's associated flowline through these catchments. Next, EJfunction() draws a user-defined buffer around each flowline and extracts EJSCREEN's environmental and demographic data for all CBGs that intersect the buffer. From here, data processing and visualizations follow identically to the land-based approach described above. To illustrate this water-based buffering and data extraction, the following figure maps the buffer area and associated CBGs for a flowline up to 50 miles downstream from a single starting location (outflow) point:
 
 <center>
 ![Map of flowline and proximate CBGs up to 50 miles downstream from input location.](flowlineimage.png)
