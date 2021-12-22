@@ -272,7 +272,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   #For each data type, make sure GIS methods make sense.
   if(data_type=="landbased"){
     #set default to intersection method
-    if(is.na(gis_option)){gis_option=="intersection"}
+    if(is.null(gis_option)){gis_option=="intersection"}
 
     #users can specify alternative options.
     if(gis_option %notin% c("all", "intersect", "intersection")){
@@ -795,10 +795,10 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       if (attains.check == T){
         EJ.buffer.shapes[[paste0('buffer_shape_radius',i,'mi')]] <-
-          inner_join(catchment.polygons[[1]], catchment.polygons[[3]],
+          inner_join(catchment.polygons[[1]], catchment.polygons[[4]],
                      by = c('shape_ID' = '.id'))
         EJ.attains.data[[paste0('attains_raw_radius', i, 'mi')]] <-
-          catchment.polygons[[2]]
+          catchment.polygons[[3]]
       } else {
         EJ.buffer.shapes[[paste0('buffer_shape_radius',i,'mi')]] <-
           catchment.polygons[[1]]
@@ -806,16 +806,18 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     }
 
     if(attains.check == F){
-      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes)
+      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes, 
+                        catchment.polygons[[2]])
       #EJ.demographics.data, EJ.corrplots.data, EJ.index.data,
 
-      names(return.me) <- c('EJ.facil.data', 'EJ.list.data','EJ.buffer.summary')
+      names(return.me) <- c('EJ.facil.data', 'EJ.list.data','EJ.buffer.summary',
+                            'EJ.nhd.comids')
       #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
     } else {
-      return.me <- list(EJ.facil.data, EJ.list.data,
-                        EJ.buffer.shapes, EJ.attains.data)
-      names(return.me) <- c('EJ.facil.data', 'EJ.list.data',
-                            'EJ.buffer.summary','EJ.attainsdata.raw')
+      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes, 
+                        catchment.polygons[[2]], EJ.attains.data)
+      names(return.me) <- c('EJ.facil.data', 'EJ.list.data', 'EJ.buffer.summary',
+                            'EJ.nhd.comids','EJ.attainsdata.raw')
     }
 
     if(produce_ancillary_tables==TRUE){

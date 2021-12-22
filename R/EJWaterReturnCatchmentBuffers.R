@@ -72,6 +72,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   geo.base <- 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3' #For ATTAINS API
   feature.list <- vector(mode = "list", length = length(feature.id))
   nhd.catchment <- vector(mode = 'list', length = length(feature.id))
+  return.catchments <- vector(mode = 'list', length = length(feature.id))
   for (i in 1:length(feature.id)){
     nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
     if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
@@ -85,7 +86,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
                   sf::st_transform("ESRI:102005") %>%
                   sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
                   sf::st_as_sf()
-                return.catchments <- nldi.temp[[2]]$nhdplus_comid #pulls out all ComIDs
+                return.catchments[[i]] <- nldi.temp$nhdplus_comid #pulls out all ComIDs
 
                 # Call ATTAINs database on all down/upstream catchments
                 if (attains == T) {
@@ -104,7 +105,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
 
     } else {
       feature.list[[i]] <- NULL
-      return.catchments <- NULL
+      return.catchments[[i]] <- NULL
     }
   }
 
@@ -113,6 +114,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     dplyr::rename(shape_ID = 1,
            geometry=x) %>%
     sf::st_as_sf()
+  
+  #return.catchments <- data.table::rbindlist(return.catchments, idcol = T)
 
   if (attains == T){
     nhd.attains <- data.table::rbindlist(nhd.catchment, idcol = T)
