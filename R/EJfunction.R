@@ -6,7 +6,7 @@
 #' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments).
 #' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.
 #' @param input_type Required if data_type == "waterbased". Input must be "sf" object(s) or list of catchments (ComIDs)
-#' @param gis_option User specified method of creating buffers around areas of interest ("intersect", "intersection", or "all"). Default is "intersection". Note: running multiple GIS options at a time is currently not available for water-based analyses.
+#' @param gis_option User specified method of creating buffers around areas of interest ("fast", "robust", or "all"). Default is "robust". Note: running multiple GIS options at a time is currently not available for water-based analyses.
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points and 0 miles for polygons.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
@@ -39,13 +39,13 @@
 #' # How it works:
 #' # Provide lat lons to tool and specify data type (facility_latlons)
 #' # options to consider
-#' # 1) gis_option. Three options available: intersect, intersection.
+#' # 1) gis_option. Three options available: fast, robust, all.
 #' #    Instersection is default.
 #' # 2) buffer. Radius to use around facilities
 #' # 3) Threshold for EJ consideration. EJScreen uses 80 as default.
 #' # 4) states. Can restrict analysis to specific states.
 #' # bring in data for contiguous US
-#' a1 <- EJfunction(data_type="landbased", LOI_data = facilities, gis_option="intersect",
+#' a1 <- EJfunction(data_type="landbased", LOI_data = facilities, gis_option="fast",
 #'                 buffer = 5)
 #'
 #' #===============================================================================
@@ -66,7 +66,7 @@
 #'                 input_type = 'sf', attains = F)
 #'
 EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
-                       gis_option="intersection", buffer=NULL,
+                       gis_option="robust", buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
                        produce_ancillary_tables = NULL,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL,
@@ -181,11 +181,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     in.type <- 'sf'
   }
 
-  #Check for raster data. Only needed if running intersection method. This data
+  #Check for raster data. Only needed if running robust method. This data
   #needs to be pre-downloaded.
-  if(is.null(gis_option) || gis_option=="intersection" || gis_option=="all"){
+  if(is.null(gis_option) || gis_option=="robust" || gis_option=="all"){
     if(is.null(raster_data)){
-      stop("Buffering using intersection method requires raster data for areal
+      stop("Buffering using robust method requires raster data for areal
            apportionment. Please provide path to raster data.")
     }
   }
@@ -271,12 +271,12 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   #=============================================================================
   #For each data type, make sure GIS methods make sense.
   if(data_type=="landbased"){
-    #set default to intersection method
-    if(is.na(gis_option)){gis_option=="intersection"}
+    #set default to robust method
+    if(is.na(gis_option)){gis_option=="robust"}
 
     #users can specify alternative options.
-    if(gis_option %notin% c("all", "intersect", "intersection")){
-      stop("Please provide one of the following buffer options: all, intersect, intersection")
+    if(gis_option %notin% c("all", "fast", "robust")){
+      stop("Please provide one of the following buffer options: all, fast, robust")
     }
 
     # Determine most common geometry type in the input sf dataframe
@@ -328,8 +328,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         }
       }
 
-      if(gis_option %in% c("all", "intersect")){
-        print('Intersect method...')
+      if(gis_option %in% c("all", "fast")){
+        print('Fast method...')
         area1_intersect <- facility_buff %>%
           sf::st_join(data.tog, join=st_intersects) %>%
           dplyr::select(-geometry) %>%
@@ -389,17 +389,17 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
 
         EJ.list.data[[j]] <- temp_intersect
-        names(EJ.list.data)[j] = paste0("area1_intersect_radius",i,"mi")
+        names(EJ.list.data)[j] = paste0("area1_fast_radius",i,"mi")
 
-        EJ.index.data[[paste0("Indexes_intersect_radius",i,"mi")]] <-
-          EJIndexes(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, directory = output_path)
-        EJ.demographics.data[[paste0("demographics_intersect_radius",i,"mi")]] <-
-          EJdemographics(area1_intersect, gis_method="intersect" , buffer=i, threshold=Thresh, directory = output_path)
-        EJ.corrplots.data[[paste0("corrplots_intersect_radius",i,"mi")]] <-
-          EJCorrPlots(area1_intersect, gis_method ="intersect" , buffer=i, threshold=Thresh, directory = output_path)
+        EJ.index.data[[paste0("Indexes_fast_radius",i,"mi")]] <-
+          EJIndexes(area1_intersect, gis_method="fast" , buffer=i, threshold=Thresh, directory = output_path)
+        EJ.demographics.data[[paste0("demographics_fast_radius",i,"mi")]] <-
+          EJdemographics(area1_intersect, gis_method="fast" , buffer=i, threshold=Thresh, directory = output_path)
+        EJ.corrplots.data[[paste0("corrplots_fast_radius",i,"mi")]] <-
+          EJCorrPlots(area1_intersect, gis_method ="fast" , buffer=i, threshold=Thresh, directory = output_path)
 
         if (!is.null(input_name)) {
-          EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
+          EJ.facil.data[[paste0('facil_fast_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
                          facil_data = st_transform(LOI_data, crs = 4326),
                          ejscreen_data = data.state.uspr,
@@ -408,7 +408,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {
-          EJ.facil.data[[paste0('facil_intersect_radius',i,'mi')]] <-
+          EJ.facil.data[[paste0('facil_fast_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
                          facil_data = st_transform(LOI_data, crs = 4326),
                          ejscreen_data = data.state.uspr,
@@ -417,8 +417,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         }
       }
 
-      if(gis_option %in% c("all", "intersection")){
-        print('Intersection method...')
+      if(gis_option %in% c("all", "robust")){
+        print('Robust method...')
         j=j+1
         area3_intersection <- sf::st_intersection(facility_buff, sf::st_buffer(data.tog,0)) %>%
           dplyr::mutate(area_geo = sf::st_area(geometry)) %>%
@@ -478,14 +478,14 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                     by = 'shape_ID')
 
         EJ.list.data[[j]] <- temp_intersect
-        names(EJ.list.data)[j] = paste0("area3_intersection_radius",i,"mi")
+        names(EJ.list.data)[j] = paste0("area3_robust_radius",i,"mi")
 
-        EJ.index.data[[paste0("Indexes_intersection_radius",i,"mi")]] <-
-          EJIndexes(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, directory = output_path)
-        EJ.demographics.data[[paste0("demographics_intersection_radius",i,"mi")]] <-
-          EJdemographics(area3_intersection, gis_method="intersection" , buffer=i, threshold=Thresh, directory = output_path)
-        EJ.corrplots.data[[paste0("corrplots_intersection_radius",i,"mi")]] <-
-          EJCorrPlots(area3_intersection, gis_method ="intersection" , buffer=i, threshold=Thresh, directory = output_path)
+        EJ.index.data[[paste0("Indexes_robust_radius",i,"mi")]] <-
+          EJIndexes(area3_intersection, gis_method="robust" , buffer=i, threshold=Thresh, directory = output_path)
+        EJ.demographics.data[[paste0("demographics_robust_radius",i,"mi")]] <-
+          EJdemographics(area3_intersection, gis_method="robust" , buffer=i, threshold=Thresh, directory = output_path)
+        EJ.corrplots.data[[paste0("corrplots_robust_radius",i,"mi")]] <-
+          EJCorrPlots(area3_intersection, gis_method ="robust" , buffer=i, threshold=Thresh, directory = output_path)
 
         ### Areal apportionment using circular buffers around facilities
         # Extract the state associated with each facility
@@ -499,7 +499,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         rm(state.shapes)
 
         if (!is.null(input_name)) {
-          EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+          EJ.facil.data[[paste0('facil_robust_radius',i,'mi')]] <-
             areal_apportionment(ejscreen_bgs_data = data.tog,
                                 facility_buff = facility_buff,
                                 facil_data = LOI_data,
@@ -507,7 +507,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {
-          EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+          EJ.facil.data[[paste0('facil_robust_radius',i,'mi')]] <-
             areal_apportionment(ejscreen_bgs_data = data.tog,
                                 facility_buff = facility_buff,
                                 facil_data = LOI_data,
@@ -556,7 +556,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
     ## Can come back and add all option later if demand exists.
     if(gis_option == 'all'){
-      stop('Please choose ONLY ONE of (intersect, intersection) for water-based analysis.')
+      stop('Please choose ONLY ONE of (fast, robust) for water-based analysis.')
     }
 
     # Set Upstream/downstream option
@@ -689,7 +689,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       #############
       ## This returns facility level summaries for
-      if(gis_option %in% c('intersect')){
+      if(gis_option %in% c('fast')){
         if (in.type == 'sf'){
           if (!is.null(input_name)) {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
@@ -728,7 +728,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         ## AREAL APPORTIONMENT for user-selected buffer around stream from facility
         ## This yields pop-weighted average data for a given facility
-      } else if(gis_option == 'intersection'){
+      } else if(gis_option == 'robust'){
 
         state.shapes <- spData::us_states %>% st_as_sf() %>%
           st_transform(crs="ESRI:102005") %>%
@@ -744,7 +744,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
           if (!is.null(input_name)) {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-              EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+              EJ.facil.data[[paste0('facil_robust_radius',i,'mi')]] <-
               areal_apportionment(ejscreen_bgs_data = data.tog,
                                   facility_buff = facility_buff,
                                   facil_data = LOI_data,
@@ -754,7 +754,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
               dplyr::relocate(input_name)
           } else {
             EJ.facil.data[[paste0('facil_',gis_option,'_radius',i,'mi')]] <-
-              EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+              EJ.facil.data[[paste0('facil_robust_radius',i,'mi')]] <-
               areal_apportionment(ejscreen_bgs_data = data.tog,
                                   facility_buff = facility_buff,
                                   facil_data = LOI_data,
@@ -780,7 +780,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             st_as_sf() %>%
             st_transform(crs = 4326)
 
-          EJ.facil.data[[paste0('facil_intersection_radius',i,'mi')]] <-
+          EJ.facil.data[[paste0('facil_robust_radius',i,'mi')]] <-
             areal_apportionment(ejscreen_bgs_data = data.tog,
                                 facility_buff = facility_buff,
                                 facil_data = temp.mat,
