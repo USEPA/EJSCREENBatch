@@ -6,7 +6,7 @@
 #' @param data_type Required. Either "landbased" (coordinate locations) or "waterbased" (sf or catchments).
 #' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.
 #' @param input_type Required if data_type == "waterbased". Input must be "sf" object(s) or list of catchments (ComIDs)
-#' @param gis_option User specified method of creating buffers around areas of interest ("fast", "robust", or "all"). Default is "robust". Note: running multiple GIS options at a time is currently not available for water-based analyses.
+#' @param gis_option User specified method of creating buffers around areas of interest ("fast", "robust", or "all"). Default is "robust", which using population weighting to apportion demographic and environmental data. Note: running multiple GIS options at a time is currently not available for water-based analyses.
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points and 0 miles for polygons.
 #' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
