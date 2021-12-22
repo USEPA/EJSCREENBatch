@@ -4,9 +4,9 @@
 #' EJ and demographic indicators.
 #'
 #' @param data
-#' @param gis_method User specified method of creating buffers around areas of interest (intersect, centroid, intersection).
+#' @param gis_method User specified method of creating buffers around areas of interest ("fast",  "robust").
 #' @param buffer Distance(s) used to create buffers.
-#' @param threshold User specified threshold to represent potential concern. Default is 80\%.
+#' @param threshold User specified threshold to represent potential concern. Default is 80%.
 #'
 #' @return
 #' @export
