@@ -263,7 +263,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   }
 
   # Join EJSCREEN + ACS Data
-  data.tog <- data.state.uspr %>% left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
+  data.tog <- data.state.uspr %>% dplyr::left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
 
 
   #=============================================================================
@@ -684,9 +684,16 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
         EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh, directory = output_path)
 
-      EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
-        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, directory = output_path)
-
+      tryCatch({
+        EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
+          EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, 
+                      directory = output_path)
+      },
+      error=function(error){
+        #print(error)
+        EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <- NULL
+      })
+      
       #############
       ## This returns facility level summaries for
       if(gis_option %in% c('intersect')){
