@@ -73,56 +73,93 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     #feature.id <- hold.together$comid
   }
 
-  # Loop through catchment IDs to extract down/upstream buffer polygons
+  # Base URL for ATTAINS API
   geo.base <- 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3' #For ATTAINS API
-  feature.list <- vector(mode = "list", length = length(feature.id))
-  nhd.catchment <- vector(mode = 'list', length = length(feature.id))
-  return.catchments <- vector(mode = 'list', length = length(feature.id))
-  for (i in 1:length(feature.id)){
-    nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
-    if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
-      tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
-                                                        mode = ds_us_mode,
-                                                        distance_km = round(ds_us_dist*1.60934))[[2]]
-
-                feature.list[[i]] <- nldi.temp  %>%
-                  sf::st_union() %>%
-                  sf::st_transform("ESRI:102005") %>%
-                  sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
-                  sf::st_as_sf()
-                return.catchments[[i]] <- nldi.temp$nhdplus_comid #pulls out all ComIDs
-
-                # Call ATTAINs database on all down/upstream catchments
-                if (attains == T) {
-                  sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
-                  nhd.catchment[[i]] <- arcpullr::get_spatial_layer(geo.base, where = sql.statement)
-                  if (dim(nhd.catchment[[i]])[1] < 1) {
-                    nhd.catchment[[i]] <- NULL
-                  }
-                }
-
-               },
-               error=function(error){
-                 print(error)
-                 feature.list[[i]] <- NULL
-               })
-
-    } else {
-      feature.list[[i]] <- NULL
-      return.catchments[[i]] <- NULL
-    }
+  
+  # Combine function to use with foreach loop (returns 3 lists)
+  comb <- function(x, ...) {
+    lapply(seq_along(x),
+           function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
+  
+  # Loop through catchment IDs to extract down/upstream buffer polygons
+  nhd.buffs <- foreach::foreach(i = 1:length(feature.id), 
+                           .packages = c('nhdplusTools','sf','arcpullr'),
+                           .combine = comb,
+                           .multicombine = T,
+                           .init = list(list(), list(), list())
+  ) %dopar% {
+    # If comid was returned in last call, enter loop to return up/downstream comids
+    if (!is.na(feature.id[i])) {
+      
+      # Create NLDI feature object
+      nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
+      
+      # Make sure something meaningful is going to be returned
+      if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0) {
+        # Try to return the following objects:
+        tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
+                                                           mode = ds_us_mode,
+                                                           distance_km = round(ds_us_dist*1.60934))[[2]]
+        
+        # First object returned: shapefile for buffered area
+        feature.list <- nldi.temp  %>%
+          sf::st_union() %>%
+          sf::st_transform("ESRI:102005") %>%
+          sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
+          sf::st_as_sf()
+        
+        # Second object returned: list of relevant comids
+        return.catchments <- nldi.temp$nhdplus_comid #pulls out all ComIDs
+        
+        # Call ATTAINs database on all down/upstream catchments
+        # Return third object
+        if (attains == T) {
+          if (length(nldi.temp$nhdplus_comid) == 1) {
+            sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "=")
+          } else {
+            sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
+          }
+          nhd.catchment <- arcpullr::get_spatial_layer(geo.base, where = sql.statement)
+          if (dim(nhd.catchment)[1] < 1) {
+            nhd.catchment <- NULL
+          }
+        } else {
+          nhd.catchment <- NULL
+        }
+        },
+        error=function(error){
+          feature.list <- NULL
+          return.catchments <- NULL
+          nhd.catchment <- NULL
+        })
+        
+      } else {
+        feature.list <- NULL
+        return.catchments <- NULL
+        nhd.catchment <- NULL    
+      }
+    } else {
+      feature.list <- NULL
+      return.catchments <- NULL
+      nhd.catchment <- NULL
+    }
+    
+    # Return the 3 lists
+    return(list(feature.list, return.catchments, nhd.catchment))
+  }
+  
 
-  feature.buff <- data.table::rbindlist(feature.list, idcol = T) %>%
+  feature.buff <- data.table::rbindlist(nhd.buffs[[1]], idcol = T) %>%
     dplyr::mutate(start_catchment = feature.id[.id]) %>%
     dplyr::rename(shape_ID = 1,
            geometry=x) %>%
     sf::st_as_sf()
   
-  #return.catchments <- data.table::rbindlist(return.catchments, idcol = T)
+  return.catchments <- nhd.buffs[[2]]
 
   if (attains == T){
-    nhd.attains <- data.table::rbindlist(nhd.catchment, idcol = T)
+    nhd.attains <- data.table::rbindlist(nhd.buffs[[3]], idcol = T)
 
     # this is slightly messy:
     # (since ATTAINS only returns geography at catchment, not assessment level)
