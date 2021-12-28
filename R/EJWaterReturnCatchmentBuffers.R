@@ -23,12 +23,14 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   if (input_type == 'sf'){
     input_data <- sf::st_transform(input_data, crs = 4326)
     
+    # Unfortunately must transform input_data to row-wise list for get_nhdplus()
     doFuture::registerDoFuture()
     future::plan(multisession, workers = (parallel::detectCores()-2))
     loi.list <- foreach::foreach(i = 1:dim(input_data)[1], .packages='sf') %dopar% {
       input_data[i, ]
     }
 
+    # Function calls USGS API, returns comid if valid, NA otherwise
     parallel.getnhdplus <- function(input_data){
       tryCatch(
         {
@@ -45,10 +47,10 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
       )
     }
     
-    # Fill in an empty feature.id vector through parallelized API calls
+    # Fills in an empty feature.id vector through parallelized API calls
     feature.id <- furrr::future_pmap(list(loi.list), parallel.getnhdplus)
     feature.id <- unlist(feature.id)
-  } else if (input_type == 'catchment'){
+  } else if (input_type == 'catchment') {
     # List of catchments
     feature.id <- input_data$catchment_ID
 
@@ -81,7 +83,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
       tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                                         mode = ds_us_mode,
-                                                        distance_km = round(ds_us_dist*1.60934))$DD_flowlines
+                                                        distance_km = round(ds_us_dist*1.60934))[[2]]
 
                 feature.list[[i]] <- nldi.temp  %>%
                   sf::st_union() %>%
