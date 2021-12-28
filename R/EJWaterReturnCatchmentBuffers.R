@@ -22,27 +22,32 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   # (in future could have this determine object type (sf, numeric list, etc.) without user input)
   if (input_type == 'sf'){
     input_data <- sf::st_transform(input_data, crs = 4326)
-    feature.id <- vector(mode = "list", length = dim(input_data)[1])
-    for (i in 1:dim(input_data)[1]){
-      feature.id[[i]] <- tryCatch(
+    
+    doFuture::registerDoFuture()
+    future::plan(multisession, workers = (parallel::detectCores()-2))
+    loi.list <- foreach::foreach(i = 1:dim(input_data)[1], .packages='sf') %dopar% {
+      input_data[i, ]
+    }
+
+    parallel.getnhdplus <- function(input_data){
+      tryCatch(
         {
-        nhdplusTools::get_nhdplus(AOI = input_data[i,],
-                                     realization = 'catchment')$featureid
+          nhdplusTools::get_nhdplus(AOI = input_data,
+                                    realization = 'catchment')$featureid
+          
         },
         error=function(cond) {
-          message("Note: is input a sf data.frame with all obs in continental US?")
-          message(paste0("Original error message: ", cond))
-          # Choose a return value in case of error
-          return(as.integer(1))
+          return(NA_integer_)
         },
         warning=function(cond) {
-          message("Please check that all ComIDs are valid.") #edited
-          message(paste0("Original warning message: ", cond)) #edited
-          return(as.integer(1))
+          return(NA_integer_)
         }
-        )
+      )
     }
-    feature.id <- as.numeric(feature.id)
+    
+    # Fill in an empty feature.id vector through parallelized API calls
+    feature.id <- furrr::future_pmap(list(loi.list), parallel.getnhdplus)
+    feature.id <- unlist(feature.id)
   } else if (input_type == 'catchment'){
     # List of catchments
     feature.id <- input_data$catchment_ID
@@ -66,8 +71,6 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     #feature.id <- hold.together$comid
   }
 
-  # Just a temporary comment to try and figure out what's preventing this update.
-
   # Loop through catchment IDs to extract down/upstream buffer polygons
   geo.base <- 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3' #For ATTAINS API
   feature.list <- vector(mode = "list", length = length(feature.id))
@@ -76,7 +79,6 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   for (i in 1:length(feature.id)){
     nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
     if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0){
-
       tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                                         mode = ds_us_mode,
                                                         distance_km = round(ds_us_dist*1.60934))$DD_flowlines
