@@ -91,20 +91,15 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
            potential_issues_count_US = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_S"))))) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),replace.zeros)
 
-
-
-
   geo_levels <- c("state","US")
   datasets <- c("demo_indexes", "ej_indexes")
   for(geo_level in geo_levels){
     for(dataset in datasets){
 
       if(geo_level=="state"){
-        print("state")
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_US")))
       } else{
-        print("US")
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_S")))
       }
@@ -116,7 +111,6 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             stringr::str_replace_all(.,'_US','')
           )
         )
-
 
       w <- which(step1==1,arr.ind=TRUE)
       step1[w] <- names(step1)[w[,"col"]]
@@ -149,13 +143,13 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             dplyr::select(-ID) %>%
             dplyr::select(order(colnames(.))) %>%
             cor()
-
+          
           if(dataset=="demo_indexes"){
              txt.size=480
            } else {
              txt.size=900
            }
-
+          
           jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
@@ -176,7 +170,6 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
 
     }
   }
-
   step2 <- step2_demo_indexes %>%
     rename(potential_issues_count_demo = potential_issues_count,
            overlap_demo = overlap) %>%
