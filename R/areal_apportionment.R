@@ -1,7 +1,7 @@
 #' EJ Population Areal Apportionment
 #'
 #' Function to apportion census block group population using dasymetric raster data
-#' when using intersection approach to creating buffers around areas of interest.
+#' when using "robust" approach to creating buffers around areas of interest.
 #' This function currently uses 1kmX1km raster data from NASA's Socioeconomic
 #' Data and Applications Center (SEDAC)
 #'
@@ -25,20 +25,20 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
     raster::projectRaster(crs="ESRI:102005")
 
   #Decennial Census Data from NASA's SEDAC
-  #get pop for block group (intersect) and area covered by buffer (intersection)
+  #get pop for block group (intersect, "fast" GIS method) and area covered by buffer ("robust" GIS method)
   #Used to compute fraction necessary to weight EJ Indices
   print('Computing weights by areal apportionment...')
-  methods=c("intersect", "intersection")
+  methods=c("fast", "robust")
   for(method in methods){
     intermediate <- ejscreen_bgs_data %>%
       dplyr::select(ID, Shape) %>%
-      {if(method=="intersection"){
+      {if(method=="robust"){
         sf::st_intersection(.,facility_buff) %>%
           dplyr::group_by(shape_ID) %>%
           dplyr::mutate(count_bgs_radius = n_distinct(ID)) %>%
           dplyr::group_by(ID) %>%
           dplyr::mutate(count_fac_radius = n_distinct(shape_ID))
-      } else if(method=="intersect"){
+      } else if(method=="fast"){
         sf::st_join(.,facility_buff, join=st_intersects) %>%
           dplyr::filter(!is.na(shape_ID))
       }} %>%
@@ -53,18 +53,18 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
 
   #Summarizes EJ Indices for buffer, computes state and national averages, and national percentiles
   print('Reshaping data')
-  facility_level <- bgs.intersect %>%
+  facility_level <- bgs.fast %>% #check this, this was referrencing "bgs.intersect" NOT "bgs.interesection"
     as.data.frame() %>%
     dplyr::select(shape_ID, ID, starts_with("sum")) %>%
-    dplyr::left_join(bgs.intersection %>%
+    dplyr::left_join(bgs.robust %>%
                        as.data.frame() %>%
                        dplyr::select(-c(starts_with("Shape", ignore.case = FALSE))) %>%
                        dplyr::select(ID, shape_ID, facility_state, starts_with("sum"),starts_with("count_")) %>%
-                       dplyr::rename(sum.uspop10.intersection = sum.uspop10.tif),
+                       dplyr::rename(sum.uspop10.robust = sum.uspop10.tif),
                      by = c("ID", "shape_ID")) %>%
-    dplyr::mutate(fraction = as.numeric(sum.uspop10.intersection/sum.uspop10.tif*100, options(scipen=999))) %>%
+    dplyr::mutate(fraction = as.numeric(sum.uspop10.robust/sum.uspop10.tif*100, options(scipen=999))) %>%
     dplyr::right_join(ejscreen_bgs_data, by=c("ID"="ID")) %>%
-    dplyr::select(ID, shape_ID, sum.uspop10.tif, sum.uspop10.intersection,
+    dplyr::select(ID, shape_ID, sum.uspop10.tif, sum.uspop10.robust,
                   fraction, count_bgs_radius, #count_fac_radius,
                   facility_state, STATE_NAME, ACSTOTPOP,
                   PM25, OZONE, DSLPM, CANCER, RESP, PTRAF, PNPL, PRMP, PRE1960PCT,
@@ -84,9 +84,9 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                            frac_pov50, frac_pov99),
                          list(~ifelse(!is.na(ID) & is.na(shape_ID), ., (sum(fraction*ACSTOTPOP*., na.rm=T)/sum(fraction*ACSTOTPOP,na.rm=T)))  )  ,
                          .names="raw_{.col}")) %>%
-    dplyr::select(shape_ID, sum.uspop10.intersection, ID, facility_state, STATE_NAME, starts_with("raw_"), ends_with("state"), ends_with("US")) %>%
+    dplyr::select(shape_ID, sum.uspop10.robust, ID, facility_state, STATE_NAME, starts_with("raw_"), ends_with("state"), ends_with("US")) %>%
     dplyr::mutate(ID = ifelse(!is.na(shape_ID),"1",ID),
-                  sum.uspop10.intersection = sum(sum.uspop10.intersection)) %>%
+                  sum.uspop10.robust = sum(sum.uspop10.robust)) %>%
     dplyr::distinct() %>%
     dplyr::ungroup() %>%
     dplyr::mutate(across(c(starts_with("raw_")),
@@ -100,7 +100,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                          .names="P_{.col}_US"))  %>%
     #rename_with(~ sub("raw_", "", .x), everything()) %>%
     dplyr::filter(!is.na(shape_ID) & facility_state == STATE_NAME) %>%
-    dplyr::rename(`Pop. Count` = sum.uspop10.intersection)
+    dplyr::rename(`Pop. Count` = sum.uspop10.robust)
 
   states <- facility_level %>%
     dplyr::select(STATE_NAME) %>%

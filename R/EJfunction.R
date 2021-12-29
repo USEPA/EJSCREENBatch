@@ -263,7 +263,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   }
 
   # Join EJSCREEN + ACS Data
-  data.tog <- data.state.uspr %>% left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
+  data.tog <- data.state.uspr %>% dplyr::left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
 
 
   #=============================================================================
@@ -271,6 +271,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   #=============================================================================
   #For each data type, make sure GIS methods make sense.
   if(data_type=="landbased"){
+
     #set default to robust method
     if(is.na(gis_option)){gis_option=="robust"}
 
@@ -684,9 +685,16 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       EJ.demographics.data[[paste0("demographics_",gis_option,"_buffer",i,"mi")]] <-
         EJdemographics(area, gis_method = gis_option, buffer=i, threshold=Thresh, directory = output_path)
 
-      EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
-        EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, directory = output_path)
-
+      tryCatch({
+        EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
+          EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, 
+                      directory = output_path)
+      },
+      error=function(error){
+        #print(error)
+        EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <- NULL
+      })
+      
       #############
       ## This returns facility level summaries for
       if(gis_option %in% c('fast')){
@@ -795,10 +803,10 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       if (attains.check == T){
         EJ.buffer.shapes[[paste0('buffer_shape_radius',i,'mi')]] <-
-          inner_join(catchment.polygons[[1]], catchment.polygons[[3]],
+          inner_join(catchment.polygons[[1]], catchment.polygons[[4]],
                      by = c('shape_ID' = '.id'))
         EJ.attains.data[[paste0('attains_raw_radius', i, 'mi')]] <-
-          catchment.polygons[[2]]
+          catchment.polygons[[3]]
       } else {
         EJ.buffer.shapes[[paste0('buffer_shape_radius',i,'mi')]] <-
           catchment.polygons[[1]]
@@ -806,16 +814,18 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     }
 
     if(attains.check == F){
-      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes)
+      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes, 
+                        catchment.polygons[[2]])
       #EJ.demographics.data, EJ.corrplots.data, EJ.index.data,
 
-      names(return.me) <- c('EJ.facil.data', 'EJ.list.data','EJ.buffer.summary')
+      names(return.me) <- c('EJ.facil.data', 'EJ.list.data','EJ.buffer.summary',
+                            'EJ.nhd.comids')
       #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
     } else {
-      return.me <- list(EJ.facil.data, EJ.list.data,
-                        EJ.buffer.shapes, EJ.attains.data)
-      names(return.me) <- c('EJ.facil.data', 'EJ.list.data',
-                            'EJ.buffer.summary','EJ.attainsdata.raw')
+      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes, 
+                        catchment.polygons[[2]], EJ.attains.data)
+      names(return.me) <- c('EJ.facil.data', 'EJ.list.data', 'EJ.buffer.summary',
+                            'EJ.nhd.comids','EJ.attainsdata.raw')
     }
 
     if(produce_ancillary_tables==TRUE){
