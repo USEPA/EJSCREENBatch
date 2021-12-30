@@ -774,7 +774,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         } else if (in.type == 'catchment') {
 
           ## Shapefile for downstream (/upstream?) buffer
-          facility_buff <- catchment.polygons[[4]] %>%
+          facility_buff <- catchment.polygons[[5]] %>%
             mutate(comid = as.numeric(comid)) %>%
             inner_join(LOI_data, by = c('comid' = 'catchment_ID')) %>%
             dplyr::select(shape_ID, facility_state) %>%
