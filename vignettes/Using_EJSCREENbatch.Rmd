@@ -110,7 +110,8 @@ The function's primary role is the return of dataframes containing raw or summar
 
 We begin by running a simple, land-based EJ screening call on our set of location coordinates.
 
-```{r, cache = T, results = 'hide'}
+```{r, cache = F}
+print(raster.path)
 my.EJ.data <- EJfunction(data_type = "landbased",
            LOI_data = rnd.pts, 
            gis_option = "robust", 

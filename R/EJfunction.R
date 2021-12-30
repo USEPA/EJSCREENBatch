@@ -545,7 +545,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       EJCountTable(input_data = return.me, save_option = T, directory = output_path)
 
-      EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
+      EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T,
+             directory = output_path)
     }
 
     return(return.me)
@@ -842,7 +843,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       EJCountTable(input_data = return.me, save_option = T, directory = output_path)
 
-      EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T)
+      EJMaps(input_data = return.me, perc_geog = maps_perc_geog, save_option = T,
+             directory = output_path)
     }
     return(return.me)
 
