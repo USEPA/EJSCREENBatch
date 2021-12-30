@@ -785,7 +785,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           ## Shapefile with lat/lon of catchmentID waterbody centroid
           temp.mat <- as.data.frame(catchment.polygons$catchment_state) %>%
             mutate(comid = as.numeric(comid)) %>%
-            inner_join(LOI_data, by = c('comid' = 'catchmentID')) %>%
+            inner_join(LOI_data, by = c('comid' = 'catchment_ID')) %>%
             st_as_sf() %>%
             st_transform(crs = 4326)
 
