@@ -4,16 +4,17 @@
 #' EJ and demographic indicators.
 #'
 #' @param data
-#' @param gis_method User specified method of creating buffers around areas of interest (intersect, centroid, intersection).
+#' @param gis_method User specified method of creating buffers around areas of interest ("fast", "robust").
 #' @param buffer Distance(s) used to create buffers.
-#' @param threshold User specified threshold to represent potential concern. Default is 80\%.
+#' @param threshold User specified threshold to represent potential concern. Default is 80%.
+#' @param directory
 #'
 #' @return
 #' @export
 #'
 #' @examples
-EJCorrPlots <- function(data, gis_method, buffer, threshold){
-  ifelse(!dir.exists(file.path(getwd(),"plots")), dir.create(file.path(getwd(),"plots")), FALSE)
+EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
+  ifelse(!dir.exists(file.path(directory,"plots")), dir.create(file.path(directory,"plots")), FALSE)
 
   exceed.threshold <- function(x) {
     ifelse(as.numeric(x)>threshold, 1, 0)
@@ -80,7 +81,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
       Major_WW_Dischargers_US=P_PWDIS_US,
       Nation_Priorities_List_US=P_PNPL_US,
       Risk_Mgmt_Plan_Facilities_US=P_PRMP_US,
-      Treatment_Ntorage_Disposal_Facilities_US=P_PTSDF_US,
+      Treatment_Storage_Disposal_Facilities_US=P_PTSDF_US,
       Ozone_Level_US=P_OZONE_US,
       PM_US=P_PM25_US,
       Demographic_Index_US=P_VULEOPCT_US,
@@ -90,20 +91,15 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
            potential_issues_count_US = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_S"))))) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),replace.zeros)
 
-
-
-
   geo_levels <- c("state","US")
   datasets <- c("demo_indexes", "ej_indexes")
   for(geo_level in geo_levels){
     for(dataset in datasets){
 
       if(geo_level=="state"){
-        print("state")
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_US")))
       } else{
-        print("US")
         step1 <- get(dataset) %>%
           select(-c(tidyselect::ends_with("_S")))
       }
@@ -115,7 +111,6 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
             stringr::str_replace_all(.,'_US','')
           )
         )
-
 
       w <- which(step1==1,arr.ind=TRUE)
       step1[w] <- names(step1)[w[,"col"]]
@@ -146,22 +141,24 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
             filter(overlap!="")  %>%
             pivot_wider(values_from=value, names_from=overlap,  values_fill=0)  %>%
             dplyr::select(-ID) %>%
+            dplyr::select(order(colnames(.))) %>%
             cor()
-
+          
           if(dataset=="demo_indexes"){
              txt.size=480
            } else {
              txt.size=900
            }
-
-          jpeg(file=paste0("plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
+          
+          jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
-                   type="upper", order="hclust",
-                   addCoef.col = "black", # Add coefficient of correlation
-                   tl.col="black", tl.srt=45, #Text label color and rotation
-                   diag=FALSE, # hide correlation coefficient on the principal diagonal,
-                   tl.cex=1.25
+                             order = 'original',
+                             type="upper",
+                             addCoef.col = "black", # Add coefficient of correlation
+                             tl.col="black", tl.srt=45, #Text label color and rotation
+                             diag=FALSE, # hide correlation coefficient on the principal diagonal,
+                             tl.cex=1.25
           )
           dev.off()
 
@@ -173,7 +170,6 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold){
 
     }
   }
-
   step2 <- step2_demo_indexes %>%
     rename(potential_issues_count_demo = potential_issues_count,
            overlap_demo = overlap) %>%
