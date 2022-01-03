@@ -63,7 +63,7 @@ Users should also note that when the package is installed, the most recent relea
 
 Below is a visual overview of the package, highlighting the input types, primary data sources, and examples of output graphics. Three primary data types can be input: coordinates, NHDplus common identifiers (ComIDs), and shape files (polygons). The package offers two buffering methods and can accept multiple buffer distances at a time. The user can chose to output summary plots and tables in addition to the returned raw dataframe. Additional documentation and a demonstration on how to leverage the package's functional are available in the vignette directory.
 
-![EJSCREENbatch_overview_single_slide](https://github.com/USEPA/EJSCREENBatch/tree/main/docs/assets/css/EJSCREENbatch_overview_single_slide.jpg)
+![EJSCREENbatch_overview_single_slide](docs/assets/css/EJSCREENbatch_overview_single_slide.jpg)
 
 ## EPA Disclaimer
 
