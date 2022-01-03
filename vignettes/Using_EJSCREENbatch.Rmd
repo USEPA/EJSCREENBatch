@@ -113,16 +113,21 @@ The function's primary role is the return of dataframes containing raw or summar
 
 We begin by running a simple, land-based EJ screening call on our set of location coordinates.
 
-```{r, cache = T, results = 'hide'}
+
+```{r, cache = F}
+print(raster.path)
 
 my.EJ.data <- EJfunction(data_type = "landbased",
-           LOI_data = mpp, 
-           gis_option = "intersection", 
-           buffer = 1,
+           LOI_data = rnd.pts, 
+           gis_option = "robust", 
+           buff_dist = 1,
            raster_data = raster.path)
 ```
 
-This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'intersection')*, the function also returns a location-level summary data frame that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API.^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's because we rely on the SEDAC population grid, while they weight populations using Census block geographies. Nevertheless, benchmarking exercises suggest very similar results in practice.]
+
+This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'robust')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's because we rely on the SEDAC population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
+
+
 
 This function returns 3 outputs: 
  1) *my.EJ.data*: a list of sub-objects (see below for details)
@@ -147,7 +152,9 @@ my.EJ.data$EJ.list.data[[1]] %>%
   dplyr::filter(STATE_NAME == "Colorado")
 ```
 
-Second, the location-level percentile summaries are returned as *EJ.facil.data*. The dataframe includes the raw data as well as the state and national and state percentiles for each EJSCREEN indicator. Under the default GIS option ("intersection"), these are the percentiles for a population-weighted average of a location's indicator values.^[For other GIS options, a location's returned values are the median percentile across all of its CBGs.] Here, we call a return of the summary for the first two locations in our list. Six rows are returned, one for raw values, one for state percentiles, and one for U.S. percentiles, per location (indicated in the "geography" column)
+
+Second, the location-level percentile summaries are returned as *EJ.facil.data*. The dataframe includes both national and state percentiles for each EJSCREEN indicator. Under the default GIS option ("robust"), these are the percentiles for a population-weighted average of a location's indicator values.^[For other GIS options, a location's returned values are the median percentile across all of its CBGs.] Here, we call a return of the summary for the first two locations in our list. Four rows are returned, one for U.S. and one for state percentiles, per location:
+
 
 ```{r, eval = F}
 my.EJ.data$EJ.facil.data[[1]] %>%
@@ -162,14 +169,13 @@ The user is able to specify several alternative settings while compiling data wi
 ```{r, eval = F}
 # An example run with multiple buffer distances:
 my.EJ.data <- EJfunction(data_type = "landbased",
-           LOI_data = mpp, 
-           gis_option = "intersection", 
-           buffer = c(1,3,5),
+           LOI_data = rnd.pts, 
+           gis_option = "robust", 
+           buff_dist = c(1,3,5),
            raster_data = raster.path)
 ```
-2.	The buffer GIS option used to extract CBG-level data from EJSCREEN. Users specify this via the *gis_option* argument. The default setting, described above, is “intersection”. The second option is "intersect": this extracts data from all CBGs that spatially intersect with the buffer region, but does not take any population-weighting measures to address areas that fall outside the buffer.
-
-3.  The threshold argument used to identify elevated indicators and populations expressing characteristics of concern. This is set with the *threshold* argument. The default setting is the 80th percentile, as [initially suggested](https://www.epa.gov/ejscreen/frequent-questions-about-ejscreen) by EJSCREEN. 
+2.	The buffer GIS option used to extract CBG-level data from EJSCREEN. Users specify this via the *gis_option* argument. The default setting, described above, is “robust”. Another option is "fast": this extracts data from all CBGs that spatially intersect with the buffer region, but does not take any population-weighting measures to address areas that fall outside the buffer. A third option is "centroid": this extracts data from all CBGs whose centroids fall inside the buffer region.
+3.  The threshold percentile used to identify elevated indicators and potential populations of concern. This is set with the *threshold* argument. The default setting is the 80th percentile, as [initially suggested](https://www.epa.gov/ejscreen/frequent-questions-about-ejscreen) by EJSCREEN. 
 
 4.  The state screened, for cases when a user wants to restrict analysis to a single state. This is set with the *state* argument, using the state's designated two letter code.
 
@@ -177,10 +183,10 @@ my.EJ.data <- EJfunction(data_type = "landbased",
 ```{r, cache = T, results = 'hide', eval = F}
 # An example run with LOI names:
 my.EJ.data.named <- EJfunction(data_type = "landbased",
-           LOI_data =  mpp, 
-           input_name = "Facility Name",
-           gis_option = "intersect", 
-           buffer = c(1),
+           LOI_data = mpp, 
+           input_name = "name",
+           gis_option = "robust", 
+           buff_dist = c(1,3,5),
            raster_data = raster.path)
 
 my.EJ.data.named$EJ.facil.data[[1]] %>%
@@ -200,17 +206,16 @@ library(magick)
 
 file.list <-list.files(recursive = T)
 ggdraw() + 
-  draw_image(file.list[6], width = 0.5) +     
-  draw_image(file.list[8], width = 0.5, x = 0.5)
+  draw_image("plots/Indexes_boxplot_gis_robust_radius1_state.jpeg", width = 0.5) +   
+  draw_image("plots/demographics_boxplot_gis_robust_radius1_state.jpeg", width = 0.5, x = 0.5)
 ```
 
 A second, related set of figures is also included by default in EJfunction(). Data from all selected CBGs are used to produce two-way correlation plots between the environmental or demographic indices. Again, these summary visualizations highlight which environmental or demographic indicators are correlated in neighborhoods that are proximate to the user's inputted locations. With our running example using national percentiles, this returns:
 
 ```{r, echo = F, warning =F, message = F, eval = F}
 ggdraw() + 
-  draw_image(file.list[2], width = 0.4, x = 0.6) +
-  draw_image(file.list[4], width = 0.6) 
-
+  draw_image("plots/correlations_ej_indexes_gis_robust_radius1.jpeg", width = 0.6) +   
+  draw_image("plots/correlations_demo_indexes_gis_robust_radius1.jpeg", width = 0.4, x = 0.5)
 ```
 
 The package also includes several visualization sub-functions that are not called by default in EJfunction(). In each of these sub-functions, the data object created by EJfunction() must be input as a required argument. We describe these below:
@@ -300,10 +305,10 @@ It merits mention that a user can choose to succinctly run all canned visualizat
 
 ```{r, eval = F}
 my.EJ.data.onestop <- EJfunction(data_type = "landbased",
-           LOI_data = mpp, 
-           input_name = "Facility Name",
-           gis_option = "intersect", 
-           buffer = c(1),
+           facility_data = mpp, 
+           input_name = "name",
+           gis_option = "robust", 
+           buff_dist = c(1,3,5),
            raster_data = raster.path,
            produce_ancillary_tables = T,
            heat_table_type = 'all',
@@ -329,9 +334,9 @@ To run a water-based screening analysis, several input arguments to EJfunction m
 my.EJ.data.water <- EJfunction(data_type = "waterbased",
            LOI_data = mpp, 
            input_type = "sf",
-           input_name = "Facility Name",
-           gis_option = "intersect", 
-           buffer = 1,
+           input_name = "name",
+           gis_option = "fast", 
+           buff_dist = 1,
            ds_mode = "DD",
            ds_dist = 5,
            attains = T,
@@ -384,8 +389,8 @@ catch.id <- as.numeric(catch.id)
 my.EJ.data.water2 <- EJfunction(data_type = "waterbased",
            LOI_data = catch.id, 
            input_type = "catchment",
-           gis_option = "intersect", 
-           buffer = 1,
+           gis_option = "fast", 
+           buff_dist = 1,
            ds_mode = "DD",
            ds_dist = 5,
            attains = F,
