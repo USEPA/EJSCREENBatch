@@ -246,7 +246,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     geometry <- st_read("block_geometries.shp")
 
     data.state.uspr <- dbGetQuery(mydb, 'SELECT * FROM "data.state.uspr"') %>%
-      left_join(geometry, by="ID")
+      left_join(geometry, by="ID") %>%
+      st_as_sf()
     acs.cbg.data <- dbGetQuery(mydb, 'SELECT * FROM "acs.cbg.data"')
 
   } else {
