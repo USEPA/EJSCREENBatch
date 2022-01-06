@@ -238,7 +238,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   #-------------------------------BRING IN DATA---------------------------------
   #=============================================================================
 
-  if(web = T){
+  if(web == T){
     mydb <- dbPool(
       RSQLite::SQLite(),
       dbname="ejscreen_db.sqlite"
@@ -615,7 +615,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       #(2) full return from attains API
       #(3) summary of attains data
       #(4) if input is catchment#, the lat/lon coords of segment centroid
-      print(paste0('Calculating for buffer distance: ', i))
+      print(message(paste0('Calculating for buffer distance: ', i)))
       catchment.polygons <- EJWaterReturnCatchmentBuffers(LOI_data, ds.us.mode, ds.us.dist,
                                                           i, in.type, attains.check)
 
