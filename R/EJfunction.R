@@ -68,7 +68,7 @@
 EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                        gis_option="robust", buffer=NULL,
                        threshold=NULL, state=NULL, ds_mode=NULL, ds_dist=NULL,
-                       produce_ancillary_tables = NULL,
+                       produce_ancillary_tables = NULL, web=F,
                        heat_table_type=NULL, heat_table_geog_lvl=NULL,
                        heat_table_input_name=NULL, heat_table_topN=NULL,
                        rank_type = NULL, rank_geography_type = NULL,
@@ -238,28 +238,38 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   #-------------------------------BRING IN DATA---------------------------------
   #=============================================================================
 
-  # Bring in EJ Screen Data
-  if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
-    data <- get("data.state.uspr", envir = .GlobalEnv)
-    if(!is.null(state)){
-      data.state.uspr <- data %>%
-        filter(ST_ABBREV %in% state)
+  if(web = T){
+    mydb <- dbPool(
+      RSQLite::SQLite(),
+      dbname="ejscreen_db.sqlite"
+    )
+    data.state.uspr <- dbGetQuery(mydb, 'SELECT * FROM "data.state.uspr"')
+    acs.cbg.data <- dbGetQuery(mydb, 'SELECT * FROM "acs.cbg.data"')
+  } else {
+    # Bring in EJ Screen Data
+    if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
+      data <- get("data.state.uspr", envir = .GlobalEnv)
+      if(!is.null(state)){
+        data.state.uspr <- data %>%
+          filter(ST_ABBREV %in% state)
+      } else {
+        data.state.uspr <- data
+      }
+
     } else {
-      data.state.uspr <- data
+      data.state.uspr <- fetch_data_ej(working_dir, state)
+      assign("data.state.uspr", data.state.uspr, envir=globalenv())
     }
 
-  } else {
-    data.state.uspr <- fetch_data_ej(working_dir, state)
-    assign("data.state.uspr", data.state.uspr, envir=globalenv())
-  }
+    # Bring in ACS Data
+    if ("acs.cbg.data" %in% ls(envir = .GlobalEnv)) {
+      data <- get('acs.cbg.data', env = .GlobalEnv)
+      acs.cbg.data <- data
+    } else {
+      acs.cbg.data <- fetch_acs_data(working_dir,state)
+      assign('acs.cbg.data', acs.cbg.data, envir=globalenv())
+    }
 
-  # Bring in ACS Data
-  if ("acs.cbg.data" %in% ls(envir = .GlobalEnv)) {
-    data <- get('acs.cbg.data', env = .GlobalEnv)
-    acs.cbg.data <- data
-  } else {
-    acs.cbg.data <- fetch_acs_data(working_dir,state)
-    assign('acs.cbg.data', acs.cbg.data, envir=globalenv())
   }
 
   # Join EJSCREEN + ACS Data
@@ -307,7 +317,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
     j=1
     for(i in buffers){
-      print(paste0('Calculating for buffer distance: ', i, ' mi...'))
+      print(message(paste0('Calculating for buffer distance: ', i, ' mi...\n')))
 
       #if lat-lons provided, draw buffers around points
       #if polygon provided, default is to use polygon without buffer but can add buffer if desired
@@ -330,7 +340,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       }
 
       if(gis_option %in% c("all", "fast")){
-        print('Fast method...')
+        print(message('Fast method...'))
         area1_intersect <- facility_buff %>%
           sf::st_join(data.tog, join=st_intersects) %>%
           dplyr::select(-geometry) %>%
@@ -419,7 +429,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       }
 
       if(gis_option %in% c("all", "robust")){
-        print('Robust method...')
+        print(message('Robust method...'))
         j=j+1
         area3_intersection <- sf::st_intersection(facility_buff, sf::st_buffer(data.tog,0)) %>%
           dplyr::mutate(area_geo = sf::st_area(geometry)) %>%
@@ -688,14 +698,14 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
       tryCatch({
         EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <-
-          EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh, 
+          EJCorrPlots(area, gis_method = gis_option , buffer=i, threshold=Thresh,
                       directory = output_path)
       },
       error=function(error){
         #print(error)
         EJ.corrplots.data[[paste0("corrplots_",gis_option,"_buffer",i,"mi")]] <- NULL
       })
-      
+
       #############
       ## This returns facility level summaries for
       if(gis_option %in% c('fast')){
@@ -815,7 +825,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
     }
 
     if(attains.check == F){
-      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes, 
+      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes,
                         catchment.polygons[[2]])
       #EJ.demographics.data, EJ.corrplots.data, EJ.index.data,
 
@@ -823,7 +833,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                             'EJ.nhd.comids')
       #'EJ.demographics.data', 'EJ.corrplots.data','EJ.index.data',
     } else {
-      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes, 
+      return.me <- list(EJ.facil.data, EJ.list.data, EJ.buffer.shapes,
                         catchment.polygons[[2]], EJ.attains.data)
       names(return.me) <- c('EJ.facil.data', 'EJ.list.data', 'EJ.buffer.summary',
                             'EJ.nhd.comids','EJ.attainsdata.raw')
