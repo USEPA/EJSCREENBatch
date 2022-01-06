@@ -243,8 +243,12 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       RSQLite::SQLite(),
       dbname="ejscreen_db.sqlite"
     )
-    data.state.uspr <- dbGetQuery(mydb, 'SELECT * FROM "data.state.uspr"')
+    geometry <- st_read("block_geometries.shp")
+
+    data.state.uspr <- dbGetQuery(mydb, 'SELECT * FROM "data.state.uspr"') %>%
+      left_join(geometry, by="ID")
     acs.cbg.data <- dbGetQuery(mydb, 'SELECT * FROM "acs.cbg.data"')
+
   } else {
     # Bring in EJ Screen Data
     if ("data.state.uspr" %in% ls(envir = .GlobalEnv)) {
@@ -274,6 +278,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
   # Join EJSCREEN + ACS Data
   data.tog <- data.state.uspr %>% dplyr::left_join(acs.cbg.data, by = c('ID' = 'GEOID'))
+
 
 
   #=============================================================================
