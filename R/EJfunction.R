@@ -354,7 +354,6 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           dplyr::select(-geometry) %>%
           as.data.frame()
 
-        print(message('test1...'))
 
         # Trim down list.data to key variables.
         list.keep <- c('shape_ID', 'ID', 'STATE_NAME', 'ST_ABBREV', 'ACSTOTPOP',
@@ -407,7 +406,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                             },
                            by = 'shape_ID')
 
-        print(message('test2...'))
+
 
         EJ.list.data[[j]] <- temp_intersect
         names(EJ.list.data)[j] = paste0("area1_fast_radius",i,"mi")
@@ -419,6 +418,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         EJ.corrplots.data[[paste0("corrplots_fast_radius",i,"mi")]] <-
           EJCorrPlots(area1_intersect, gis_method ="fast" , buffer=i, threshold=Thresh, directory = output_path)
 
+        print(message('test1...'))
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_fast_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
@@ -437,6 +437,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                          thrshld = Thresh)
         }
       }
+      print(message('test2...'))
+
 
       if(gis_option %in% c("all", "robust")){
         print(message('Robust method...'))
