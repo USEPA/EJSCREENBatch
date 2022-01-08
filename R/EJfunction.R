@@ -354,6 +354,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           dplyr::select(-geometry) %>%
           as.data.frame()
 
+        print(message('test1...'))
+
         # Trim down list.data to key variables.
         list.keep <- c('shape_ID', 'ID', 'STATE_NAME', 'ST_ABBREV', 'ACSTOTPOP',
                        'PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'PTRAF', 'PNPL', 'PRMP',
@@ -397,15 +399,15 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         #Merge together, join back to facility data
         temp_intersect <- data.table::rbindlist(temp_state) %>%
-          suppressMessages(dplyr::left_join(if(class(LOI_data)[1]=="sf"){
+          dplyr::left_join(if(class(LOI_data)[1]=="sf"){
                              LOI_data %>%
                                  sf::st_drop_geometry()
                             } else {
                                LOI_data
                             },
-                           by = 'shape_ID'))
+                           by = 'shape_ID')
 
-
+        print(message('test2...'))
 
         EJ.list.data[[j]] <- temp_intersect
         names(EJ.list.data)[j] = paste0("area1_fast_radius",i,"mi")
@@ -424,7 +426,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                          ejscreen_data = data.state.uspr,
                          acs_data = acs.cbg.data,
                          thrshld = Thresh) %>%
-            suppressMessages(dplyr::inner_join(facility_name, by = 'shape_ID')) %>%
+            dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {
           EJ.facil.data[[paste0('facil_fast_radius',i,'mi')]] <-
