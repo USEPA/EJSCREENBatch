@@ -418,7 +418,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         EJ.corrplots.data[[paste0("corrplots_fast_radius",i,"mi")]] <-
           EJCorrPlots(area1_intersect, gis_method ="fast" , buffer=i, threshold=Thresh, directory = output_path)
 
-        print(message('test1...'))
+
         if (!is.null(input_name)) {
           EJ.facil.data[[paste0('facil_fast_radius',i,'mi')]] <-
             EJFacilLevel(list_data = EJ.list.data[[j]],
@@ -437,7 +437,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                          thrshld = Thresh)
         }
       }
-      print(message('test2...'))
+
 
 
       if(gis_option %in% c("all", "robust")){

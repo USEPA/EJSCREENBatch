@@ -143,13 +143,13 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             dplyr::select(-ID) %>%
             dplyr::select(order(colnames(.))) %>%
             cor()
-          
+
           if(dataset=="demo_indexes"){
              txt.size=480
            } else {
              txt.size=900
            }
-          
+
           jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
@@ -170,12 +170,12 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
 
     }
   }
-  step2 <- step2_demo_indexes %>%
+  step2 <- suppressMessages(step2_demo_indexes %>%
     rename(potential_issues_count_demo = potential_issues_count,
            overlap_demo = overlap) %>%
     left_join(step2_ej_indexes) %>%
     rename(potential_issues_count_ej = potential_issues_count,
-           overlap_ej = overlap)
+           overlap_ej = overlap))
 
 
   return(step2)
