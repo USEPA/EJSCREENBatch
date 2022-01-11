@@ -14,7 +14,9 @@
 #'
 #' @examples
 EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
-  ifelse(!dir.exists(file.path(directory,"plots")), dir.create(file.path(directory,"plots")), FALSE)
+  if(!is.null(directory)){
+    ifelse(!dir.exists(file.path(directory,"plots")), dir.create(file.path(directory,"plots")), FALSE)
+  }
 
   exceed.threshold <- function(x) {
     ifelse(as.numeric(x)>threshold, 1, 0)
@@ -128,7 +130,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
                potential_issues_count = ifelse(potential_issues_count=="potential_issues_count",1,potential_issues_count)) %>%
         filter(!is.na(ID))
 
-      assign(paste0("step2_",dataset),step2)
+      assign(paste0("step2_",dataset,"_",geo_level),step2)
 
       tryCatch(
         {
@@ -150,9 +152,9 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             txt.size=900
           }
 
-          if(!is.null(directory)){
+          # if(!is.null(directory)){
             jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
-          }
+          # }
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
                              order = 'original',
@@ -162,9 +164,9 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
                              diag=FALSE, # hide correlation coefficient on the principal diagonal,
                              tl.cex=1.25
           )
-          if(!is.null(directory)){
+          # if(!is.null(directory)){
             dev.off()
-          }
+          # }
 
         },
         warning=function(cond){
@@ -174,13 +176,20 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
 
     }
   }
-  step2 <- suppressMessages(step2_demo_indexes %>%
+  step2_US <- suppressMessages(step2_demo_indexes_US %>%
                               rename(potential_issues_count_demo = potential_issues_count,
                                      overlap_demo = overlap) %>%
-                              left_join(step2_ej_indexes) %>%
+                              left_join(step2_ej_indexes_US) %>%
                               rename(potential_issues_count_ej = potential_issues_count,
                                      overlap_ej = overlap))
 
+  step2_S <- suppressMessages(step2_demo_indexes_state %>%
+                                 rename(potential_issues_count_demo = potential_issues_count,
+                                        overlap_demo = overlap) %>%
+                                 left_join(step2_ej_indexes_state) %>%
+                                 rename(potential_issues_count_ej = potential_issues_count,
+                                        overlap_ej = overlap))
+  step2 <- list(step2_US, step2_S)
 
   return(step2)
 }
