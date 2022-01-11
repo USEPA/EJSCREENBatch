@@ -85,7 +85,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
       Ozone_Level_US=P_OZONE_US,
       PM_US=P_PM25_US,
       Demographic_Index_US=P_VULEOPCT_US,
-      ) %>%
+    ) %>%
     mutate_at(vars(-c("ID","STATE_NAME","ST_ABBREV")),exceed.threshold) %>%
     mutate(potential_issues_count_S = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_US")))),
            potential_issues_count_US = rowSums(dplyr::select(., -c("ID","STATE_NAME","ST_ABBREV", ends_with("_S"))))) %>%
@@ -108,7 +108,7 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
         rename_all(
           funs(
             stringr::str_replace_all(.,'_S','') %>%
-            stringr::str_replace_all(.,'_US','')
+              stringr::str_replace_all(.,'_US','')
           )
         )
 
@@ -145,10 +145,10 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             cor()
 
           if(dataset=="demo_indexes"){
-             txt.size=480
-           } else {
-             txt.size=900
-           }
+            txt.size=480
+          } else {
+            txt.size=900
+          }
 
           jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
@@ -171,11 +171,11 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
     }
   }
   step2 <- suppressMessages(step2_demo_indexes %>%
-    rename(potential_issues_count_demo = potential_issues_count,
-           overlap_demo = overlap) %>%
-    left_join(step2_ej_indexes) %>%
-    rename(potential_issues_count_ej = potential_issues_count,
-           overlap_ej = overlap))
+                              rename(potential_issues_count_demo = potential_issues_count,
+                                     overlap_demo = overlap) %>%
+                              left_join(step2_ej_indexes) %>%
+                              rename(potential_issues_count_ej = potential_issues_count,
+                                     overlap_ej = overlap))
 
 
   return(step2)
