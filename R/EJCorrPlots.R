@@ -150,7 +150,9 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
             txt.size=900
           }
 
-          jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
+          if(!is.null(directory)){
+            jpeg(file=paste0(directory,"/plots/correlations_",dataset,"_gis_",gis_method,"_radius",buffer,"_",geo_level,".jpeg"), width = txt.size, height = txt.size)
+          }
           col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
           corrplot::corrplot(step3, method="color",
                              order = 'original',
@@ -160,7 +162,9 @@ EJCorrPlots <- function(data, gis_method, buffer, threshold, directory){
                              diag=FALSE, # hide correlation coefficient on the principal diagonal,
                              tl.cex=1.25
           )
-          dev.off()
+          if(!is.null(directory)){
+            dev.off()
+          }
 
         },
         warning=function(cond){
