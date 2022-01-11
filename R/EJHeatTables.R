@@ -58,7 +58,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                         P_UNDR5PCT_US, P_OVR64PCT_US, P_LDPNT_US, P_VULEOPCT_US,
                         P_DSLPM_US, P_CANCR_US, P_RESP_US, P_PTRAF_US, P_PWDIS_US,
                         P_PNPL_US, P_PRMP_US, P_PTSDF_US, P_OZONE_US,
-                        P_PM25_US, ACSTOTPOP, shape_ID, ) %>% as.data.table()
+                        P_PM25_US, ACSTOTPOP, shape_ID, any_of(additional_vars)) %>% as.data.table()
 
         for (col in 1:ncol(df.var.wm)){
           colnames(df.var.wm)[col] <-  sub("_US", "", colnames(df.var.wm)[col])
@@ -70,7 +70,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                         P_DSLPM_state, P_CANCR_state, P_RESP_state, P_PTRAF_state, P_PWDIS_state,
                         P_PNPL_state, P_PRMP_state, P_PTSDF_state, P_OZONE_state,
                         P_PM25_state,
-                        ACSTOTPOP, shape_ID) %>% as.data.table()
+                        ACSTOTPOP, shape_ID, any_of(additional_vars)) %>% as.data.table()
 
         for (col in 1:ncol(df.var.wm)){
           colnames(df.var.wm)[col] <-  sub("_state", "", colnames(df.var.wm)[col])
@@ -79,26 +79,36 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
         stop('Geography must be "US" or "state".')
       }
 
+      lookup <- c("% Black"="frac_black", "% Hispanic"="frac_hisp",
+                  "% White"="frac_white", "% Asian"="frac_asian",
+                  "% Pacific Islander"="frac_pacisl", "% American Indian"="frac_amerind",
+                  "<50% P.L."="frac_pov50", "<99% P.L."="frac_pov99")
+
+
       df.var.wm <- df.var.wm %>%
         dplyr::rename(Lead         = P_LDPNT,
-               'Diesel PM'         = P_DSLPM,
-               'Air, Cancer'       = P_CANCR,
-               'Resp. Hazard'      = P_RESP,
-               'Traffic'           = P_PTRAF,
-               'WW Discharge'      = P_PWDIS,
-               'NPL'               = P_PNPL,
-               'RMP Facility'      = P_PRMP,
-               'TSD Facility'      = P_PTSDF,
-               'Ozone'             = P_OZONE,
-               'PM'                = P_PM25,
-               'Demo. Index'       = P_VULEOPCT,
-               Minority            = P_MINORPCT,
-               'Low Income'        = P_LWINCPCT,
-               'Less HS Educ'      = P_LESHSPCT,
-               'Ling. Isol.'       = P_LNGISPCT,
-               'Age Under 5'       = P_UNDR5PCT,
-               'Age Over 64'       = P_OVR64PCT) %>%
-        dplyr::select(-c(ACSTOTPOP, shape_ID, 'Demo. Index')) %>%
+                      'Diesel PM'         = P_DSLPM,
+                      'Air, Cancer'       = P_CANCR,
+                      'Resp. Hazard'      = P_RESP,
+                      'Traffic'           = P_PTRAF,
+                      'WW Discharge'      = P_PWDIS,
+                      'NPL'               = P_PNPL,
+                      'RMP Facility'      = P_PRMP,
+                      'TSD Facility'      = P_PTSDF,
+                      'Ozone'             = P_OZONE,
+                      'PM'                = P_PM25,
+                      'Demo. Index'       = P_VULEOPCT,
+                      Minority            = P_MINORPCT,
+                      'Low Income'        = P_LWINCPCT,
+                      'Less HS Educ'      = P_LESHSPCT,
+                      'Ling. Isol.'       = P_LNGISPCT,
+                      'Age Under 5'       = P_UNDR5PCT,
+                      'Age Over 64'       = P_OVR64PCT) %>%
+        dplyr::select(-c(ACSTOTPOP, shape_ID, 'Demo. Index'))  %>%
+        mutate(across(c(starts_with("frac_")),
+                      list(~.*100),
+                      .names="{.col}"))  %>%
+        rename(any_of(lookup)) %>%
         as.data.table()
 
       # Keep list of relevant varnames
