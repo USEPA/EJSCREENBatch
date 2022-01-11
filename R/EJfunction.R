@@ -244,7 +244,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
       dbname="ejscreen_db.sqlite"
     )
 
-    print(message("Getting census block geometry"))
+    print(message("Getting data from EJScreen...Getting data from ACS...Getting associated census block geometries..."))
     geometry <- st_read("block_geometries.shp")
 
     data.state.uspr <- dbGetQuery(mydb, 'SELECT * FROM "data.state.uspr"') %>%
@@ -377,6 +377,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                            ,0)),
                                .names="P_{.col}_US"))
 
+        print(message('Computing percentiles...'))
         # State percentiles
         states <- na.omit(unique(temp_intersect$ST_ABBREV))
         temp_state <- lapply(states, function(x){
@@ -410,6 +411,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         EJ.list.data[[j]] <- temp_intersect
         names(EJ.list.data)[j] = paste0("area1_fast_radius",i,"mi")
+
+
 
         EJ.index.data[[paste0("Indexes_fast_radius",i,"mi")]] <-
           EJIndexes(area1_intersect, gis_method="fast" , buffer=i, threshold=Thresh, directory = output_path)
@@ -471,6 +474,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
                                            ,0)),
                                .names="P_{.col}_US"))
 
+        print(message('Computing percentiles...'))
         # State percentiles
         states <- na.omit(unique(temp_intersect$ST_ABBREV))
         temp_state <- lapply(states, function(x){
@@ -502,6 +506,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         EJ.list.data[[j]] <- temp_intersect
         names(EJ.list.data)[j] = paste0("area3_robust_radius",i,"mi")
+
+
 
         EJ.index.data[[paste0("Indexes_robust_radius",i,"mi")]] <-
           EJIndexes(area3_intersection, gis_method="robust" , buffer=i, threshold=Thresh, directory = output_path)
@@ -554,6 +560,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
     # If user wants all tables/figures returned, then:
     if(produce_ancillary_tables==TRUE){
+      print(message('Creating output...'))
       EJHeatTables(input_data = return.me, heat_table_type = heat_table_type,
                    heat_table_geog_lvl = heat_table_geog_lvl,
                    heat_table_input_name = heat_table_input_name,
