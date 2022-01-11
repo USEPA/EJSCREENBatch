@@ -25,16 +25,16 @@
 #' y1 <- EJHeatTables(input_data = y, heat_table_type = 'topn', heat_table_topN = 5)
 #' y2 <- EJHeatTables(input_data = y, heat_table_type = 'all', heat_table_geog_lvl = 'state')
 EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
-                         heat_table_input_name = NULL, heat_table_topN = NULL,
+                         heat_table_input_name = NULL, heat_table_topN = NULL, additional_vars=NULL,
                          save_option = F, directory){
 
   #set heat table thresholds
-  thrshld <- input_data$EJ.facil.data[[1]] %>% 
-    dplyr::select(starts_with('Env. indicators')) %>% 
-    names() %>% 
-    gsub(".*above (.+)th.*",'\\1',.) %>% 
+  thrshld <- input_data$EJ.facil.data[[1]] %>%
+    dplyr::select(starts_with('Env. indicators')) %>%
+    names() %>%
+    gsub(".*above (.+)th.*",'\\1',.) %>%
     as.numeric()
-  
+
   # Set default geography level @ nat'l scale
   if(is.null(heat_table_geog_lvl)){
     geog <- 'US'  #default values
@@ -58,7 +58,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
                         P_UNDR5PCT_US, P_OVR64PCT_US, P_LDPNT_US, P_VULEOPCT_US,
                         P_DSLPM_US, P_CANCR_US, P_RESP_US, P_PTRAF_US, P_PWDIS_US,
                         P_PNPL_US, P_PRMP_US, P_PTSDF_US, P_OZONE_US,
-                        P_PM25_US, ACSTOTPOP, shape_ID) %>% as.data.table()
+                        P_PM25_US, ACSTOTPOP, shape_ID, ) %>% as.data.table()
 
         for (col in 1:ncol(df.var.wm)){
           colnames(df.var.wm)[col] <-  sub("_US", "", colnames(df.var.wm)[col])
@@ -243,7 +243,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
     }
 
   } else if (heat_table_type == 'topn') { #Return HeatTable summary for Top10 facilities
-    
+
     # How many facilities included in table?
     if(is.null(heat_table_topN)){
       n_rank <-  5 #default values
@@ -264,7 +264,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
 
       ##
       # Extract nat'l level data, keep only top N
-      
+
       dt <- input_data$EJ.facil.data[[k]] %>%
         as.data.frame() %>%
         dplyr::filter(geography == geog) %>%
@@ -278,7 +278,7 @@ EJHeatTables <- function(input_data, heat_table_type, heat_table_geog_lvl= NULL,
         dplyr::select(dplyr::all_of(facil.name),
                       `Low Income`:`Resp. Hazard`) %>%
         as.data.table()
-      
+
       # Reshape/transpose data
       new.dt <- data.table(cn = names(dt), data.table::transpose(dt))
       setnames(new.dt, as.character(new.dt[1,]))
