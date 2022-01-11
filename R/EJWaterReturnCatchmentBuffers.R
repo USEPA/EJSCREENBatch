@@ -25,7 +25,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     
     # Unfortunately must transform input_data to row-wise list for get_nhdplus()
     doFuture::registerDoFuture()
-    future::plan(multisession, workers = (parallel::detectCores()-2))
+    cl <- parallel::makeCluster(parallel::detectCores()-2)
+    future::plan(multisession, workers = length(cl))
     loi.list <- foreach::foreach(i = 1:dim(input_data)[1], .packages='sf') %dopar% {
       input_data[i, ]
     }
@@ -149,6 +150,8 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     return(list(feature.list, return.catchments, nhd.catchment))
   }
   
+  # Stop parallel operations
+  parallel::stopCluster(cl)
 
   feature.buff <- data.table::rbindlist(nhd.buffs[[1]], idcol = T) %>%
     dplyr::mutate(start_catchment = feature.id[.id]) %>%
