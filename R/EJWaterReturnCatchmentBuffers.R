@@ -25,8 +25,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     
     # Unfortunately must transform input_data to row-wise list for get_nhdplus()
     doFuture::registerDoFuture()
-    cl <- parallel::makeCluster(parallel::detectCores()-2)
-    future::plan(multisession, workers = length(cl))
+    future::plan(multisession, workers = parallel::detectCores()-2)
     loi.list <- foreach::foreach(i = 1:dim(input_data)[1], .packages='sf') %dopar% {
       input_data[i, ]
     }
@@ -40,10 +39,10 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
           
         },
         error=function(cond) {
-          return(NA_integer_)
+          return(1)
         },
         warning=function(cond) {
-          return(NA_integer_)
+          return(1)
         }
       )
     }
@@ -51,6 +50,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     # Fills in an empty feature.id vector through parallelized API calls
     feature.id <- furrr::future_pmap(list(loi.list), parallel.getnhdplus)
     feature.id <- unlist(feature.id)
+    future::plan(sequential)
   } else if (input_type == 'catchment') {
     # List of catchments
     feature.id <- input_data$catchment_ID
@@ -84,6 +84,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
   }
   
   # Loop through catchment IDs to extract down/upstream buffer polygons
+  future::plan(multisession, workers = parallel::detectCores()-2)
   nhd.buffs <- foreach::foreach(i = 1:length(feature.id), 
                            .packages = c('nhdplusTools','sf','arcpullr'),
                            .combine = comb,
@@ -91,7 +92,7 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
                            .init = list(list(), list(), list())
   ) %dopar% {
     # If comid was returned in last call, enter loop to return up/downstream comids
-    if (!is.na(feature.id[i])) {
+    if (feature.id[i] != 1) {
       
       # Create NLDI feature object
       nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
@@ -149,11 +150,16 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
     # Return the 3 lists
     return(list(feature.list, return.catchments, nhd.catchment))
   }
-  
   # Stop parallel operations
-  parallel::stopCluster(cl)
-
-  feature.buff <- data.table::rbindlist(nhd.buffs[[1]], idcol = T) %>%
+  future::plan(sequential)
+  
+  castPolygon <- function (data_in) {
+    return(tryCatch(sf::st_cast(data_in, 'MULTIPOLYGON'), error=function(e) NULL))
+  }
+  
+  polys <- lapply(nhd.buffs[[1]], castPolygon)
+  
+  feature.buff <- data.table::rbindlist(polys, idcol = T) %>%
     dplyr::mutate(start_catchment = feature.id[.id]) %>%
     dplyr::rename(shape_ID = 1,
            geometry=x) %>%
