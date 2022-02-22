@@ -120,12 +120,12 @@ print(raster.path)
 my.EJ.data <- EJfunction(data_type = "landbased",
            LOI_data = mpp, 
            gis_option = "robust", 
-           buff_dist = 1,
+           buffer = 1,
            raster_data = raster.path)
 ```
 
 
-This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buff_dist = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'robust')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's because we rely on the SEDAC population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
+This land-based run *(data_type = 'landbased')* draws a simple buffer of 1 mile *(buffer = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(gis_option = 'robust')*, the function also returns a location-level summary dataframe that is essentially equivalent to objects returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. ^[Our population weighting approach currently differs slightly from the EJSCREEN mapper's because we rely on the SEDAC population grid, while they weight populations using Census block geographies. Nevertheless, our benchmarking exercises suggested very similar results in practice.]
 
 
 
@@ -165,13 +165,13 @@ my.EJ.data$EJ.facil.data[[1]] %>%
 ### Adjusting user-selected options
 The user is able to specify several alternative settings while compiling data with the land-based version of EJfunction(). These include:
 
-1.	The buffer distance(s) from which to select proximate CBGs. Users can modify these distances (in miles) using the *buff_dist* argument. Input value(s) must be numeric and can be a vector if the user is interested in running analyses at several bandwidths.
+1.	The buffer distance(s) from which to select proximate CBGs. Users can modify these distances (in miles) using the *buffer* argument. Input value(s) must be numeric and can be a vector if the user is interested in running analyses at several bandwidths.
 ```{r, eval = F}
 # An example run with multiple buffer distances:
 my.EJ.data <- EJfunction(data_type = "landbased",
            LOI_data = mpp, 
            gis_option = "robust", 
-           buff_dist = c(1,3,5),
+           buffer = c(1,3,5),
            raster_data = raster.path)
 ```
 2.	The buffer GIS option used to extract CBG-level data from EJSCREEN. Users specify this via the *gis_option* argument. The default setting, described above, is “robust”. Another option is "fast": this extracts data from all CBGs that spatially intersect with the buffer region, but does not take any population-weighting measures to address areas that fall outside the buffer. A third option is "centroid": this extracts data from all CBGs whose centroids fall inside the buffer region.
@@ -186,7 +186,7 @@ my.EJ.data.named <- EJfunction(data_type = "landbased",
            LOI_data = mpp, 
            input_name = "name",
            gis_option = "robust", 
-           buff_dist = c(1,3,5),
+           buffer = c(1,3,5),
            raster_data = raster.path)
 
 my.EJ.data.named$EJ.facil.data[[1]] %>%
@@ -308,7 +308,7 @@ my.EJ.data.onestop <- EJfunction(data_type = "landbased",
            facility_data = mpp, 
            input_name = "name",
            gis_option = "robust", 
-           buff_dist = c(1,3,5),
+           buffer = c(1,3,5),
            raster_data = raster.path,
            produce_ancillary_tables = T,
            heat_table_type = 'all',
@@ -336,7 +336,7 @@ my.EJ.data.water <- EJfunction(data_type = "waterbased",
            input_type = "sf",
            input_name = "name",
            gis_option = "fast", 
-           buff_dist = 1,
+           buffer = 1,
            ds_mode = "DD",
            ds_dist = 5,
            attains = T,
@@ -390,7 +390,7 @@ my.EJ.data.water2 <- EJfunction(data_type = "waterbased",
            LOI_data = catch.id, 
            input_type = "catchment",
            gis_option = "fast", 
-           buff_dist = 1,
+           buffer = 1,
            ds_mode = "DD",
            ds_dist = 5,
            attains = F,
