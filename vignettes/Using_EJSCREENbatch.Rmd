@@ -118,7 +118,7 @@ We begin by running a simple, land-based EJ screening call on our set of locatio
 print(raster.path)
 
 my.EJ.data <- EJfunction(data_type = "landbased",
-           LOI_data = rnd.pts, 
+           LOI_data = mpp, 
            gis_option = "robust", 
            buff_dist = 1,
            raster_data = raster.path)
@@ -169,7 +169,7 @@ The user is able to specify several alternative settings while compiling data wi
 ```{r, eval = F}
 # An example run with multiple buffer distances:
 my.EJ.data <- EJfunction(data_type = "landbased",
-           LOI_data = rnd.pts, 
+           LOI_data = mpp, 
            gis_option = "robust", 
            buff_dist = c(1,3,5),
            raster_data = raster.path)
