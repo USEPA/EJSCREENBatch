@@ -768,13 +768,13 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
         ## This yields pop-weighted average data for a given facility
       } else if(gis_option == 'robust'){
 
-        state.shapes <- spData::us_states %>% st_as_sf() %>%
+        state.shapes <- tigris::states() %>% st_as_sf() %>%
           st_transform(crs="ESRI:102005") %>%
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
 
         if(in.type == 'sf'){
-          facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects) %>%
+          facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects, largest = T) %>%
             dplyr::select(shape_ID, facility_state) %>%
             st_drop_geometry() %>%
             inner_join(catchment.polygons[[1]], by = 'shape_ID') %>%
