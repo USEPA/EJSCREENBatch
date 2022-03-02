@@ -518,12 +518,11 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
 
         ### Areal apportionment using circular buffers around facilities
         # Extract the state associated with each facility
-        state.shapes <- spData::us_states %>% st_as_sf() %>%
+        state.shapes <- tigris::states() %>% st_as_sf() %>%
           st_transform(crs="ESRI:102005") %>%
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
-        facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects) %>%
-          st_buffer(dist = units::set_units(i,"mi"))
+        facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects, largest = T)
 
         rm(state.shapes)
 
@@ -532,7 +531,8 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
             areal_apportionment(ejscreen_bgs_data = data.tog,
                                 facility_buff = facility_buff,
                                 facil_data = LOI_data,
-                                path_raster_layer = raster_data) %>%
+                                path_raster_layer = raster_data,
+                                thrshld = Thresh) %>%
             dplyr::inner_join(facility_name, by = 'shape_ID') %>%
             dplyr::relocate(input_name)
         } else {

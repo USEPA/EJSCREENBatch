@@ -31,7 +31,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
   methods=c("fast", "robust")
   for(method in methods){
     intermediate <- ejscreen_bgs_data %>%
-      dplyr::select(ID, Shape) %>%
+      dplyr::select_if(names(.) %in% c('ID', 'Shape')) %>%
       {if(method=="robust"){
         sf::st_intersection(.,facility_buff) %>%
           dplyr::group_by(shape_ID) %>%
@@ -115,9 +115,9 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
   rename_cols <- c("PM25","OZONE","DSLPM","CANCER","RESP","PTRAF","PNPL",
                    "PRMP","PRE1960PCT","PTSDF","PWDIS","VULEOPCT","MINORPCT",
                    "LOWINCPCT","UNDER5PCT","LESSHSPCT","OVER64PCT","LINGISOPCT",
-                   "med_inc","frac_white","frac_black","frac_amerind","frac_asian",          
+                   "med_inc","frac_white","frac_black","frac_amerind","frac_asian",
                    "frac_pacisl","frac_hisp","frac_pov50","frac_pov99")
-  
+
   facility_level_estimates <- do.call(rbind,lapply(states, function(x){
     iterm <- facility_level %>%
       dplyr::filter(STATE_NAME==x) %>%
@@ -188,7 +188,7 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
                     #`Asian (%)`, `Pac. Isl (%)`, `Hispanic (%)`,
                     #`<50% P.L. (%)`, `<100% P.L. (%)`
                     )
-  
+
   together.sf <- together.sf %>%
     dplyr::mutate(!!paste0('Env. indicators above ',thrshld,'th %ile') :=
                     as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
@@ -197,18 +197,18 @@ areal_apportionment <- function(ejscreen_bgs_data, facility_buff, facil_data, pa
     dplyr::mutate(!!paste0('Demo. indicators above ',thrshld,'th %ile') :=
                     as.factor(rowSums(dplyr::select(as.data.frame(together.sf),
                                                     `Low Income`:`Age Over 64`) > thrshld,
-                                      na.rm = TRUE))) 
+                                      na.rm = TRUE)))
   together.perc <- together.sf %>%
     dplyr::filter(geography != 'raw') %>%
     dplyr::mutate_if(is.numeric, round)
-  
+
   together.sf <- together.sf %>%
     dplyr::filter(geography == 'raw') %>%
     dplyr::mutate(`Pop. Count` = round(`Pop. Count`),
                   !!paste0('Env. indicators above ',thrshld,'th %ile') := NA,
                   !!paste0('Demo. indicators above ',thrshld,'th %ile') := NA
                   )
-  
+
   together.sf <- rbind(together.sf, together.perc) %>%
     arrange(shape_ID, geography)
 
