@@ -522,7 +522,7 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
           st_transform(crs="ESRI:102005") %>%
           dplyr::select('NAME') %>%
           rename(facility_state = NAME)
-        facility_buff <- st_join(LOI_data, state.shapes, join=st_intersects, largest = T)
+        facility_buff <- st_join(facility_buff, state.shapes, join=st_intersects, largest = T)
 
         rm(state.shapes)
 
