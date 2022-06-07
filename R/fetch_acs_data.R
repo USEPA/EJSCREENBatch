@@ -65,7 +65,8 @@ fetch_acs_data <- function(working_dir, state_filter){
                     frac_pacisl = pop_pacisl/pop_total,
                     frac_hisp = pop_hisp/pop_total,
                     frac_pov50 = pov50/pop_total,
-                    frac_pov99 = (pov50+pov99)/pop_total)]
+                    frac_pov99 = (pov50+pov99)/pop_total,
+                    pop_total)]
     rm(convert.cols, cbg.list, cbg.together)
 
     # Write file for future use
