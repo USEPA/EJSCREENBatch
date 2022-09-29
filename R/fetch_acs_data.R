@@ -34,7 +34,7 @@ fetch_acs_data <- function(working_dir, state_filter){
                     pov99 = 'C17002_003',
                     med_inc = 'B19013_001'),
       state = st,
-      year = 2020,
+      year = 2019,
       geometry = F
     ) %>%
       dplyr::select(GEOID, variable, estimate) %>%
