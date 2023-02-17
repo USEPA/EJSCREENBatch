@@ -34,7 +34,7 @@ fetch_acs_data <- function(working_dir, state_filter){
                     pov99 = 'C17002_003',
                     med_inc = 'B19013_001'),
       state = st,
-      year = 2019,
+      year = 2020, #*# ICF: revision from 2019 to 2020 on 11/10/22
       geometry = F
     ) %>%
       dplyr::select(GEOID, variable, estimate) %>%
@@ -49,7 +49,7 @@ fetch_acs_data <- function(working_dir, state_filter){
     state.list <- state.list[!(state.list %in% c('AK', 'HI'))]
 
     # Loop (in parallel) thru each county/state pair, calling census API
-    future::plan(multisession, workers = (parallel::detectCores()-2))
+    future::plan("multisession", workers = (parallel::detectCores()-2))
     cbg.list <- furrr::future_pmap(list(state.list), parallel.api)
 
     cbg.together <- data.table::rbindlist(cbg.list, use.names = T, idcol = 'statelistid')

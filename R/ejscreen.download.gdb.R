@@ -19,9 +19,10 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
                                      state=NULL, justreadname = NULL, addflag = FALSE, cutoff = 80)
 {
 
+  #*# ICF: Made the code more generic to accommodate different file names across different EJSCREEN dataset vintages.
   `%notin%` = Negate(`%in%`)
-  if(file %notin% c("StatePctile","USPR")){
-    stop("File must be either StatePctile or USPR")
+  if(file %notin% c("StatePctile","CBG_Data")){
+    stop("File must be either State percentile data or National Census Block Group percentile data")
   }
 
     latestavailableyear <- function(mypath) {
@@ -57,7 +58,7 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
     ftpurl <- justftpurl(yr)
     zipunzippednames <- function(yr) {
 
-      if (yr > 2019) {
+      if (yr > 2019 & yr < 2022) {
         if(file == "StatePctile"){
         zipname <- paste("EJSCREEN_", yr, "_StatePctile.gdb.zip",
                          sep = "")
@@ -68,6 +69,18 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
                            sep = "")
           unzippedname <- paste("EJSCREEN_", yr, "_USPR.csv",
                            sep = "")
+        }
+      } else if (yr == 2022) {
+        if(file == "StatePctile"){
+          zipname <- paste("EJSCREEN_", yr, "_StatePct_with_AS_CNMI_GU_VI.gdb.zip",
+                           sep = "")
+          unzippedname <- paste("EJSCREEN_", yr, "_StatePct_with_AS_CNMI_GU_VI.gdb",
+                                sep = "")
+        } else {
+          zipname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv.zip",
+                           sep = "")
+          unzippedname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv",
+                                sep = "")
         }
       }
       return(c(zipname, unzippedname))
@@ -94,7 +107,7 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
         stop("Download failed.")
       }
       if (!(file.exists(mypathfileLocal))) {
-        stop("download attempted but saved zip file not found locally")
+        stop("Download attempted but saved zip file not found locally")
       }
       return(NULL)
     }
@@ -120,15 +133,14 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       }
     }
 
-
   if(file=="StatePctile"){
-    db <- sf::st_read(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"), layer = st_layers(dsn = paste0(folder,"/EJSCREEN_",yr,"_StatePctile.gdb"))[[1]]) %>%
+    db <- sf::st_read(dsn = paste0(folder,"/",unzippedname), layer = st_layers(dsn = paste0(folder,"/",unzippedname))[[1]]) %>%
       filter_state(state_filter=state) %>%
       sf::st_transform("ESRI:102005") %>%
       dplyr::mutate(area_bg = st_area(Shape)) %>%
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
   } else{
-    db <- data.table::fread(paste0(folder,"/EJSCREEN_",yr,"_USPR.csv"), colClasses = 'character') %>%
+    db <- data.table::fread(paste0(folder,"/",unzippedname), colClasses = 'character') %>%
       dplyr::select(ID, starts_with("P_")) %>%
       dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
       dplyr::na_if("None") %>%
