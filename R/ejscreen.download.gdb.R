@@ -77,9 +77,9 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
           unzippedname <- paste("EJSCREEN_", yr, "_StatePct_with_AS_CNMI_GU_VI.gdb",
                                 sep = "")
         } else {
-          zipname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv.zip",
+          zipname <- paste("EJSCREEN_", yr, "_with_AS_CNMI_GU_VI.csv.zip",
                            sep = "")
-          unzippedname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv",
+          unzippedname <- paste("EJSCREEN_", yr, "_with_AS_CNMI_GU_VI.csv",
                                 sep = "")
         }
       }
