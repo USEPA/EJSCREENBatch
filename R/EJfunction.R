@@ -219,13 +219,14 @@ EJfunction <- function(data_type, LOI_data, working_dir=NULL, input_type = NULL,
   }
 
   # Create internal facility name mapping (if provided by user)
+  #*# ICF: Made changes to change deprecated programming.
   if (!is.null(input_name)){  #& (length(input_name) == dim(LOI_data)[1])
     if(input_name %notin% colnames(LOI_data)){
       stop('Input_name must be a variable in LOI_data.')
     }
     facility_name <- LOI_data %>%
       as.data.frame() %>%
-      dplyr::select(input_name,shape_ID, -geometry)
+      dplyr::select(all_of(input_name),shape_ID, -geometry)
   }
 
   # Determine most common geometry type in the input sf dataframe
