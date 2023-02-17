@@ -79,7 +79,7 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
         } else {
           zipname <- paste("EJSCREEN_", yr, "_with_AS_CNMI_GU_VI.csv.zip",
                            sep = "")
-          unzippedname <- paste("EJSCREEN_", yr, "_with_AS_CNMI_GU_VI.csv",
+          unzippedname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv",
                                 sep = "")
         }
       }
