@@ -3,7 +3,7 @@
 #' This function looks for demographic data from ACS. First checks if this data is
 #' in working directory. If not, it creates a directory and downloads most recent
 #' data.
-#' @param working_dir
+#' @param year Year of EJSCREEN data. Fctn pulls ACS data from preceeding year.
 #' @param state_filter Users may restrict screening to a particular state in the
 #' contiguous US. If so, users can specify a state. Default is to conduct
 #' screening for the entire contiguous US.
@@ -13,11 +13,24 @@
 #'
 #' @examples
 
-fetch_acs_data <- function(working_dir, state_filter){
+fetch_acs_data <- function(year = NULL, state_filter = NULL){
 
   # Create directory if needed.
-  ifelse(!dir.exists(paste0(working_dir,"/ACS_data")),
-         dir.create(paste0(working_dir,"/ACS_data")), FALSE)
+  ifelse(!dir.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
+                                        "/ACS_data")),
+         dir.create(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
+                           "/ACS_data")), FALSE)
+  
+  # Set year
+  if (is.null(year)) {
+    yr_input = 2020 #This is not dynamic, fix later.
+  } else {
+    if (year > 2020) {
+      yr_input = 2020
+    } else if (year == 2020){
+      yr_input = 2019
+    }
+  }
 
   # Function to extract relevant CBG dataframe
   parallel.api <- function(st){
@@ -34,15 +47,17 @@ fetch_acs_data <- function(working_dir, state_filter){
                     pov99 = 'C17002_003',
                     med_inc = 'B19013_001'),
       state = st,
-      year = 2020, #*# ICF: revision from 2019 to 2020 on 11/10/22
+      year = yr_input,
       geometry = F
     ) %>%
       dplyr::select(GEOID, variable, estimate) %>%
       tidyr::pivot_wider(id_cols = c(GEOID), names_from = variable, values_from = estimate)
   }
 
-  if(identical(list.files(path=paste0(working_dir,"/ACS_data"), pattern="acs_ejstats.csv"),
-               character(0))){
+  # If EJStats file for year of interest doesn't exist, create it.
+  # Else, open the existing file
+  if(!(file.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
+                '/ACS_data/acs_',yr_input,'_ejstats.csv')))){
 
     ## State lists
     state.list <- c(state.abb, 'DC')
@@ -50,7 +65,9 @@ fetch_acs_data <- function(working_dir, state_filter){
 
     # Loop (in parallel) thru each county/state pair, calling census API
     future::plan("multisession", workers = (parallel::detectCores()-2))
-    cbg.list <- furrr::future_pmap(list(state.list), parallel.api)
+    cbg.list <- furrr::future_pmap(list(state.list), parallel.api, 
+                                   .options = furrr::furrr_options(seed = NULL))
+    future::plan('sequential')
 
     cbg.together <- data.table::rbindlist(cbg.list, use.names = T, idcol = 'statelistid')
     convert.cols <- names(cbg.together)[-2]
@@ -70,17 +87,20 @@ fetch_acs_data <- function(working_dir, state_filter){
     rm(convert.cols, cbg.list, cbg.together)
 
     # Write file for future use
-    fwrite(acs.cbg.data, paste0(working_dir,'/ACS_data/acs_ejstats.csv'))
+    data.table::fwrite(acs.cbg.data, 
+           paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
+                  '/ACS_data/acs_',yr_input,'_ejstats.csv'))
 
   } else {
-    acs.cbg.data <- fread(paste0(working_dir,'/ACS_data/acs_ejstats.csv'),
+    acs.cbg.data <- data.table::fread(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
+                                 '/ACS_data/acs_',yr_input,'_ejstats.csv'),
                           colClasses = c('GEOID'='character'))
   }
 
   # Filter down to user-requested state
   if (!is.null(state_filter)){
     acs.cbg.data <- acs.cbg.data %>%
-      filter(state %in% state_filter)
+      dplyr::filter(state %in% state_filter)
   }
 
   return(acs.cbg.data)

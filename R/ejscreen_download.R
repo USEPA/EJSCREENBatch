@@ -10,12 +10,12 @@
 #' @param justreadname
 #' @param addflag
 #' @param cutoff
+#' @param state
 #'
 #' @return
 #' @export
-#'
 #' @examples
-ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
+ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
                                      state=NULL, justreadname = NULL, addflag = FALSE, cutoff = 80)
 {
 
@@ -30,14 +30,14 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       yrschecked <- 2015:calendaryear
 
       temp1 <-  lapply(paste0(ftpurlbase,
-                              yrschecked, "/", sep = ""), httr::GET)
+                              yrschecked, "/", sep = ""), httr::GET,
+                       config = httr::config(connecttimeout = 30))
 
       temp2 <- sapply(temp1, "[[", 2)
       exists.fun <- function(x){
         ifelse(x>200, FALSE, TRUE)
       }
      return(yrschecked[max(which(sapply(temp2, exists.fun)))])
-
     }
 
     if (is.null(yr)) {
@@ -52,13 +52,9 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
         stop("folder for that year not found on FTP site")
       }
     }
-    justftpurl <- function(yr) {
-      return(paste(ftpurlbase, yr, sep = ""))
-    }
-    ftpurl <- justftpurl(yr)
+    ftpurl <- paste(ftpurlbase, yr, sep = "")
     zipunzippednames <- function(yr) {
-
-      if (yr > 2019 & yr < 2022) {
+      if (yr >= 2019 & yr < 2022) {
         if(file == "StatePctile"){
         zipname <- paste("EJSCREEN_", yr, "_StatePctile.gdb.zip",
                          sep = "")
@@ -74,12 +70,12 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
         if(file == "StatePctile"){
           zipname <- paste("EJSCREEN_", yr, "_StatePct_with_AS_CNMI_GU_VI.gdb.zip",
                            sep = "")
-          unzippedname <- paste("EJSCREEN_", yr, "_StatePct_with_AS_CNMI_GU_VI.gdb",
+          unzippedname <- paste("EJSCREEN_", yr, "_StatePctile.gdb",
                                 sep = "")
         } else {
           zipname <- paste("EJSCREEN_", yr, "_with_AS_CNMI_GU_VI.csv.zip",
                            sep = "")
-          unzippedname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv",
+          unzippedname <- paste("EJSCREEN_", yr, "_USPR.csv",
                                 sep = "")
         }
       }
@@ -88,18 +84,14 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
     x <- zipunzippednames(yr)
     zipname <- x[1]
     unzippedname <- x[2]
-    if (zipname == "") {
-      myfilename <- unzippedname
-    } else {
-      myfilename <- zipname
-    }
+
     justdownload <- function(mypathfileRemote, mypathfileLocal) {
       cat("Attempting to download dataset from ", mypathfileRemote,
           "and saving as", mypathfileLocal, " \n")
       cat("This normally takes a few minutes. \n")
 
       getOption('timeout')
-      options(timeout=3600) #set timeout at 1hour for slower connections
+      options(timeout=600) #10 min max
 
       x <- utils::download.file(url = mypathfileRemote,
                                 destfile = mypathfileLocal)
@@ -111,13 +103,23 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
       }
       return(NULL)
     }
-    justdownload(mypathfileRemote = file.path(ftpurl, myfilename),
-                 mypathfileLocal = file.path(folder, myfilename))
+    
+    justdownload(mypathfileRemote = file.path(ftpurl, zipname),
+                 mypathfileLocal = file.path(folder, paste0(unzippedname,'.zip')))
+    
     if (zipname == "") {
       cat("\n")
     } else {
+      if (zipname == paste("EJSCREEN_", yr, "_with_AS_CNMI_GU_VI.csv.zip",
+                           sep = "")) {
+        zipname <- paste("EJSCREEN_", yr, "_Full_with_AS_CNMI_GU_VI.csv.zip",
+                         sep = "")
+      }
       cat("Attempting to unzip dataset \n")
-      utils::unzip(file.path(folder, myfilename), exdir=folder)
+      utils::unzip(file.path(folder, paste0(unzippedname,'.zip')), 
+                   exdir=folder)
+      file.rename(from = gsub('.zip','',file.path(folder,zipname)),
+                  to = file.path(folder, unzippedname))
     }
 
     # Option to filter states--only used if user specifies this
@@ -134,12 +136,13 @@ ejscreen.download.local <- function (folder = "EJSCREEN data", file, yr = NULL, 
     }
 
   if(file=="StatePctile"){
-    db <- sf::st_read(dsn = paste0(folder,"/",unzippedname), layer = st_layers(dsn = paste0(folder,"/",unzippedname))[[1]]) %>%
+    db <- sf::st_read(dsn = paste0(folder,"/",unzippedname), 
+                      layer = sf::st_layers(dsn = paste0(folder,"/",unzippedname))[[1]]) %>%
       filter_state(state_filter=state) %>%
       sf::st_transform("ESRI:102005") %>%
       dplyr::mutate(area_bg = st_area(Shape)) %>%
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
-  } else{
+  } else {
     db <- data.table::fread(paste0(folder,"/",unzippedname), colClasses = 'character') %>%
       dplyr::select(ID, starts_with("P_")) %>%
       dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
