@@ -2,7 +2,7 @@
 st_dynamic_buffer <- function(input_sf, buff_dist){
   
   # Assign UTM at the centroid of the shape.
-  st_agr(input_sf) = 'constant'
+  sf::st_agr(input_sf) = 'constant'
   df <- input_sf %>%
     dplyr::mutate(L1 = sf::st_coordinates(sf::st_centroid(.))[, 1],
                   L2 = sf::st_coordinates(sf::st_centroid(.))[, 2],
@@ -26,7 +26,7 @@ st_dynamic_buffer <- function(input_sf, buff_dist){
                      function(x, y){
     sf::st_transform(group_split(df)[[x]], y)
   }) %>%
-    purrr::map(., ~ sf::st_buffer(., 1609.34*buff_dist) %>%
+    purrr::map(., ~ sf::st_buffer(., 1609.344*buff_dist) %>%
           sf::st_transform(4326)) %>%
     data.table::rbindlist() %>%
     sf::st_sf() %>%

@@ -78,6 +78,18 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
           unzippedname <- paste("EJSCREEN_", yr, "_USPR.csv",
                                 sep = "")
         }
+      } else if (yr == 2023) {
+        if(file == "StatePctile"){
+          zipname <- paste("EJSCREEN_", yr, "_BG_StatePct_with_AS_CNMI_GU_VI.gdb.zip",
+                           sep = "")
+          unzippedname <- paste("EJSCREEN_", yr, "_StatePctile.gdb",
+                                sep = "")
+        } else {
+          zipname <- paste("EJSCREEN_", yr, "_BG_with_AS_CNMI_GU_VI.csv.zip",
+                           sep = "")
+          unzippedname <- paste("EJSCREEN_", yr, "_USPR.csv",
+                                sep = "")
+        }
       }
       return(c(zipname, unzippedname))
     }
@@ -131,7 +143,7 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
         }
       } else {
         data <- data %>%
-          filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
+          filter(!(ST_ABBREV %in% c("GU","MP","VI","AS")))
       }
     }
 
@@ -139,14 +151,11 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
     db <- sf::st_read(dsn = paste0(folder,"/",unzippedname), 
                       layer = sf::st_layers(dsn = paste0(folder,"/",unzippedname))[[1]]) %>%
       filter_state(state_filter=state) %>%
-      sf::st_transform("ESRI:102005") %>%
-      dplyr::mutate(area_bg = st_area(Shape)) %>%
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
   } else {
     db <- data.table::fread(paste0(folder,"/",unzippedname), colClasses = 'character') %>%
       dplyr::select(ID, starts_with("P_")) %>%
       dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
-      dplyr::na_if("None") %>%
       dplyr::mutate_at(vars(-ID), as.numeric)
   }
 

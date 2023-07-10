@@ -3,7 +3,7 @@
 #' This function looks for demographic data from ACS. First checks if this data is
 #' in working directory. If not, it creates a directory and downloads most recent
 #' data.
-#' @param year Year of EJSCREEN data. Fctn pulls ACS data from preceeding year.
+#' @param year Year of ACS data desired by user.
 #' @param state_filter Users may restrict screening to a particular state in the
 #' contiguous US. If so, users can specify a state. Default is to conduct
 #' screening for the entire contiguous US.
@@ -13,24 +13,15 @@
 #'
 #' @examples
 
-fetch_acs_data <- function(year = NULL, state_filter = NULL){
+fetch_acs_data <- function(year, state_filter = NULL){
 
   # Create directory if needed.
   ifelse(!dir.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                         "/ACS_data")),
          dir.create(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                            "/ACS_data")), FALSE)
-  
-  # Set year
-  if (is.null(year)) {
-    yr_input = 2020 #This is not dynamic, fix later.
-  } else {
-    if (year > 2020) {
-      yr_input = 2020
-    } else if (year == 2020){
-      yr_input = 2019
-    }
-  }
+
+  yr_input = year  
 
   # Function to extract relevant CBG dataframe
   parallel.api <- function(st){
@@ -43,8 +34,13 @@ fetch_acs_data <- function(year = NULL, state_filter = NULL){
                     pop_asian = 'B02001_005',
                     pop_pacisl = 'B02001_006',
                     pop_hisp = 'B03003_003',
+                    pov_total = 'C17002_001',
                     pov50 = 'C17002_002',
                     pov99 = 'C17002_003',
+                    pov124 = 'C17002_004',
+                    pov149 = 'C17002_005',
+                    pov184 = 'C17002_006',
+                    pov199 = 'C17002_007',
                     med_inc = 'B19013_001'),
       state = st,
       year = yr_input,
@@ -61,7 +57,6 @@ fetch_acs_data <- function(year = NULL, state_filter = NULL){
 
     ## State lists
     state.list <- c(state.abb, 'DC')
-    state.list <- state.list[!(state.list %in% c('AK', 'HI'))]
 
     # Loop (in parallel) thru each county/state pair, calling census API
     future::plan("multisession", workers = (parallel::detectCores()-2))
@@ -81,8 +76,9 @@ fetch_acs_data <- function(year = NULL, state_filter = NULL){
                     frac_asian = pop_asian/pop_total,
                     frac_pacisl = pop_pacisl/pop_total,
                     frac_hisp = pop_hisp/pop_total,
-                    frac_pov50 = pov50/pop_total,
                     frac_pov99 = (pov50+pov99)/pop_total,
+                    frac_pov199 = (pov50+pov99+pov124+pov149+pov184+pov199) / 
+                      pov_total,
                     pop_total)]
     rm(convert.cols, cbg.list, cbg.together)
 

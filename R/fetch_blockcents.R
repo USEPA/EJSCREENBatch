@@ -1,6 +1,6 @@
 
 
-fetch_blockcents <- function(year){
+fetch_blockcents <- function(year = NULL){
   
   # Create folder if it doesn't exist
   ifelse(!dir.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
@@ -22,6 +22,22 @@ fetch_blockcents <- function(year){
   }
 
   # Open the file appropriate to EJSCREEN vintage in use.
+  if(is.null(year)){
+    latestavailableyear <- function(mypath){
+      calendaryear <- as.numeric(format(Sys.time(), "%Y"))
+      yrschecked <- 2015:calendaryear
+      temp1 <-  lapply(paste0("https://gaftp.epa.gov/EJSCREEN/",
+                              yrschecked, "/", sep = ""), httr::GET,
+                       config = httr::config(connecttimeout = 20))
+      temp2 <- sapply(temp1, "[[", 2)
+      exists.fun <- function(x){
+        ifelse(x>200, FALSE, TRUE)
+      }
+      return(yrschecked[max(which(sapply(temp2, exists.fun)))])
+    }
+    year <- latestavailableyear(ftpurlbase)
+  }
+  
   if (year > 2021){
     block <- data.table::fread(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                       "/Census block data/",

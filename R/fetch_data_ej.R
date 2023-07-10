@@ -3,7 +3,7 @@
 #' This function looks for data from EJSCREEN. First checks if from EJSCREEN is
 #' in package directory. If not, it creates a directory and downloads most recent
 #' data.
-#' @param year Users may use EJSCREEN data from any year from 2020-2022.
+#' @param year Users may use EJSCREEN data from any year from 2020-2023.
 #' @param state_filter Users may restrict screening to a particular state in the
 #' contiguous US. If so, users can specify a state. Default is to conduct
 #' screening for the entire contiguous US.
@@ -31,11 +31,11 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
       if(state_filter %in% unique(data$ST_ABBREV)){
         data <- data %>%
           dplyr::filter((ST_ABBREV %in% state_filter)) %>%
-          dplyr::filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
+          dplyr::filter(!(ST_ABBREV %in% c("GU","MP","VI","AS")))
       }
     } else {
       data <- data %>%
-        dplyr::filter(!(ST_ABBREV %in% c("AK","HI","GU","MP","VI","AS")))
+        dplyr::filter(!(ST_ABBREV %in% c("GU","MP","VI","AS")))
     }
   }
   
@@ -55,12 +55,9 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
       }
       return(yrschecked[max(which(sapply(temp2, exists.fun)))])
     }
-    yr <- latestavailableyear(ftpurlbase)
-    if(file.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1], 
-                            "/EJSCREEN data/EJSCREEN_",yr,"_StatePctile.gdb"))){
-      year <- yr
-    }
+    year <- latestavailableyear(ftpurlbase)
   }
+
 
   #Block group level data and state percentiles
   #*# ICF: The if statement needed to be adjusted to accommodate different file names across different EJSCREEN dataset vintages.
@@ -82,7 +79,6 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
                                 layer = sf::st_layers(dsn = paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                                               "/EJSCREEN data/",gdbname))[[1]]) %>%
       filter_state(state_filter) %>%
-      dplyr::mutate(area_bg = sf::st_area(Shape)) %>%
       rename_at(dplyr::vars(dplyr::starts_with("P_")), ~ paste0(., '_state'))
   }
 
@@ -100,7 +96,6 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
                                  colClasses = 'character') %>%
       dplyr::select(ID, dplyr::starts_with("P_")) %>%
       dplyr::rename_at(dplyr::vars(-ID), ~ paste0(., '_US'))  %>%
-      dplyr::na_if("None") %>%
       dplyr::mutate_at(dplyr::vars(-ID), as.numeric)
   }
 
