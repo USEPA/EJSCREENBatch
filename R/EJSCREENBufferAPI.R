@@ -1,7 +1,5 @@
-## EPA--NCEE 2023
+## EPA-NCEE-Adam Theising-2023
 ## This function calls the EJSCREEN API
-
-
 ## Inputs:
 # data: facility location data (as sf object)
 # dist: a numeric value to designate the buffer distance.
