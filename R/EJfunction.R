@@ -7,7 +7,6 @@
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points and 0 miles for polygons.
 #' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
 #' @param data_year Option for which year of EJSCREEN data to return (and corresponding ACS data). Default is 2023.
-#' @param working_dir
 #'
 #' @return
 #' @export
