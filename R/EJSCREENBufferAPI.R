@@ -1,8 +1,10 @@
 ## EPA-NCEE-Adam Theising-2023
-## This function calls the EJSCREEN API
+## This is a canned loop function for calling the EJSCREEN API and returning 
+## fire-hose of data as a data.frame.
+
 ## Inputs:
-# data: facility location data (as sf object)
-# dist: a numeric value to designate the buffer distance.
+# data: facility location data (as sf object). 
+# dist: a numeric value to designate the buffer distance in miles.
 
 ## Output: a single data.frame
 
