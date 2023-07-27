@@ -11,8 +11,6 @@
 EJSCREENBufferAPI <- function(input_data, dist){
   
   data <- input_data %>%
-    #dplyr::mutate(apilong = sf::st_coordinates(.)[,1],
-    #       apilat = sf::st_coordinates(.)[,2]) %>%
     tibble::rowid_to_column()
 
   # API POST urls:
@@ -80,6 +78,7 @@ EJSCREENBufferAPI <- function(input_data, dist){
       next
     }
     
+    # Information to send in post query.
     post.body <- list(namestr='',
                       geometry=geom.string,
                       distance=as.character(dist),
@@ -89,7 +88,6 @@ EJSCREENBufferAPI <- function(input_data, dist){
                       f='json')
     
     # Call APIs, merge output 
-    
     dta.list[[i]] <- tryCatch(
       {
         df <- lapply(post.urls, api.call)
@@ -110,7 +108,6 @@ EJSCREENBufferAPI <- function(input_data, dist){
         return(NULL)
       }
     )
-
     } 
   
   ## Merge into data.frame
