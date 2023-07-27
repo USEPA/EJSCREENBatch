@@ -1,12 +1,12 @@
 ## EPA-NCEE-Adam Theising-2023
-## This is a canned loop function for calling the EJSCREEN API and returning 
-## fire-hose of data as a data.frame.
+## This is a canned loop function for calling the EJSCREEN API and returning the 
+## fire-hose of data as a tidy data.frame (one row per input coordinate/shape).
 
 ## Inputs:
-# data: facility location data (as sf object). 
+# data: facility location data *as sf data.frame* (point, (multi-)linestring, (multi-)polygon). 
 # dist: a numeric value to designate the buffer distance in miles.
 
-## Output: a single data.frame
+## Output: a tidy data.frame
 
 EJSCREENBufferAPI <- function(input_data, dist){
   
@@ -87,7 +87,7 @@ EJSCREENBufferAPI <- function(input_data, dist){
                       areaid='',
                       f='json')
     
-    # Call APIs, merge output 
+    # Call APIs, merge output from the 3 separate calls
     dta.list[[i]] <- tryCatch(
       {
         df <- lapply(post.urls, api.call)
@@ -111,6 +111,7 @@ EJSCREENBufferAPI <- function(input_data, dist){
     } 
   
   ## Merge into data.frame
+  #  drop duplicated columns
   #  EJSCREEN fields here: https://ejscreen.epa.gov/mapper/ejsoefielddesc.html
   api.datalist <- data.table::rbindlist(dta.list, fill = T, idcol = 'rowid')
   api.datalist <- api.datalist[, which(duplicated(names(api.datalist))) := NULL]
