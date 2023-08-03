@@ -139,11 +139,11 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
       if(!is.null(state_filter)){
         if(state_filter %in% unique(data$ST_ABBREV)){
           data <- data %>%
-            filter(!(ST_ABBREV %in% state_filter))
+            dplyr::filter(!(ST_ABBREV %in% state_filter))
         }
       } else {
         data <- data %>%
-          filter(!(ST_ABBREV %in% c("GU","MP","VI","AS")))
+          dplyr::filter(!(ST_ABBREV %in% c("GU","MP","VI","AS")))
       }
     }
 
@@ -154,7 +154,7 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
   } else {
     db <- data.table::fread(paste0(folder,"/",unzippedname), colClasses = 'character') %>%
-      dplyr::select(ID, starts_with("P_")) %>%
+      dplyr::select(ID, dplyr::starts_with("P_")) %>%
       dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
       dplyr::mutate_at(vars(-ID), as.numeric)
   }

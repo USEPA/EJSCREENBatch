@@ -69,7 +69,7 @@ EJfunction <- function(LOI_data,
     data <- get('data.tog', env = .GlobalEnv)
     if(!is.null(state)){
       data.tog <- data %>%
-        filter(ST_ABBREV %in% state)
+        dplyr::filter(ST_ABBREV %in% state)
     } else {
       data.tog <- data
     }
@@ -160,9 +160,9 @@ EJfunction <- function(LOI_data,
     #merge Cblock pop counts in buffer with demographics at CBG resolution
     area_together <- area.intersection %>% 
       dplyr::mutate(ID = as.character(ID)) %>%
-      left_join(area_cb_intersect, by = c('shape_ID' = 'shape_ID', 
+      dplyr::left_join(area_cb_intersect, by = c('shape_ID' = 'shape_ID', 
                                           'ID' = 'bg_id')) %>%
-      as.data.table()
+      data.table::as.data.table()
     
     #columns to keep in the facility level table
     colsToKeep <- c(ejvarlist[[1]][-(1:4)],
@@ -210,7 +210,7 @@ EJfunction <- function(LOI_data,
       temp_intersect %>%
         dplyr::filter(ST_ABB==x) %>%
         dplyr::filter(!is.na(shape_ID))  %>%
-        dplyr::mutate(across(colsToKeep[-length(colsToKeep)],
+        dplyr::mutate(dplyr::across(colsToKeep[-length(colsToKeep)],
                              list(~round(ecdf(na.omit(data.tog %>%
                                                         sf::st_drop_geometry() %>%
                                                         as.data.frame() %>%

@@ -5,7 +5,7 @@
 #' (2) a list of downstream catchment IDs
 #'
 #' @param input_data
-#' @param ds_us_mode Option for upstream or downstream. Default is downstream.
+#' @param ds_us_mode Option for upstream or downstream. Default is downstream, main.
 #' @param ds_us_dist Distance up/downstream. Default is 10 miles.
 #'
 #' @return
@@ -14,7 +14,7 @@
 #' @examples
 #'
 
-EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode = 'DD', ds_us_dist = 10){
+EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode = 'DM', ds_us_dist = 10){
   # Determine the input_data type:
   # (in future could have this determine object type (sf, numeric list, etc.) without user input)
   
