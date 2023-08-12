@@ -1,3 +1,11 @@
+#' Support function to download and extract pop count raster data for analysis
+#'
+#' @param year User-specified year of data vintage for analysis.
+#'
+#' @return A raster object
+#' @export
+#'
+#' @examples
 fetch_rasters <- function(year = NULL){
   
   # Create folder if it doesn't exist

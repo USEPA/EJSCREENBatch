@@ -1,6 +1,14 @@
-## Dynamic buffering
+#' Dynamic buffering projections
+#'
+#' @param input_sf Required. Input sf data.frame
+#' @param buff_dist Required. Buffer distance
+#'
+#' @return Data.frame sf object with buffered geometry.
+#' @export
+#'
+#' @examples
 st_dynamic_buffer <- function(input_sf, buff_dist){
-  
+
   # Assign UTM at the centroid of the shape.
   sf::st_agr(input_sf) = 'constant'
   df <- input_sf %>%
@@ -19,10 +27,10 @@ st_dynamic_buffer <- function(input_sf, buff_dist){
                     TRUE ~ paste0("+proj=utm +zone=", zone, " +south", " +datum=WGS84 +units=m +no_defs")
                   )) %>%
     dplyr::group_by(prj)
-  
+
   # Transform projection, buffer, transform back to 4326, merge
-  dfs <- purrr::map2(1:dim(dplyr::group_keys(df))[1], 
-                     unlist(dplyr::group_keys(df)), 
+  dfs <- purrr::map2(1:dim(dplyr::group_keys(df))[1],
+                     unlist(dplyr::group_keys(df)),
                      function(x, y){
     sf::st_transform(group_split(df)[[x]], y)
   }) %>%

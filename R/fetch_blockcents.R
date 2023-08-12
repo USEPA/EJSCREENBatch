@@ -1,5 +1,11 @@
-
-
+#' Support function to download and import vintage-appropriate census block centroids
+#'
+#' @param year Year of data vintage
+#'
+#' @return Data.frame containing coordinates of census block centroids.
+#' @export
+#'
+#' @examples
 fetch_blockcents <- function(year = NULL){
   
   # Create folder if it doesn't exist

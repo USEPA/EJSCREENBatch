@@ -1,15 +1,12 @@
-#' EJ tool
+#' Primary function that performs EJ/demographic screening.
+#' 
+#' @param LOI_data Required. Location of interest. Location data must be an SF object to undergo screening analysis.
+#' @param data_year Option for which EJSCREEN (and corresponding ACS) data vintage to return. Default is 2023.
+#' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points/linestrings and 0 miles for polygons.
+#' @param raster Block or raster apportioning for buffer? Default is T. If set to false, uses EJSCREEN's block approach.
+#' @param state User can restrict screening to particular states. Default is to screen for entire US.
 #'
-#' Main function that performs screening (land and water-based).
-#' Input must be an SF object! User must make this transformation.
-#'
-#' @param LOI_data Required. Location of interest. Locational data to undergo screening analysis.
-#' @param data_year Option for which year of EJSCREEN data to return (and corresponding ACS data). Default is 2023.
-#' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points and 0 miles for polygons.
-#' @param raster Block or raster apportioning for buffer? If set to false, uses EJSCREEN's block approach.
-#' @param state User can restrict screening to particular states. Default is to screen for entire contiguous US.
-#'
-#' @return
+#' @return A list containing 2 sublists: (1) a LOI-buffer-level screening summary, and (2) a CBG-level screening summary for all block groups within affected communities.
 #' @export
 #'
 #' @examples
@@ -17,7 +14,7 @@
 EJfunction <- function(LOI_data,
                        data_year = NULL,
                        buffer = NULL, 
-                       raster = F,
+                       raster = T,
                        state = NULL){
 
   `%notin%` = Negate(`%in%`)

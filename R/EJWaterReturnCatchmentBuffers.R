@@ -1,14 +1,10 @@
 #' EJ Return Water Catchment Buffers
 #'
-#' This function returns:
-#' (1) a SF data.frame containing up/downstream flowlines of a user-specified distance
-#' (2) a list of downstream catchment IDs
-#'
-#' @param input_data
-#' @param ds_us_mode Option for upstream or downstream. Default is downstream, main.
+#' @param input_data Required. An sf POINT data.frame with coordinates falling in the US.
+#' @param ds_us_mode Option for upstream or downstream. Default is downstream, main ("DM"). Other options: "DD","UT","UM".
 #' @param ds_us_dist Distance up/downstream. Default is 10 miles.
 #'
-#' @return
+#' @return This function returns: (1) a SF data.frame containing up/downstream flowlines of a user-specified distance and (2) a list of downstream catchment IDs
 #' @export
 #'
 #' @examples
