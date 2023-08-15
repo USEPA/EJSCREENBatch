@@ -1,5 +1,5 @@
 #' Primary function that performs EJ/demographic screening.
-#' 
+#'
 #' @param LOI_data Required. Location of interest. Location data must be an SF object to undergo screening analysis.
 #' @param data_year Option for which EJSCREEN (and corresponding ACS) data vintage to return. Default is 2023.
 #' @param buffer Distance(s) used to create buffers (miles). Default is 1, 3, and 5 miles for points/linestrings and 0 miles for polygons.
@@ -11,9 +11,11 @@
 #'
 #' @examples
 #'
+#' @importFrom(data.table,":=") #Keep this to add data.table to NAMESPACE FILE
+#'
 EJfunction <- function(LOI_data,
                        data_year = NULL,
-                       buffer = NULL, 
+                       buffer = NULL,
                        raster = T,
                        state = NULL){
 
@@ -39,7 +41,7 @@ EJfunction <- function(LOI_data,
   facil.geom.type <- unique(as.character(sf::st_geometry_type(LOI_data)))
   facil.geom.type <- facil.geom.type[which.max(tabulate(match(sf::st_geometry_type(LOI_data),
                                                               facil.geom.type)))]
-  
+
   #For each data type, make sure GIS methods make sense.
   #set radii to draw around areas/points of interest
   if(is.null(buffer) &
@@ -54,14 +56,14 @@ EJfunction <- function(LOI_data,
   } else {
     buffers <- buffer  #user inputted values that override default
   }
-  
+
   #=============================================================================
   #-------------------------------BRING IN DATA---------------------------------
   #=============================================================================
 
   # Pull the appropriate variable list
   ejvarlist <- fetch_ejvars(year = data_year)
-  
+
   # Bring in & join EJSCREEN and ACS data
   if ("data.tog" %in% ls(envir = .GlobalEnv)){
     data <- get('data.tog', env = .GlobalEnv)
@@ -74,7 +76,7 @@ EJfunction <- function(LOI_data,
   } else {
     acs.cbg.data <- fetch_acs_data(year = ejvarlist[[2]], state)
     data.state.uspr <- fetch_data_ej(year = data_year, state)
-    data.tog <- data.state.uspr %>% 
+    data.tog <- data.state.uspr %>%
       dplyr::left_join(acs.cbg.data, by = c('ID' = 'GEOID')) %>%
       sf::st_transform(crs = 4326) %>%
       dplyr::mutate(ID = as.numeric(ID)) %>%
@@ -87,18 +89,18 @@ EJfunction <- function(LOI_data,
     assign("data.tog", data.tog, envir=globalenv())
     rm(acs.cbg.data, data.state.uspr)
   }
-  
+
   #=============================================================================
   #---------------------SCREENING ANALYSES--------------------------------------
   #=============================================================================
-  
+
   #create empty lists to store lists/DFs/DTs
   EJ.loi.data = vector(mode = 'list', length = length(buffers))
   EJ.cbg.data = vector(mode = 'list', length = length(buffers))
-  
+
   for(i in 1:length(buffers)){
     message(paste0('Calculating for buffer distance: ', buffers[i], ' mi...\n'))
-    
+
     #if lat-lons provided, draw buffers around points
     #if polygon provided, default is to use polygon without buffer but can add buffer if desired
     if(facil.geom.type %in% c('POINT','LINESTRING','MULTIPOINT','MULTILINESTRING')){
@@ -116,14 +118,14 @@ EJfunction <- function(LOI_data,
         stop('Buffer distance(s) must be numeric and non-negative.')
       }
     }
-    
+
     #perform buffering using the Cblock methodology
     if (raster == F){
       blockbuffer <- EJSCREENBufferBlocks(dta_year = data_year,
                                           buff_dta = facility_buff,
                                           data.tog = data.tog,
                                           ejvarlist = ejvarlist)
-      
+
       #LOI data.frame
       #merge together, join back to facility data
       EJ.loi.data[[i]] <- LOI_data %>%
@@ -132,19 +134,19 @@ EJfunction <- function(LOI_data,
           by = 'shape_ID'
         )
       names(EJ.loi.data)[i] = paste0("LOI_radius_",ejvarlist[[3]],"_",buffers[i],"mi")
-      
+
       #CBG data.frame
       #merge together, join back to facility data
       EJ.cbg.data[[i]] <- blockbuffer[[2]]
       names(EJ.cbg.data)[i] = paste0("CBG_radius_",ejvarlist[[3]],"_",buffers[i],"mi")
-      
+
       rm(blockbuffer)
     } else {
       rasterbuffer <- EJSCREENBufferRaster(ejscreen_bgs_data = data.tog,
                                            facility_buff = facility_buff,
                                            ejvarlist = ejvarlist,
                                            year = data_year)
-      
+
       #LOI data.frame
       #merge together, join back to facility data
       EJ.loi.data[[i]] <- LOI_data %>%
@@ -153,25 +155,25 @@ EJfunction <- function(LOI_data,
           by = 'shape_ID'
         )
       names(EJ.loi.data)[i] = paste0("LOI_radius_",ejvarlist[[3]],"_",buffers[i],"mi")
-      
+
       #CBG data.frame
       #merge together, join back to facility data
       EJ.cbg.data[[i]] <- rasterbuffer[[2]]
       names(EJ.cbg.data)[i] = paste0("CBG_radius_",ejvarlist[[3]],"_",buffers[i],"mi")
-      
+
       rm(rasterbuffer)
     }
-    
+
 
   }
   # Clean up table
   EJ.cbg.data <- Filter(Negate(is.null), EJ.cbg.data)
   EJ.loi.data <- Filter(Negate(is.null), EJ.loi.data)
-  
+
   # Return these objects as functional output
-  return.me <- sapply(objects(pattern="^EJ", envir = environment()), 
+  return.me <- sapply(objects(pattern="^EJ", envir = environment()),
                       get, envir = environment(), simplify=F, USE.NAMES=T)
   return.me <- return.me[unlist(lapply(return.me,class))!="function"]
-  
+
   return(return.me)
 }

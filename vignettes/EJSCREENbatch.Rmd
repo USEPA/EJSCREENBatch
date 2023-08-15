@@ -1,0 +1,160 @@
+---
+title: "An introduction to the EJSCREENbatch tool"
+author: "A.R. El-Khattabi, Morgan Teachey & Adam Theising"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: journal
+    number_sections: no
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{EJSCREENbatch introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Environmental justice (EJ) analyses summarize demographics of local populations and environmental burden in order to measure the differential impacts that environmental policy decisions may have on affected communities. It is often helpful for regulators, analysts, and citizen communities to be able to assess impacts across many affected areas at once, allowing for comparison between communities and across regulatory actions. To streamline initial screening-level EJ analysis efforts, this package was developed to leverage national demographic and environmental datasets made available through the U.S. Environmental Protection Agency. Specifically, it allows users to analyze EJ summary statistics for an unlimited number of locations (coordinates, polygons, or water features) and produces customized figures and maps based on user specifications.
+
+The EJSCREENbatch R package primarily relies on data provided by [EJSCREEN](https://www.epa.gov/ejscreen), a mapping and screening tool maintained by EPA that provides demographic and environmental impact data on the Census Block Group (CBG) level for the United States. For information on how these data were prepared, refer to the [EJSCREEN Technical Information Guidance](https://www.epa.gov/ejscreen/technical-documentation-ejscreen). 
+
+This package also draws CBG-level demographic data from the Census Bureau's American Community Survey (ACS) using the [tidycensus](https://walker-data.com/tidycensus/index.html) R package.
+
+ 
+# Getting started
+To access the latest version of the package, simply install from the EPA's Github Repo using the devtools package:
+```{r, eval = F}
+# Import EJSCREENbatch package 
+library(devtools)
+install_github(repo = "USEPA/EJSCREENbatch@feb23_development")
+```
+
+Next load the package (and others essential to this vignette):
+```{r, warning = F, }
+library(EJSCREENbatch)
+library(tidyverse)
+library(data.table)
+```
+
+Users should note that when the package is installed and certain functions are called, EJSCREEN and ACS data are downloaded and saved to the package's library folder. For users that are hyper-conscious of local disk space, making a default EJfunction() call using the most recent releases of EJSCREEN/ACS data will locally save files that are roughly 1GB in size. For users who intend to perform screening analyses using older or multiple vintages of the EJSCREEN/ACS data, more or less disk space may be required.
+
+After installation, load the package and set a project-appropriate working directory. You will also need to download a local copy of a dasymetric population density raster. This package is currently built to use [NASA's Socioeconomic Data and Application Center (SEDAC) 1km x 1km raster](https://sedac.ciesin.columbia.edu/data/set/usgrid-summary-file1-2010). An easy-to-download version of this raster is currently available [here](https://adamtheising.github.io/Papers/uspop10.zip). For the more inquisitive, direct download access to NASA's socioeconomic raster products requires creation of a (free) user account; we do suggest exploring the many offerings they have.
+
+Lastly: as of v2.0 you must point the package's EJfunction() towards the filepath where this population raster is stored locally. We suggest denoting an object (e.g. *raster.path* in the code block above) with the filepath housing the SEDAC raster.^[Other note: higher resolution (e.g. 30m by 30m) US population density rasters have been produced by various research groups, including U.S. EPA's Office of Research and Development, USGS, and Facebook. These more granular rasters could be downloaded in lieu of the SEDAC raster, but standard accuracy versus computation time and feasibility trade-offs apply. A longer-term project for us is the incorporation of a higher-resolution raster without prohibitively high computation times. In the meanwhile, our functions currently look for and use a raster file named 'uspop10.tif' in the user-indicated filepath, so interested users should name alternative rasters using this convention.]
+
+# Input data requirements
+
+To run the tool, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), shapes (i.e. a set of linestrings representing streams/rivers or polygons representing wetlands, municipal boundaries, or air pollution plumes), or a waterbody identifier from the NHDPlus database (more on this below).
+
+For illustrative purposes, we will work through this vignette using a dataset containing the latitude/longitude outfall coordinates for 284 meat and poultry processing (MPP) facilities in the continental US. These outfall coordinates feed directly into the US's water network, and will serve as our "locations of interest" (LOIs) for the vignette's sample EJ analysis.
+
+```{r}
+### MPP facilities pulled from stable URL
+mpp <- data.table::fread('https://ejscreenbatch-data.s3.amazonaws.com/dmr_mpp_facilities_2019.csv') %>%
+  dplyr::filter(!(State %in% c('AK','HI','PR'))) %>%
+  sf::st_as_sf(coords = c('Facility Longitude', 'Facility Latitude'), crs = 4326)
+```
+
+One important technical item: location inputs must be fed into package functions either (1) as a _simple feature_ (sf) dataframe for point/line/polygon shapes or (2) as a _list_ of catchment common identifiers (COMIDs). See the [sf package](https://r-spatial.github.io/sf/index.html) documentation for a primer on using spatial data in R and the [nhdplusTools package](https://usgs-r.github.io/nhdplusTools/) for an overview of the catchment ID data structure.
+
+For an illustrative sense of the geographies that will be screened, we map our location inputs below. In the next section, we draw spatial buffers around our locations to extract demographic and environmental data from EJSCREEN's national database.
+
+```{r, warning = F, message = F, cache = T}
+# Visualize locations of MPP facilities:
+library(ggplot2)
+state.data <- map_data('state')
+ggplot() + 
+  geom_map(data = map_data('state'), map = map_data('state'),
+           aes(x = long, y = lat, map_id = region),
+           color = 'black',fill = NA) +
+  geom_sf(data = mpp, color = 'red') +
+  theme_minimal()
+```
+
+# Compiling data: using EJfunction()
+We now demonstrate the batch tool's implementation. The foundation of the package is built around EJfunction(), which does the heavy lifting of data compilation, cleaning, and spatial computation. Based on the user-provided input data and options selected, buffers are drawn around locations, and data from EJSCREEN are extracted and compiled for these areas. 
+
+The function's primary role is the return of dataframes containing raw or summarized information. To provide meaningful and systematic comparisons across locations, the data.frames returned by EJfunction() report both national and state percentiles in addition to the raw demographic and environmental indicators.
+
+## An initial run
+
+We begin by running a simple, EJ screening call on our set of location coordinates.
+
+```{r, cache = T}
+# A simple application of EJfunction()
+my.EJ.data <-  EJfunction(mpp, buffer = 1)
+
+```
+
+This proximity analysis draws a simple buffer of 1 mile *(buffer = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(raster = T)*, the function also returns a location-level summary dataframe that is similar in spirit to data returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. Our raster-based population weighting approach differs slightly from the EJSCREEN mapper's because we rely on NASA's SEDAC population grid, while EJSCREEN weights populations using Census block centroids. To align with the EJSCREEN population buffering approach, users can set the option *(raster = F)*
+
+By default, this function returns 3 outputs to the user's work environment: 
+
+1) *my.EJ.data*: a list of sub-objects that result from the screening (see below for details)
+
+2) *data.tog*: an sf data frame of the raw EJSCREEN and selected ACS demographic data for U.S. states and Puerto Rico.
+
+3) *raster_extract*: a raster containing population counts for the North American continent.
+
+*data.tog* and *raster_extract* are kept in memory to accelerate additional runs of EJfunction() should the user wish to fine-tune the analysis or to incorporate into custom data visualization or analyses as appropriate. 
+
+### The screening data
+
+The object returned as *my.EJ.data* is a list of two data sub-objects:
+
+```{r}
+names(my.EJ.data)
+```
+
+First, the CBG-level data for block groups within the designated 1-mile buffer proximity are returned as *EJ.cbg.data*.^[*EJ.cbg.data* and *EJ.loi.data* are both named lists of dataframes; this design choice was made to accommodate simultaneous runs of multiple distance buffers and/or GIS methods. Users performing ad-hoc analyses should account for this accordingly.] CBGs are identified by the *ID* column; note that CBG population estimates in these data.frames are for the spatial area of CBGs within *ANY* LOI's buffer.
+
+These data may be of interest to users for two reasons. First, for users who want to characterize demographics and environmental characteristics across *ALL* LOIs, these data provide the opportunity to calculate statistics using population-weighted averaging or to sum the total population count living within the buffers of all the LOIs. Second, in cases where buffers are not overlapping, users can use the CBG-level data to develop a within-LOI, "neighborhood"-level analyses of populations that may be affected by policy. For a flavor of this data, we can explore the dataframe below, which has been filtered to include all block groups that fall within the distance buffers of MPP facilities in Wisconsin. The EJSCREEN variable names and definitions can be downloaded [here](https://gaftp.epa.gov/EJSCREEN/2023/EJSCREEN_2023_BG_Columns.xlsx).
+
+```{r, echo = F}
+DT::datatable(
+  my.EJ.data$EJ.list.data[[1]] %>%
+    as_tibble() %>%
+    dplyr::filter(STATE_NAME == "Wisconsin"),
+  class = 'cell-border stripe',
+  #filter = 'top',
+  rownames = FALSE,
+  extensions = c('FixedColumns','Scroller'),
+  options = list(dom = 't',
+                 scrollX = TRUE,
+                 scrollCollapse = TRUE,
+                 deferRender = TRUE,
+                 scrollY = 200,
+                 scroller = TRUE)
+)
+```
+
+Second, the location-level summaries are returned as *EJ.loi.data*. The LOI-level information here is analogous to the report returned from EJSCREEN's online point-and-click mapper interface. Here, however, the data is returned in a tidy data.frame format for a batch of locations. The data frame includes national and state percentiles, as well as the population-weighted raw values for each EJSCREEN indicator and key demographic variables from the ACS. Here, we explore the summary return for each of the MPP facilities.
+
+```{r, echo = F}
+DT::datatable(
+my.EJ.data$EJ.facil.data[[1]],
+class = 'cell-border stripe',
+filter = 'top',
+rownames = FALSE,
+extensions = c('FixedColumns','Scroller'),
+options = list(dom = 't',
+               scrollX = TRUE,
+               scrollCollapse = TRUE,
+               deferRender = TRUE,
+               scrollY = 200,
+               scroller = TRUE)
+)
+```
