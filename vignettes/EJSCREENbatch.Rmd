@@ -47,6 +47,7 @@ Next load the package (and others essential to this vignette):
 library(EJSCREENbatch)
 library(tidyverse)
 library(data.table)
+library(DT)
 ```
 
 Users should note that when the package is installed and certain functions are called, EJSCREEN and ACS data are downloaded and saved to the package's library folder. For users that are hyper-conscious of local disk space, making a default EJfunction() call using the most recent releases of EJSCREEN/ACS data will locally save files that are roughly 1GB in size. For users who intend to perform screening analyses using older or multiple vintages of the EJSCREEN/ACS data, more or less disk space may be required.
@@ -59,25 +60,29 @@ Lastly: as of v2.0 you must point the package's EJfunction() towards the filepat
 
 To run the tool, the user supplies input location data. Since this is a batch tool, the data can (and should!) include several input locations. These locations could be points in space (i.e. lat/long coordinates of an emitting facility), shapes (i.e. a set of linestrings representing streams/rivers or polygons representing wetlands, municipal boundaries, or air pollution plumes), or a waterbody identifier from the NHDPlus database (more on this below).
 
-For illustrative purposes, we will work through this vignette using a dataset containing the latitude/longitude outfall coordinates for 284 meat and poultry processing (MPP) facilities in the continental US. These outfall coordinates feed directly into the US's water network, and will serve as our "locations of interest" (LOIs) for the vignette's sample EJ analysis.
+For illustrative purposes, we will work through this vignette using a dataset containing the latitude/longitude outfall coordinates for a set of meat and poultry processing (MPP) facilities in the Great Lakes region. These MPP outfalls feed directly into the US's water network, and will serve as our "locations of interest" (LOIs) for the vignette's sample EJ analysis.
 
 ```{r}
-### MPP facilities pulled from stable URL
+### MPP facilities pulled from stable URL -- only those
 mpp <- data.table::fread('https://ejscreenbatch-data.s3.amazonaws.com/dmr_mpp_facilities_2019.csv') %>%
-  dplyr::filter(!(State %in% c('AK','HI','PR'))) %>%
+  dplyr::filter(State %in% c('IL','IN','MI','OH','WI')) %>%
   sf::st_as_sf(coords = c('Facility Longitude', 'Facility Latitude'), crs = 4326)
 ```
 
-One important technical item: location inputs must be fed into package functions either (1) as a _simple feature_ (sf) dataframe for point/line/polygon shapes or (2) as a _list_ of catchment common identifiers (COMIDs). See the [sf package](https://r-spatial.github.io/sf/index.html) documentation for a primer on using spatial data in R and the [nhdplusTools package](https://usgs-r.github.io/nhdplusTools/) for an overview of the catchment ID data structure.
+One important technical item: location inputs must be fed into package functions either (1) as a _simple feature_ (sf) data.frame for point/line/polygon shapes or (2) as a _list_ of catchment common identifiers (COMIDs). See the [sf package](https://r-spatial.github.io/sf/index.html) documentation for a primer on using spatial data in R and the [nhdplusTools package](https://usgs-r.github.io/nhdplusTools/) for an overview of the catchment ID data structure.
 
 For an illustrative sense of the geographies that will be screened, we map our location inputs below. In the next section, we draw spatial buffers around our locations to extract demographic and environmental data from EJSCREEN's national database.
 
 ```{r, warning = F, message = F, cache = T}
 # Visualize locations of MPP facilities:
 library(ggplot2)
-state.data <- map_data('state')
 ggplot() + 
-  geom_map(data = map_data('state'), map = map_data('state'),
+  geom_map(data = map_data('state') %>% 
+             dplyr::filter(region %in% c('illinois','indiana','michigan',
+                                         'ohio','wisconsin')),
+           map = map_data('state') %>% 
+             dplyr::filter(region %in% c('illinois','indiana','michigan',
+                                         'ohio','wisconsin')),
            aes(x = long, y = lat, map_id = region),
            color = 'black',fill = NA) +
   geom_sf(data = mpp, color = 'red') +
@@ -85,31 +90,32 @@ ggplot() +
 ```
 
 # Compiling data: using EJfunction()
-We now demonstrate the batch tool's implementation. The foundation of the package is built around EJfunction(), which does the heavy lifting of data compilation, cleaning, and spatial computation. Based on the user-provided input data and options selected, buffers are drawn around locations, and data from EJSCREEN are extracted and compiled for these areas. 
+We now demonstrate the batch tool's implementation. The foundation of the package is built around EJfunction(), which does the heavy lifting of data compilation, cleaning, and spatial computation. Based on the user-provided input data and options selected, buffers are drawn around locations, and data from EJSCREEN and the ACS are extracted and compiled for these areas. 
 
-The function's primary role is the return of dataframes containing raw or summarized information. To provide meaningful and systematic comparisons across locations, the data.frames returned by EJfunction() report both national and state percentiles in addition to the raw demographic and environmental indicators.
+The function's primary role is the return of data.frames containing raw or summarized information. To provide meaningful and systematic comparisons across locations, the data.frames returned by EJfunction() report both national and state percentiles in addition to the raw demographic and environmental indicators.
 
 ## An initial run
 
-We begin by running a simple, EJ screening call on our set of location coordinates.
+We begin by running a simple, EJ screening call on our set of location coordinates. EJfunction() accepts an *sf* data.frame as its data input.^[For users interested in providing a list of COMIDs as an input, an intermediate step is necessary; see section below on using EJWaterReturnCatchmentBuffers().]
 
-```{r, cache = T}
+```{r, warning = F, message = F, cache = T}
 # A simple application of EJfunction()
-my.EJ.data <-  EJfunction(mpp, buffer = 1)
-
+my.EJ.data <-  EJfunction(mpp, buffer = 1, raster = T)
 ```
 
-This proximity analysis draws a simple buffer of 1 mile *(buffer = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(raster = T)*, the function also returns a location-level summary dataframe that is similar in spirit to data returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. Our raster-based population weighting approach differs slightly from the EJSCREEN mapper's because we rely on NASA's SEDAC population grid, while EJSCREEN weights populations using Census block centroids. To align with the EJSCREEN population buffering approach, users can set the option *(raster = F)*
+Note that this example function call may take several minutes to run on your machine depending on bandwidth and processor speed.
+
+This proximity analysis draws a simple buffer of 1 mile *(buffer = 1)* around each location, and extracts/returns the raw EJSCREEN data for all CBGs that intersect with the buffer area. Under the default (and suggested) GIS method *(raster = T)*, the function also returns a location-level summary data.frame that is similar in spirit to data returned from the [EJSCREEN mapper](https://ejscreen.epa.gov/mapper/) or API. Our raster-based population weighting approach differs slightly from the EJSCREEN mapper's because we rely on NASA's SEDAC population grid, while EJSCREEN weights populations using Census block centroids. To align with the EJSCREEN population buffering approach, users can set the option *(raster = F)*
 
 By default, this function returns 3 outputs to the user's work environment: 
 
 1) *my.EJ.data*: a list of sub-objects that result from the screening (see below for details)
 
-2) *data.tog*: an sf data frame of the raw EJSCREEN and selected ACS demographic data for U.S. states and Puerto Rico.
+2) *data.tog*: an sf data.frame of the raw EJSCREEN and selected ACS demographic data for U.S. states and Puerto Rico.
 
 3) *raster_extract*: a raster containing population counts for the North American continent.
 
-*data.tog* and *raster_extract* are kept in memory to accelerate additional runs of EJfunction() should the user wish to fine-tune the analysis or to incorporate into custom data visualization or analyses as appropriate. 
+*data.tog* and *raster_extract* are kept in memory by design to ease additional runs of EJfunction() should the user wish to fine-tune the analysis or to incorporate into custom data visualization or analyses as appropriate. 
 
 ### The screening data
 
@@ -119,13 +125,13 @@ The object returned as *my.EJ.data* is a list of two data sub-objects:
 names(my.EJ.data)
 ```
 
-First, the CBG-level data for block groups within the designated 1-mile buffer proximity are returned as *EJ.cbg.data*.^[*EJ.cbg.data* and *EJ.loi.data* are both named lists of dataframes; this design choice was made to accommodate simultaneous runs of multiple distance buffers and/or GIS methods. Users performing ad-hoc analyses should account for this accordingly.] CBGs are identified by the *ID* column; note that CBG population estimates in these data.frames are for the spatial area of CBGs within *ANY* LOI's buffer.
+First, the CBG-level data for block groups within the designated 1-mile buffer proximity are returned as *EJ.cbg.data*.^[*EJ.cbg.data* and *EJ.loi.data* are both named lists of data.frames; this design choice was made to accommodate simultaneous runs of multiple distance buffers. Users performing ad-hoc analyses should account for this accordingly.] CBGs are identified by the *ID* column; note that CBG population estimates in these data.frames are for the spatial area of CBGs within any LOI's buffer.
 
-These data may be of interest to users for two reasons. First, for users who want to characterize demographics and environmental characteristics across *ALL* LOIs, these data provide the opportunity to calculate statistics using population-weighted averaging or to sum the total population count living within the buffers of all the LOIs. Second, in cases where buffers are not overlapping, users can use the CBG-level data to develop a within-LOI, "neighborhood"-level analyses of populations that may be affected by policy. For a flavor of this data, we can explore the dataframe below, which has been filtered to include all block groups that fall within the distance buffers of MPP facilities in Wisconsin. The EJSCREEN variable names and definitions can be downloaded [here](https://gaftp.epa.gov/EJSCREEN/2023/EJSCREEN_2023_BG_Columns.xlsx).
+These data may be of interest to users for two reasons. (1) For users who want to characterize demographics and environmental characteristics across ALL LOIs, these data provide the opportunity to calculate statistics using population-weighted averaging or to sum the total population count living within the buffers of all the LOIs. (2) In cases where buffers are not overlapping, users can use the CBG-level data to develop a within-LOI, "neighborhood"-level analyses of populations that may be affected by policy. For a flavor of this data, we can explore the data.frame below, which has been filtered to include all block groups that fall within the distance buffers of MPP facilities in Wisconsin. The EJSCREEN variable names and definitions can be downloaded [here](https://gaftp.epa.gov/EJSCREEN/2023/EJSCREEN_2023_BG_Columns.xlsx).
 
 ```{r, echo = F}
 DT::datatable(
-  my.EJ.data$EJ.list.data[[1]] %>%
+  my.EJ.data$EJ.cbg.data[[1]] %>%
     as_tibble() %>%
     dplyr::filter(STATE_NAME == "Wisconsin"),
   class = 'cell-border stripe',
@@ -141,11 +147,11 @@ DT::datatable(
 )
 ```
 
-Second, the location-level summaries are returned as *EJ.loi.data*. The LOI-level information here is analogous to the report returned from EJSCREEN's online point-and-click mapper interface. Here, however, the data is returned in a tidy data.frame format for a batch of locations. The data frame includes national and state percentiles, as well as the population-weighted raw values for each EJSCREEN indicator and key demographic variables from the ACS. Here, we explore the summary return for each of the MPP facilities.
+Second, the location-level summaries are returned as *EJ.loi.data*. The LOI-level information here is analogous to the report returned from EJSCREEN's online point-and-click mapper interface. Here, rather than compiling results for a single location, the data is returned in a tidy data.frame format for a batch of locations. The data.frame includes national and state percentiles, as well as the population-weighted raw values for each EJSCREEN indicator and key demographic variables from the ACS. Here, we explore the summary return for each of the MPP facilities.
 
 ```{r, echo = F}
 DT::datatable(
-my.EJ.data$EJ.facil.data[[1]],
+my.EJ.data$EJ.loi.data[[1]],
 class = 'cell-border stripe',
 filter = 'top',
 rownames = FALSE,
@@ -158,3 +164,100 @@ options = list(dom = 't',
                scroller = TRUE)
 )
 ```
+
+## Adjusting user-selected options
+The user is able to specify several alternative settings while compiling data with EJfunction(). These include:
+
+1.	The buffer distance(s) within which to select proximate CBGs. Users can modify these distances (in miles) using the *buffer* argument. Input value(s) must be numeric and can be a vector if the user is interested in running analyses at several bandwidths.
+```{r, eval = F}
+# An example run with multiple buffer distances:
+my.EJ.data.multibuffer <- EJfunction(LOI_data = mpp,
+           buffer = c(1,3,5))
+```
+
+2.	The buffer GIS method used to apportion population for CBGs that overlap the LOI buffer's boundary. Users specify this via the *raster* argument. The default setting is *raster = T*. 
+
+The alternative is to set this option to *raster = F*: doing so will result in use of the EJSCREEN Mapper's methodology. EJfunction() will download census block centroid coordinates and use them to calculate the fraction of a boundary CBG's population that falls within the LOI's buffer. This fraction will then be used to population-weight demographic and environmental statistics as displayed in *EJ.loi.data*.
+```{r, eval = F}
+# An example run using the census block centroids to apportion buffer population.
+my.EJ.data.block <- EJfunction(LOI_data = mpp, 
+                                   buffer = 1,
+                                   raster = F)
+```
+
+3.  The data vintage used in the analysis, for cases when a user would like to perform a retrospective screening using older versions of the EJSCREEN and corresponding ACS data. This option is set with the *data_year* parameter using a numeric value. Currently, EJSCREENbatch allows for all vintages 2020 and later.
+```{r, eval = F}
+# An example run using EJSCREEN data from 2021.
+my.EJ.data.2021 <- EJfunction(LOI_data = mpp, 
+                               buffer = 1,
+                               data_year = 2021)
+```
+
+4.  The state screen, for cases when a user wants to restrict analysis to a single state. This is set with the *state* argument, using the state's designated two letter code.
+```{r, eval = F}
+# An example run restricting the screening only to the state of WI.
+my.EJ.data.state <- EJfunction(LOI_data = mpp, 
+                               buffer = 1,
+                               state = 'WI')
+```
+
+# Water-based EJ screening analysis
+
+The previous screening analyses using EJfunction() can also be completed using water-feature-based buffering. This package leverages the surface water network established in the [National Hydrology Dataset](https://www.usgs.gov/core-science-systems/ngp/national-hydrography) (NHD), which incorporates the NHD, the National Elevation Dataset, and the National Watershed Boundary Dataset. Flowlines and catchments (watersheds) in this context therefore refer those established in the [NHDPlusV2](https://s3.amazonaws.com/edap-nhdplus/NHDPlusV21/Documentation/NHDPlusV2_User_Guide.pdf) (medium resolution). Users should note that these catchments are smaller in area than HUC12s.
+
+To leverage this package's water-based screening capabilities, users can supply either an *sf* data.frame of point coordinates or a list of catchment IDs (COMIDs) to the EJWaterReturnCatchmentBuffers() function. Using our MPP outfall data, for example, we can call the following script in order to return an *sf* data.frame of flowlines shapes reaching 25 miles downstream of the outfalls.
+```{r, echo = F, warning = F}
+mpp.flowlines <- EJWaterReturnCatchmentBuffers(mpp, 
+                              ds_us_mode = 'DM',
+                              ds_us_dist = 25)
+```
+Underneath the hood, this function identifies catchments that lie within a specified distance up- or downstream (in river miles) of these starting locations. The function then creates a shapefile of each starting location's associated flowline through these catchments. The user can modify two parameters: *ds_us_dist* is set as a numeric value to determine the distance down- or upstream that the flowline should run. *ds_us_mode* is set to determine whether the flowline shape returned should run downstream along the main stem ('DM'), downstream including all diversions ('DD'), upstream along the main stem ('UM') or upstream along all tributaries ('UT').
+
+The returned list from EJWaterReturnCatchmentBuffers() contains 2 items: *flowline_geoms* and *nhd_comids*. The former is an *sf* data.frame, containing the user's original input data with updated linestring geometries for each LOI's flowline. The latter is a list of COMIDS through which each LOI passes. We envision that these COMID lists could be highly useful for supplemental analyses using other EPA water data products that are built on the NHDPlus network.
+
+To illustrate the returned output, the flowlines for MPP facilities in the Great Lakes Region are mapped in the code block below:
+
+```{r, warning = F, message = F, cache = T}
+ggplot() + 
+  geom_map(data = map_data('state') %>% 
+             dplyr::filter(region %in% c('illinois','indiana','michigan',
+                                         'ohio','wisconsin')), 
+           map = map_data('state') %>% 
+             dplyr::filter(region %in% c('illinois','indiana','michigan',
+                                         'ohio','wisconsin')),
+           aes(x = long, y = lat, map_id = region),
+           color = 'black',fill = NA) +
+  geom_sf(data = mpp.flowlines$flowline_geoms,
+          color = 'blue',
+          size = 3) +
+  geom_sf(data = mpp,
+          color = 'darkblue') +
+  theme_minimal()
+```
+
+With the sf data.frame of flowline geometries in hand, it is now straightforward to call EJfunction() and return the environmental and demographic screening data for buffered areas 25 miles downstream of the MPP outfalls:
+
+```{r, warning = F, message = F, cache = T}
+my.EJ.data.flowlines <- EJfunction(mpp.flowlines$flowline_geoms, buffer = 1, raster = T)
+```
+
+Lastly, it is possible to successfully call EJWaterReturnCatchmentBuffers() on non-*sf* data.frames in one specific case. If a user wishes to run a water-based screening analysis and has a data.frame with a "comid" column that holds (numeric) COMIDs for each LOI, the function will successfully return downstream flowlines and COMID lists. 
+
+# Interactive mapping
+
+For users that would like to explore their spatial data visually, the *EJMaps()* function creates an [interactive map](https://rstudio.github.io/leaflet/) of the U.S. that displays the user's locations of interest. Points/lines/polygons are shaded based on the number of indicators above a screening percentile threshold, allowing users to easily identify locations that may be good candidates for outreach efforts and/or further quantitative or qualitative analysis. The map's interactive, point and click functionality also renders pop-up tables that share summary data for locations of interest.
+
+```{r, warning = F}
+EJMaps(input_data = my.EJ.data.flowlines, 
+       geography = 'US', 
+       indic_option = 'total',
+       save_option = F)[[1]]
+```
+
+The *indic_option* parameter controls whether EJMaps()'s color shading scheme summarizes environmental or demographic indicators separately or summarizes all indicators together; the *geography* parameter designates whether national or state percentiles are used to compare against the threshold. The default *threshold* is set at 80, as suggested in the EJSCREEN technical guidance, but users can modify this threshold to suit their mapping needs. If the user's input data includes a column that identifies LOIs (e.g. facility or location names), the *facil_name* parameter can be set equal to the column's name (in string format).
+
+Please note that this map visualization is a simple starting point for a regulatory screening analysis and that users are highly encouraged to produce their own figures and tables tailored to their locations of interest.
+
+# Using the EJSCREEN API
+
+To be completed...

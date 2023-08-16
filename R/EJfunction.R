@@ -7,6 +7,7 @@
 #' @param state User can restrict screening to particular states. Default is to screen for entire US.
 #'
 #' @import data.table
+#' @import doRNG
 #'
 #' @return A list containing 2 sublists: (1) a LOI-buffer-level screening summary, and (2) a CBG-level screening summary for all block groups within affected communities.
 #' @export
