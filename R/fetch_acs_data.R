@@ -85,7 +85,8 @@ fetch_acs_data <- function(year, state_filter = NULL){
     # Write file for future use
     data.table::fwrite(acs.cbg.data,
            paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                  '/ACS_data/acs_',yr_input,'_ejstats.csv'))
+                  '/ACS_data/acs_',yr_input,'_ejstats.csv'),
+           scipen = 50)
 
   } else {
     acs.cbg.data <- data.table::fread(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],

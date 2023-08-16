@@ -58,6 +58,9 @@ EJfunction <- function(LOI_data,
     buffers <- buffer  #user inputted values that override default
   }
 
+  #Until sf team fixes their 'ish
+  sf::sf_use_s2(FALSE)
+
   #=============================================================================
   #-------------------------------BRING IN DATA---------------------------------
   #=============================================================================
