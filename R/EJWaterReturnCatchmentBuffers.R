@@ -125,10 +125,9 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode = 'DM', ds_us_
   multi <- lapply(nhd.buffs[[1]], castLine)
 
   # First element to return: sf data.frame with the flowline
-  feature.fl <- data.table::rbindlist(multi, idcol = 'tag') %>%
-    dplyr::mutate(start_catchment = feature.id[tag]) %>%
+  feature.fl <- data.table::rbindlist(multi, idcol = T) %>%
     dplyr::rename(shape_ID = 1,
-           geometry=x)
+                  geometry=x)
 
   feature.tog <- input_data %>%
     tibble::rowid_to_column('shape_ID') %>%
