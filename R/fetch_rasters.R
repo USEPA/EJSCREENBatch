@@ -7,13 +7,13 @@
 #'
 #' @examples
 fetch_rasters <- function(year = NULL){
-  
+
   # Create folder if it doesn't exist
   silent <- ifelse(!dir.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                            "/Pop Rasters")), 
+                            "/Pop Rasters")),
          dir.create(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                            "/Pop Rasters")), FALSE)
-  
+
   # If both population raster files aren't there, download them.
   if (length(list.files(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                "/Pop Rasters"))) < 2){
@@ -21,20 +21,20 @@ fetch_rasters <- function(year = NULL){
                          destfile = paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                            "/Pop Rasters/",
                                            "batch_rasters.zip"))
-    
+
     unzip(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                  "/Pop Rasters/",
                  "batch_rasters.zip"),
-          junkpaths = T,
           exdir = paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                         "/Pop Rasters/")
+                         "/Pop Rasters"),
+          junkpaths = T
     )
-    
+
     silent <- file.remove(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                        "/Pop Rasters/",
                        "batch_rasters.zip"))
   }
-  
+
   # Open the file appropriate to EJSCREEN vintage in use.
   if(is.null(year)){
     latestavailableyear <- function(mypath){
@@ -51,7 +51,7 @@ fetch_rasters <- function(year = NULL){
     }
     year <- latestavailableyear(ftpurlbase)
   }
-  
+
   if (year > 2021){
     raster <- terra::rast(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                       "/Pop Rasters/",

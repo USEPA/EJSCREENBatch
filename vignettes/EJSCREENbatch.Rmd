@@ -29,10 +29,9 @@ knitr::opts_chunk$set(
 
 Environmental justice (EJ) analyses summarize demographics of local populations and environmental burden in order to measure the differential impacts that environmental policy decisions may have on affected communities. It is often helpful for regulators, analysts, and citizen communities to be able to assess impacts across many affected areas at once, allowing for comparison between communities and across regulatory actions. To streamline initial screening-level EJ analysis efforts, this package was developed to leverage national demographic and environmental datasets made available through the U.S. Environmental Protection Agency. Specifically, it allows users to analyze EJ summary statistics for an unlimited number of locations (coordinates, polygons, or water features) and produces customized figures and maps based on user specifications.
 
-The EJSCREENbatch R package primarily relies on data provided by [EJSCREEN](https://www.epa.gov/ejscreen), a mapping and screening tool maintained by EPA that provides demographic and environmental impact data on the Census Block Group (CBG) level for the United States. For information on how these data were prepared, refer to the [EJSCREEN Technical Information Guidance](https://www.epa.gov/ejscreen/technical-documentation-ejscreen). 
+The EJSCREENbatch R package primarily relies on data provided by [EJSCREEN](https://www.epa.gov/ejscreen), a mapping and screening tool maintained by EPA that provides demographic and environmental impact data on the Census Block Group (CBG) level for the United States. For information on how these data were prepared, refer to the [EJSCREEN Technical Information Guidance](https://www.epa.gov/ejscreen/technical-information-about-ejscreen).
 
 This package also draws CBG-level demographic data from the Census Bureau's American Community Survey (ACS) using the [tidycensus](https://walker-data.com/tidycensus/index.html) R package.
-
  
 # Getting started
 To access the latest version of the package, simply install from the EPA's Github Repo using the devtools package:
@@ -212,11 +211,14 @@ my.EJ.data.state <- EJfunction(LOI_data = mpp,
 
 The previous screening analyses using EJfunction() can also be completed using water-feature-based buffering. This package leverages the surface water network established in the [National Hydrology Dataset](https://www.usgs.gov/core-science-systems/ngp/national-hydrography) (NHD), which incorporates the NHD, the National Elevation Dataset, and the National Watershed Boundary Dataset. Flowlines and catchments (watersheds) in this context therefore refer those established in the [NHDPlusV2](https://s3.amazonaws.com/edap-nhdplus/NHDPlusV21/Documentation/NHDPlusV2_User_Guide.pdf) (medium resolution). Users should note that these catchments are smaller in area than HUC12s.
 
-To leverage this package's water-based screening capabilities, users can supply either an *sf* data.frame of point coordinates or a list of catchment IDs (COMIDs) to the EJWaterReturnCatchmentBuffers() function. Using our MPP outfall data, for example, we can call the following script in order to return an *sf* data.frame of flowlines shapes reaching 50 miles downstream of the outfalls.
+To leverage this package's water-based screening capabilities, users can supply either an *sf* data.frame of point coordinates or a list of catchment IDs (COMIDs) to the EJWaterReturnCatchmentBuffers() function. 
+
+## Creating flowline shapes with an sf data.frame
+Using our MPP outfall data, for example, we can call the following script in order to return an *sf* data.frame of flowlines shapes reaching 25 miles downstream of the outfalls.
 ```{r, echo = F, warning = F}
 mpp.flowlines <- EJWaterReturnCatchmentBuffers(mpp, 
                               ds_us_mode = 'DM',
-                              ds_us_dist = 50)
+                              ds_us_dist = 25)
 ```
 Underneath the hood, this function identifies catchments that lie within a specified distance up- or downstream (in river miles) of these starting locations. The function then creates a shapefile of each starting location's associated flowline through these catchments. The user can modify two parameters: *ds_us_dist* is set as a numeric value to determine the distance down- or upstream that the flowline should run. *ds_us_mode* is set to determine whether the flowline shape returned should run downstream along the main stem ('DM'), downstream including all diversions ('DD'), upstream along the main stem ('UM') or upstream along all tributaries ('UT').
 
@@ -244,7 +246,7 @@ ggplot() +
 
 The dark blue points on the map represent the original coordinates in the MPP dataset; the lighter blue flowlines moving away from those points show the resulting linestring geometry produced in the output.
 
-With this sf data.frame of flowline geometries in hand, it is now straightforward to call EJfunction() and return the environmental and demographic screening data for buffered areas 50 miles downstream of the MPP outfalls:
+With this sf data.frame of flowline geometries (*mpp.flowlines$flowline_geoms*) in hand, it is now straightforward to call EJfunction() and return the environmental and demographic screening data for buffered areas 25 miles downstream of the MPP outfalls:
 
 ```{r, include = F, warning = F, message = F, cache = T}
 # Run but don't display in vignette.
@@ -255,7 +257,7 @@ my.EJ.data.flowlines <- EJfunction(mpp.flowlines$flowline_geoms, buffer = 1, ras
 my.EJ.data.flowlines <- EJfunction(mpp.flowlines$flowline_geoms, buffer = 1, raster = T)
 ```
 
-The code block above draws a 1-mile buffer around the flowlines. The list of data.frames returned by EJfunction() are identical in structure to those shown above. It is somewhat interesting, however, to note the demographic/environmental characteristic differences that result from taking a water-based buffering approach rather than a conventional circular buffer.
+The code block above draws a 1-mile buffer around the flowlines. The list of data.frames returned by EJfunction() are identical in structure to those shown above. It is worthwhile to explore the differences in demographic/environmental characteristics that result from taking a water-based buffering approach rather than a conventional circular buffer.
 ```{r, echo = F}
 DT::datatable(
 my.EJ.data.flowlines$EJ.loi.data[[1]],
@@ -272,12 +274,12 @@ options = list(dom = 't',
 )
 ```
 
-##
+## Creating flowline shapes with COMIDs
 Lastly, it is possible to successfully call EJWaterReturnCatchmentBuffers() on non-*sf* data.frames in one specific case. If a user wishes to run a water-based screening analysis and has a data.frame with a "comid" column that holds (numeric) COMIDs for each LOI, the function will successfully return downstream flowlines and COMID lists.
 
 # Interactive mapping
 
-For users that would like to explore their spatial data visually, the *EJMaps()* function creates an [interactive map](https://rstudio.github.io/leaflet/) of the U.S. that displays the user's locations of interest. Points/lines/polygons are shaded based on the number of indicators above a screening percentile threshold, allowing users to easily identify locations that may be good candidates for outreach efforts and/or further quantitative or qualitative analysis. The map's interactive, point and click functionality also renders pop-up tables that share summary data for locations of interest.
+For users that would like to explore their spatial data visually, the *EJMaps()* function creates an [interactive map](https://rstudio.github.io/leaflet/) of the U.S. that displays the user's locations of interest. Points/lines/polygons are shaded based on the number of indicators above a screening percentile threshold, allowing users to easily identify locations that may be good candidates for outreach efforts and/or further quantitative or qualitative analysis. The map's interactive, point and click functionality also renders pop-up tables that share summary data for locations of interest. Values presented in the pop-up table are percentiles, meant to ease comparison in a national or state-level context.
 
 ```{r, warning = F}
 EJMaps(input_data = my.EJ.data.flowlines, 
@@ -292,6 +294,28 @@ Please note that this map visualization is a simple starting point for a regulat
 
 # Using the EJSCREEN API
 
-Finally, the EJSCREENbatch package has a canned function that allows users to make direct calls to the EJSCREEN API using an sf data.frame as the input data.
+Finally, the EJSCREENbatch package has a canned function that allows users to make direct calls to the EJSCREEN API using an sf data.frame and numeric distance (in miles) as inputs. This function loops through API calls, LOI-by-LOI, mirroring the batch ethos used in EJfunction().
 
-The function, EJSCREENBufferAPI(), 
+The function, EJSCREENBufferAPI(), will return a data.frame containing the full "firehose" of variables provided by EJSCREEN. This includes all the standard EJ environmental and demographic indicators, as well as CBG-level indicators about health disparities, climate change burden, critical service gaps, and a richer set of demographic information. See the [EJSCREEN map descriptions](https://www.epa.gov/ejscreen/ejscreen-map-descriptions) for more details.
+
+```{r, warning = F}
+my.ej.data.api <- EJSCREENBufferAPI(input_data = mpp.flowlines$flowline_geoms,
+                                    dist = 1)
+```
+```{r, echo = F}
+DT::datatable(
+my.EJ.data.api,
+class = 'cell-border stripe',
+filter = 'top',
+rownames = FALSE,
+extensions = c('FixedColumns','Scroller'),
+options = list(dom = 't',
+               scrollX = TRUE,
+               scrollCollapse = TRUE,
+               deferRender = TRUE,
+               scrollY = 200,
+               scroller = TRUE)
+)
+```
+
+This function may be particularly useful in cases where only LOI-level screening data are needed. EJSCREEN's API is not terribly fast, however, so users should expect a need for patience and plan to streamline the returned data.frame into more usable content for analytics.
