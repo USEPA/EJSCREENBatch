@@ -4,10 +4,11 @@
 # EJSCREENbatch
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
-As of 1/3/2022 Version 2.0 is now available!
+As of 8/18/2023 Version 2.0.1 is now available! This version has
+simplified EJfunction()’s input requirements and deprecated several
+secondary data visualization functions.
 
 To streamline initial EJ analysis efforts over *multiple locations of
 interest*, the EJSCREENbatch R package was developed to leverage the
@@ -15,22 +16,20 @@ national demographic and environmental datasets made available through
 the U.S. Environmental Protection Agency.
 
 This package offers canned functions to extract and process Census block
-group EJSCREEN data for buffered areas surrounding user-provided [sf
-geographies](https://r-spatial.github.io/sf/). Users can request
+group EJSCREEN and ACS data for buffered areas surrounding user-provided
+[sf geographies](https://r-spatial.github.io/sf/). Users can request
 different buffer distances or GIS inclusion methods. Moreover, buffers
 can be distance-based over land (i.e. drawing circles around lat/longs)
 or water (leveraging the [NHDPlus
 network](https://usgs-r.github.io/nhdplusTools/) to measure
 up/downstream).
 
-A number of standardized, secondary data visualization functions are
-also available: correlation plots, heat tables, ranking tables, and maps
-are among current offerings.
+A secondary interactive mapping function, useful for preliminary
+analytical exploration, is also included.
 
 ## Installation
 
-You can install the *development* version of EJSCREENbatch from GitHub
-with the following:
+You can install EJSCREENbatch from GitHub with the following:
 
 ``` r
 # requires devtools to install
@@ -42,26 +41,25 @@ install_github('USEPA/EJSCREENbatch')
 library(EJSCREENbatch)
 ```
 
-To install from GitHub with package vignettes:
-
-``` r
-library(devtools)
-install_github('USEPA/EJSCREENbatch', build_vignettes=TRUE)
-library(EJSCREENbatch)
-```
-
-*NOTE:* in this developmental version of the package, users must
-manually download NASA’s [SEDAC population density raster
-file](https://sedac.ciesin.columbia.edu/data/set/usgrid-summary-file1-2010/data-download)
-and point the function towards where it is housed locally. See the vignette for details.
-
-Users should also note that when the package is installed, the most recent release of EJSCREEN data is downloaded. EJSCREEN is updated periodically so if users want to ensure that they are using the most recent release, they will need to delete their local copy to allow the package to automatically pull the most current version. This design choice was made to ensure reproducibility between runs.  
-
 ## Description
 
-Below is a visual overview of the package, highlighting the input types, primary data sources, and examples of output graphics. Three primary data types can be input: coordinates, NHDplus common identifiers (ComIDs), and shape files (polygons). The package offers two buffering methods and can accept multiple buffer distances at a time. The user can chose to output summary plots and tables in addition to the returned raw dataframe. Additional documentation and a demonstration on how to leverage the package's functional are available in the vignette directory.
+Below is a visual overview of the package, highlighting the input types,
+primary data sources, and examples of output graphics. Three primary
+data types can be input: coordinates, NHDplus common identifiers
+(ComIDs), and shape files (linestrings, polygons). The package offers
+two buffering methods and can accept multiple buffer distances at a
+time. The user can chose to output summary plots and tables in addition
+to the returned raw dataframe. Additional documentation and a
+demonstration on how to leverage the package’s functional are available
+in the vignette directory.
 
-![EJSCREENbatch_overview_single_slide](docs/assets/css/EJSCREENbatch_overview_single_slide.jpg)
+<figure>
+<img
+src="https://user-images.githubusercontent.com/82970621/147955630-cb93385e-45f9-4de9-9a7d-0c0622f1af08.jpg"
+alt="EJSCREENbatch_overview_single_slide" />
+<figcaption
+aria-hidden="true">EJSCREENbatch_overview_single_slide</figcaption>
+</figure>
 
 ## EPA Disclaimer
 
@@ -78,4 +76,4 @@ product or activity by EPA or the United States Government.
 
 ## License
 
-This project is licensed under the MIT license.
+This project is covered under the MIT license.
