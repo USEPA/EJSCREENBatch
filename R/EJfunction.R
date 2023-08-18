@@ -126,7 +126,7 @@ EJfunction <- function(LOI_data,
     if (raster == F){
       blockbuffer <- EJSCREENBufferBlocks(dta_year = data_year,
                                           buff_dta = facility_buff,
-                                          data.tog = data.tog,
+                                          ejscreen_bgs_data = data.tog,
                                           ejvarlist = ejvarlist)
 
       #LOI data.frame
