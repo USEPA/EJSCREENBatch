@@ -35,7 +35,7 @@ st_dynamic_buffer <- function(input_sf, buff_dist){
     sf::st_transform(group_split(df)[[x]], y)
   }) %>%
     purrr::map(., ~ sf::st_buffer(., 1609.344*buff_dist) %>%
-          sf::st_transform(4326)) %>%
+          sf::st_transform(4326) %>% sf::st_cast("MULTIPOLYGON")) %>%
     data.table::rbindlist() %>%
     sf::st_sf() %>%
     dplyr::select(-L1,-L2,-zone,-prj)
