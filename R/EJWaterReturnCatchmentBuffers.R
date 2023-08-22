@@ -1,42 +1,41 @@
 #' EJ Return Water Catchment Buffers
 #'
-#' This function returns:
-#' (1) a SF data.frame containing user-specified buffers around catchments
-#' (2) a data.table containing raw ATTAINs API data (OPTIONAL)
+#' @param input_data Required. An sf POINT data.frame with coordinates falling in the US.
+#' @param ds_us_mode Option for upstream or downstream. Default is downstream, main ("DM"). Other options: "DD","UT","UM".
+#' @param ds_us_dist Distance up/downstream. Default is 10 miles.
 #'
-#' @param input_data
-#' @param ds_us_mode Option for upstream or downstream. Default is downstream.
-#' @param ds_us_dist Distance up/downstream. Default is 50 miles.
-#' @param buff_dist Distance in miles to buffer out. Default is 1 mile.
-#' @param input_type Type of data inputted. Options limited to 'sf' and 'catchment'
-#' @param attains
-#'
-#' @return
+#' @return This function returns: (1) a SF data.frame containing up/downstream flowlines of a user-specified distance and (2) a list of downstream catchment IDs
 #' @export
 #'
 #' @examples
 #'
 
-EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, buff_dist, input_type, attains){
+EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode = 'DM', ds_us_dist = 10){
   # Determine the input_data type:
   # (in future could have this determine object type (sf, numeric list, etc.) without user input)
-  if (input_type == 'sf'){
+
+  if(is(input_data,'sf')){
+
+    if(!is(sf::st_geometry(input_data),"sfc_POINT")){
+      stop('Input data must be an sf POINT data.frame or a data.frame with a column titled "comid" containing catchment IDs')
+    }
+
+    # Make sure data is 4326 for consistency
     input_data <- sf::st_transform(input_data, crs = 4326)
-    
+
     # Unfortunately must transform input_data to row-wise list for get_nhdplus()
     doFuture::registerDoFuture()
-    future::plan(multisession, workers = parallel::detectCores()-2)
-    loi.list <- foreach::foreach(i = 1:dim(input_data)[1], .packages='sf') %dopar% {
+    future::plan(future::multisession, workers = parallel::detectCores()-2)
+    loi.list <- foreach::foreach(i = 1:dim(input_data)[1], .packages='sf') %dorng% {
       input_data[i, ]
     }
 
     # Function calls USGS API, returns comid if valid, NA otherwise
-    parallel.getnhdplus <- function(input_data){
+    parallel.getnhdplus <- function(input){
       tryCatch(
         {
-          nhdplusTools::get_nhdplus(AOI = input_data,
-                                    realization = 'catchment')$featureid
-          
+          suppressMessages(nhdplusTools::get_nhdplus(AOI = input,
+                                    realization = 'catchment')$featureid)
         },
         error=function(cond) {
           return(1)
@@ -46,171 +45,101 @@ EJWaterReturnCatchmentBuffers <-  function(input_data, ds_us_mode, ds_us_dist, b
         }
       )
     }
-    
+
     # Fills in an empty feature.id vector through parallelized API calls
-    feature.id <- furrr::future_pmap(list(loi.list), parallel.getnhdplus)
+    feature.id <- furrr::future_pmap(list(loi.list), parallel.getnhdplus,
+                                     .options = furrr::furrr_options(seed = T))
     feature.id <- unlist(feature.id)
-    future::plan(sequential)
-  } else if (input_type == 'catchment') {
-    # List of catchments
-    feature.id <- input_data$catchment_ID
-
-    # State shapefile for matching to start catchment
-    state.shapes <- spData::us_states %>% sf::st_as_sf() %>%
-      sf::st_transform(crs="ESRI:102005") %>%
-      dplyr::select('NAME') %>%
-      dplyr::rename(facility_state = NAME)
-
-    # Loop through catchmentIDs and extract centroid lat/lon of waterbody
-    hold.me <- vector(mode = 'list', length = length(input_data))
-    for (k in 1:dim(input_data)[1]){
-      hold.me[[k]] <- nhdplusTools::get_nldi_feature(list(featureSource = 'comid', featureID = feature.id[k])) %>%
-        sf::st_centroid() %>%
-        sf::st_transform(crs='ESRI:102005') %>%
-        sf::st_join(state.shapes, join=st_intersects) %>%
-        dplyr::select(comid, facility_state, geometry)
+    future::plan(future::sequential)
+  } else {
+    # Vector of catchments
+    if(is(input_data, 'data.frame') &
+       ('comid' %in% names(input_data))){
+      feature.id <- input_data$comid
+    } else {
+      stop('Input data must be an sf POINT data.frame or a data.frame with a column titled "comid" containing catchment IDs')
     }
-    hold.together <- do.call(rbind, hold.me)
-    #feature.id <- hold.together$comid
   }
 
-  # Base URL for ATTAINS API
-  geo.base <- 'https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3' #For ATTAINS API
-  
   # Combine function to use with foreach loop (returns 3 lists)
   comb <- function(x, ...) {
     lapply(seq_along(x),
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
-  
+
   # Loop through catchment IDs to extract down/upstream buffer polygons
-  future::plan(multisession, workers = parallel::detectCores()-2)
-  nhd.buffs <- foreach::foreach(i = 1:length(feature.id), 
-                           .packages = c('nhdplusTools','sf','arcpullr'),
+  future::plan(future::multisession, workers = parallel::detectCores()-2)
+  nhd.buffs <- foreach::foreach(i = 1:length(feature.id),
+                           .packages = c('nhdplusTools','sf'),
                            .combine = comb,
                            .multicombine = T,
-                           .init = list(list(), list(), list())
-  ) %dopar% {
+                           .init = list(list(), list())
+  ) %dorng% {
     # If comid was returned in last call, enter loop to return up/downstream comids
     if (feature.id[i] != 1) {
-      
+
       # Create NLDI feature object
       nldi.feature <- list(featureSource = 'comid', featureID = feature.id[i])
-      
+
       # Make sure something meaningful is going to be returned
       if(length(nhdplusTools::get_nldi_feature(nldi.feature)) > 0) {
         # Try to return the following objects:
         tryCatch({nldi.temp <- nhdplusTools::navigate_nldi(nldi.feature,
                                                            mode = ds_us_mode,
                                                            distance_km = round(ds_us_dist*1.60934))[[2]]
-        
+
         # First object returned: shapefile for buffered area
-        feature.list <- nldi.temp  %>%
+        feature.list <- nldi.temp %>%
           sf::st_union() %>%
-          sf::st_transform("ESRI:102005") %>%
-          sf::st_buffer(dist = units::set_units(buff_dist,"mi")) %>%
           sf::st_as_sf()
-        
+
         # Second object returned: list of relevant comids
         return.catchments <- nldi.temp$nhdplus_comid #pulls out all ComIDs
-        
-        # Call ATTAINs database on all down/upstream catchments
-        # Return third object
-        if (attains == T) {
-          if (length(nldi.temp$nhdplus_comid) == 1) {
-            sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "=")
-          } else {
-            sql.statement <- arcpullr::sql_where(NHDPlusID = as.numeric(nldi.temp$nhdplus_comid), rel_op = "IN")
-          }
-          nhd.catchment <- arcpullr::get_spatial_layer(geo.base, where = sql.statement)
-          if (dim(nhd.catchment)[1] < 1) {
-            nhd.catchment <- NULL
-          }
-        } else {
-          nhd.catchment <- NULL
-        }
+
         },
         error=function(error){
           feature.list <- NULL
           return.catchments <- NULL
-          nhd.catchment <- NULL
         })
-        
+
       } else {
         feature.list <- NULL
         return.catchments <- NULL
-        nhd.catchment <- NULL    
       }
     } else {
       feature.list <- NULL
       return.catchments <- NULL
-      nhd.catchment <- NULL
     }
-    
-    # Return the 3 lists
-    return(list(feature.list, return.catchments, nhd.catchment))
+
+    # Return the 2 lists
+    return(list(feature.list, return.catchments))
   }
   # Stop parallel operations
-  future::plan(sequential)
-  
-  castPolygon <- function (data_in) {
-    return(tryCatch(sf::st_cast(data_in, 'MULTIPOLYGON'), error=function(e) NULL))
+  future::plan(future::sequential)
+
+  # Cast all shapes to multi-linestring for merging
+  castLine <- function (data_in) {
+    return(tryCatch(sf::st_cast(data_in, 'MULTILINESTRING'), error=function(e) NULL))
   }
-  
-  polys <- lapply(nhd.buffs[[1]], castPolygon)
-  
-  feature.buff <- data.table::rbindlist(polys, idcol = T) %>%
-    dplyr::mutate(start_catchment = feature.id[.id]) %>%
+
+  multi <- lapply(nhd.buffs[[1]], castLine)
+
+  # First element to return: sf data.frame with the flowline
+  feature.fl <- data.table::rbindlist(multi, idcol = T) %>%
     dplyr::rename(shape_ID = 1,
-           geometry=x) %>%
-    sf::st_as_sf()
-  
+                  geometry = 2)
+
+  feature.tog <- input_data %>%
+    tibble::rowid_to_column('shape_ID') %>%
+    sf::st_drop_geometry() %>%
+    dplyr::left_join(feature.fl, by = 'shape_ID') %>%
+    dplyr::select(-shape_ID) %>%
+    sf::st_as_sf(crs = 4326)
+
+  # Second element to return: list of comid vectors
   return.catchments <- nhd.buffs[[2]]
 
-  if (attains == T){
-    nhd.attains <- data.table::rbindlist(nhd.buffs[[3]], idcol = T)
-
-    # this is slightly messy:
-    # (since ATTAINS only returns geography at catchment, not assessment level)
-    # take the max ATTAINs status for a given catchment, facility pair.
-    summary.attains <- nhd.attains %>% data.table::as.data.table()
-    summary.attains <- summary.attains[, .(.id, OBJECTID, nhdplusid, assessmentunitidentifier,
-                 ircategory, areasqkm)
-             ][, irflag := as.integer(substring(ircategory,1,1))]
-    summary.attains <- summary.attains[summary.attains[, .I[which.max(irflag)], by = .(.id, nhdplusid)]$V1
-                  ][, irflag := NULL
-                    ][, total_area := sum(areasqkm, na.rm = T), by = .id
-                      ][, unassess.temp := as.integer(ircategory == '3')
-                        ][, unassess_area := sum(areasqkm * unassess.temp, na.rm = T), by = .id
-                          ][, unassess.temp := NULL
-                            ][, tmdl.comp.temp := as.integer(ircategory == '4A')
-                              ][, tmdl_complete_area := sum(areasqkm * tmdl.comp.temp, na.rm = T), by = .id
-        ][, tmdl.comp.temp := NULL
-          ][, tmdl.4b4c.temp := as.integer(ircategory %in% c('4B', '4C'))
-            ][, tmdl_4b4c_area := sum(areasqkm * tmdl.4b4c.temp, na.rm = T), by = .id
-              ][, tmdl.4b4c.temp := NULL
-                ][, listed.303d.temp := as.integer(ircategory == '5')
-                  ][, listed_303d_area := sum(areasqkm * listed.303d.temp, na.rm = T), by = .id
-        ][, listed.303d.temp := NULL
-          ][, attainment_area := total_area - unassess_area - tmdl_complete_area -
-              tmdl_4b4c_area - listed_303d_area
-            ][, .(total_area, attainment_area, unassess_area, tmdl_complete_area, tmdl_4b4c_area,
-                  listed_303d_area), by = .id] %>%
-              unique() %>%
-              dplyr::mutate_if(is.numeric, round, digits = 3)
-    if (input_type == 'catchment'){
-      return.me <- list(feature.buff, return.catchments, nhd.attains, summary.attains, hold.together)
-    } else {
-      return.me <- list(feature.buff, return.catchments, nhd.attains, summary.attains, NULL)
-    }
-  } else {
-    if (input_type == 'catchment'){
-      return.me <- list(feature.buff, return.catchments, NULL, NULL, hold.together)
-    } else {
-      return.me <- list(feature.buff, return.catchments, NULL, NULL, NULL)
-    }
-  }
-  names(return.me) <- c('buffer_geoms',"nhd_comids",'attains_catchments','attains_summary',
-                        'catchment_state')
+  return.me <- list(feature.tog, return.catchments)
+  names(return.me) <- c('flowline_geoms',"nhd_comids")
   return(return.me)
 }

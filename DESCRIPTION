@@ -1,26 +1,16 @@
 Package: EJSCREENbatch
 Type: Package
 Title: EJSCREEN batch tool
-Version: 0.1.0
+Version: 2.0.1
 Authors@R: c(
     person("Ahmed Rachid", "El-Khattabi", email = "elkhattabi.ahmedrachid@epa.gov", role = c("aut", "cre")),
     person("Morgan", "Teachey", email = "teachey.morgan@epa.gov", role = c("aut")),
     person("Adam", "Theising", email = "theising.adam@epa.gov", role = c("aut")))
-Maintainer: Ahmed Rachid El-Khattabi <elkhattabi.ahmedrachid@epa.gov>
-Description: This package is a wrapper for EJSCREEN, created to allows users to 
-             perform batch screening for water-related environmental justice purposes.
-             Users can perform either a land-based screening to screen locations 
-             with circular buffers around those locations. Users can also 
-             perform explicit water-based screening, examining areas within a buffer area 
-             of known waterbody features (e.g., stream, river, etc...).
+Maintainer: Adam Theising <theising.adam@epa.gov>
+Description: This package is an R wrapper for use of EPA's EJSCREEN data, created to perform batch environmental justice screening, with a particular emphasis on water-based screening. Users can perform standard land-based proximity analysis using circular buffers or user designated polygons. Users can also perform explicit water-based proximity screening, examining areas within a buffer of known waterbody features (e.g., streams, rivers, etc...).
 License: MIT
 Encoding: UTF-8
 Imports:
-  tidyverse, ggpubr, sf, spData, rgeos, rgdal, arcpullr, units, corrplot,
-  RColorBrewer, data.table, dataRetrieval, jsonlite, httr, htmltools, htmlwidgets, 
-  leaflet, leafpop, flextable, mapview, stringr, stringi, forcats, nhdplusTools,
-  rlist, exactextractr, furrr, tidycensus, future, purrr, parallel, doFuture, tigris, DT
-Depends: 
-  tidyverse, sf, data.table, tidycensus, future, purrr, parallel, doFuture, tigris, DT
+  data.table, doFuture, doRNG, dplyr, DT, exactextractr, foreach, furrr, future, httr, jsonlite, leaflet, leafpop, nhdplusTools, parallel, purrr, sf, terra, tibble, tidycensus, tidyr
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3

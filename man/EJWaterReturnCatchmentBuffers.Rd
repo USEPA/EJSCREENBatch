@@ -4,34 +4,18 @@
 \alias{EJWaterReturnCatchmentBuffers}
 \title{EJ Return Water Catchment Buffers}
 \usage{
-EJWaterReturnCatchmentBuffers(
-  input_data,
-  ds_us_mode,
-  ds_us_dist,
-  buff_dist,
-  input_type,
-  attains
-)
+EJWaterReturnCatchmentBuffers(input_data, ds_us_mode = "DM", ds_us_dist = 10)
 }
 \arguments{
-\item{ds_us_mode}{Option for upstream or downstream. Default is downstream.}
+\item{input_data}{Required. An sf POINT data.frame with coordinates falling in the US.}
 
-\item{ds_us_dist}{Distance up/downstream. Default is 50 miles.}
+\item{ds_us_mode}{Option for upstream or downstream. Default is downstream, main ("DM"). Other options: "DD","UT","UM".}
 
-\item{buff_dist}{Distance in miles to buffer out. Default is 1 mile.}
-
-\item{input_type}{Type of data inputted. Options limited to 'sf' and 'catchment'}
-
-\item{attains}{}
+\item{ds_us_dist}{Distance up/downstream. Default is 10 miles.}
 }
 \value{
-
+This function returns: (1) a SF data.frame containing up/downstream flowlines of a user-specified distance and (2) a list of downstream catchment IDs
 }
 \description{
-This function returns:
-(1) a SF data.frame containing user-specified buffers around catchments
-(2) a data.table containing raw ATTAINs API data (OPTIONAL)
-}
-\examples{
-
+EJ Return Water Catchment Buffers
 }

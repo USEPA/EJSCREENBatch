@@ -1,107 +1,111 @@
-#' EJ Maps
+#' Produces an interactive map that displays all facilities.
 #'
-#' Produces an interactive map that displays all facilities. Facility names (user
-#' defined) are displayed for each facility. Use national or state percentiles (default: US)
+#' @param input_data Required. Screening object returned from an EJFunction() call.
+#' @param indic_option EJSCREEN indicators to display? Options are 'total','environmental','demographic'. Default is 'total'.
+#' @param geography National or state percentiles used in map? Options are 'state' or 'US' (default).
+#' @param threshold Percentile threshold for map coloring. Default is 80.
+#' @param facil_name Column name in LOI input data denoting LOI name. String only.
 #'
-#' @param input_data
-#' @param indic_option 'total', 'environmental','demographic'. 'total' is default.
-#' @param perc_geog 'state' or 'US'. Default is 'US'.
-#' @param save_option Option to save map to a folder in working directory. Default is FALSE.
-#' @param directory
-#'
-#' @return
+#' @return A list containing leaflet map object(s).
 #' @export
 #'
 #' @examples
-#' maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
-EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_option = F, directory){
+#' maps <- EJMaps(input_data = z, geography = 'US', save.option = F)
+EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
+                   threshold = 80, facil_name = NULL){
 
   ## 3 possible color schemes: by env., demo. or total above 80th
   if(is.null(indic_option)){
-    ind.option <- 'total' #default values
-  } else if (indic_option %in% c('total', 'environmental','demographic')){
-    ind.option <- indic_option  #user inputted values that override default
-  } else {
+    indic_option <- 'total' #default
+  } else if(!(indic_option %in% c('total', 'environmental','demographic'))){
     stop("Indicator option not supported. Please specify one of the types:
          total, environmental, demographic")
   }
 
   ## Use percentile at national or state level?
-  if(is.null(perc_geog)){
-    geog.ind <- 'US'
-  } else if (perc_geog %in% c('US', 'state')){
-    geog.ind <- perc_geog
+  if(is.null(geography)){
+    geography <- 'US' #default
+  } else if(!(geography %in% c('US', 'state'))){
+    stop('Accepted geographies are "US" and "state".')
+  }
+
+  ## Pull list of demographic variables
+  demVarList <- names(input_data$EJ.loi.data[[1]]
+                      )[names(input_data$EJ.loi.data[[1]]) %in%
+                          c('PEOPCOLORPCT', 'MINORPCT', 'LOWINCPCT', 'LINGISOPCT',
+                            'UNEMPPCT', 'UNDER5PCT', 'LESSHSPCT', 'OVER64PCT', 'LIFEEXPPCT')]
+  envVarList <- names(input_data$EJ.loi.data[[1]]
+                      )[names(input_data$EJ.loi.data[[1]]) %in%
+                          c('PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'RSEI_AIR', 'PTRAF',
+                            'PNPL', 'PRMP', 'PRE1960PCT', 'PTSDF', 'PWDIS', 'UST')]
+
+  if (is.null(facil_name)) {
+    LOIList <- 'shape_ID'
+  } else if (facil_name %in% names(input_data$EJ.loi.data[[1]])) {
+    LOIList <- facil_name
   } else {
-    stop('Accepted geographies are US and state.')
+    stop('facil_name is not a valid column name in input_data.')
   }
-  
-  # Searching the variable name string by character index to extract threshold
-  thrshld <- input_data$EJ.facil.data[[1]] %>% 
-    dplyr::select(starts_with('Env. indicators')) %>% 
-    names() %>% 
-    gsub(".*above (.+)th.*",'\\1',.) %>% 
-    as.numeric()
 
-  EJ.maps <- list()
+  map.list <- vector(mode = 'list', length = length(input_data$EJ.loi.data))
+  for (i in 1:length(input_data$EJ.loi.data)){
+    local.dta <- input_data$EJ.loi.data[[i]] %>%
+      sf::st_drop_geometry() %>%
+      dplyr::mutate(!!paste0('Env. indicators above ',threshold,'th %ile') :=
+                      as.numeric(rowSums(dplyr::select(as.data.frame(input_data$EJ.loi.data[[1]]),
+                                                      paste0("P_",envVarList,"_",geography)) > threshold,
+                                        na.rm = TRUE))) %>%
+      dplyr::mutate(!!paste0('Dem. indicators above ',threshold,'th %ile') :=
+                      as.numeric(rowSums(dplyr::select(as.data.frame(input_data$EJ.loi.data[[1]]),
+                                                       paste0("P_",demVarList,"_",geography)) > threshold,
+                                         na.rm = TRUE))) %>%
+      dplyr::mutate(!!paste0('Total indicators above ',threshold,'th %ile') :=
+                      rowSums(dplyr::select(.,dplyr::ends_with('%ile')))) %>%
+      dplyr::left_join(input_data$EJ.loi.data[[i]] %>%
+                         dplyr::select(shape_ID)) %>%
+      sf::st_as_sf()
 
-  for (i in 1:length(input_data$EJ.facil.data)){
+    #Label the column on which the palette should be based.
+    if (indic_option == 'demographic') {
+      map.data <- local.dta %>%
+        dplyr::select(c(dplyr::all_of(LOIList), paste0("P_",demVarList,"_",geography)),
+                      dplyr::starts_with('Dem. indicators'))
 
-    map.data <- input_data$EJ.facil.data[[i]] %>%
-      dplyr::mutate_at(vars(dplyr::ends_with('%ile')), funs(as.integer(as.character(.)))) %>%
-      dplyr::mutate(!!paste0('Total indicators above ',thrshld,'th %ile') :=
-                      rowSums(dplyr::select(., dplyr::ends_with('%ile')))) %>%
-      dplyr::filter(!is.na(geometry)) %>%
-      dplyr::filter(geography == geog.ind) %>%
-      st_as_sf(crs = 4326)
-    
-    if (ind.option == 'total'){
-      
-      col.keep <- map.data %>% 
-        dplyr::select(starts_with('Total indicators')) %>% 
-        st_drop_geometry() %>%
+      col.keep <- map.data %>%
+        dplyr::select(dplyr::starts_with('Dem. indicators')) %>%
+        sf::st_drop_geometry() %>%
         names()
-      
-      # Color palette
-      pal <- leaflet::colorFactor(
-        rev(RColorBrewer::brewer.pal(n=11, "Spectral")), # NOTE: brewer.pal can't go over 11 :(
-        domain = map.data[[col.keep]])
+    } else if (indic_option == 'environmental') {
+      map.data <- local.dta %>%
+        dplyr::select(c(dplyr::all_of(LOIList), paste0("P_",envVarList,"_",geography)),
+                      dplyr::starts_with('Env. indicators'))
 
-      # Leaflet object
-      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
-                                start = 7)[i]]] <-
-        leaflet::leaflet(data = map.data) %>%
-        leaflet::addTiles() %>%
-        leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
-                  lat1 = min(sf::st_coordinates(map.data)[,2]),
-                  lng2 = max(sf::st_coordinates(map.data)[,1]),
-                  lat2 = max(sf::st_coordinates(map.data)[,2])) %>%
-        leaflet::addCircleMarkers(radius = 5,
-                         color = ~ pal(get(col.keep)),
-                         opacity = 0.75,
-                         popup = leafpop::popupTable(map.data,
-                                            feature.id = F, row.numbers = F,
-                                            zcol = names(map.data)[1:20])) %>%
-        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
-                           title = col.keep, position = "bottomright")
+      col.keep <- map.data %>%
+        dplyr::select(dplyr::starts_with('Env. indicators')) %>%
+        sf::st_drop_geometry() %>%
+        names()
+    } else {
+      map.data <- local.dta %>%
+        dplyr::select(c(dplyr::all_of(LOIList), paste0("P_",demVarList,"_",geography),
+                        paste0("P_",envVarList,"_",geography)),
+                      dplyr::starts_with('Total indicators'))
+
+      col.keep <- map.data %>%
+        dplyr::select(dplyr::starts_with('Total indicators')) %>%
+        sf::st_drop_geometry() %>%
+        names()
     }
 
-    if (ind.option == 'environmental'){
-      
-      col.keep <- map.data %>% 
-        dplyr::select(starts_with('Env. indicators')) %>% 
-        st_drop_geometry() %>%
-        names()
+    #Color palette for the map.
+    pal <- leaflet::colorNumeric(
+      palette = 'Reds',
+      domain = map.data[[col.keep]])
 
-      # Color palette
-      pal <- leaflet::colorFactor(
-        rev(RColorBrewer::brewer.pal(n=11, "Spectral")),
-        domain = map.data[[col.keep]])
-
-      # Leaflet object
-      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
-                                start = 7)[i]]] <-
-        leaflet::leaflet(data = map.data) %>%
-        leaflet::addTiles() %>%
+    # Hacky -- fix later. Look at first geom_type in data
+    if (sf::st_geometry_type(map.data)[1] == 'POINT'){
+      #Map for point objects
+      map.list[[i]] <- leaflet::leaflet(data = map.data) %>%
+        leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
                            lat1 = min(sf::st_coordinates(map.data)[,2]),
                            lng2 = max(sf::st_coordinates(map.data)[,1]),
@@ -109,63 +113,71 @@ EJMaps <- function(input_data, indic_option = NULL, perc_geog = NULL, save_optio
         leaflet::addCircleMarkers(radius = 5,
                                   color = ~ pal(get(col.keep)),
                                   opacity = 0.75,
-                                  popup = leafpop::popupTable(map.data,
-                                                              feature.id = F, row.numbers = F,
-                                                              zcol = names(map.data)[1:20])) %>%
-        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+                                  layerId = map.data$shape_ID,
+                                  popup = leafpop::popupTable(map.data %>%
+                                                                sf::st_set_geometry(NULL) %>%
+                                                                dplyr::rename_with(stringr::str_replace,
+                                                                                   pattern = "P_",
+                                                                                   replacement = "") %>%
+                                                                dplyr::rename_with(stringr::str_replace,
+                                                                                   pattern = paste0("_",geography),
+                                                                                   replacement = ""),
+                                                              feature.id = F,
+                                                              row.numbers = F)) %>%
+        leaflet::addLegend(pal = pal, values = ~get(col.keep),
                            title = col.keep, position = "bottomright")
-    }
-
-    if (ind.option == 'demographic'){
-      
-      col.keep <- map.data %>% 
-        dplyr::select(starts_with('Demo. indicators')) %>% 
-        st_drop_geometry() %>%
-        names()
-      
-      # Color palette
-      pal <- leaflet::colorFactor(
-        rev(RColorBrewer::brewer.pal(n=11, "Spectral")),
-        domain = map.data[[col.keep]])
-
-      # Leaflet object
-      EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
-                                start = 7)[i]]] <-
-        leaflet::leaflet(data = map.data) %>%
-        leaflet::addTiles() %>%
+    } else if (sf::st_geometry_type(map.data)[1] %in% c('LINESTRING','MULTILINESTRING')) {
+      #Map for non-point objects
+      map.list[[i]] <- leaflet::leaflet(data = map.data) %>%
+        leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) %>%
         leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
                            lat1 = min(sf::st_coordinates(map.data)[,2]),
                            lng2 = max(sf::st_coordinates(map.data)[,1]),
                            lat2 = max(sf::st_coordinates(map.data)[,2])) %>%
-        leaflet::addCircleMarkers(radius = 5,
-                                  color = ~ pal(get(col.keep)),
-                                  opacity = 0.75,
-                                  popup = leafpop::popupTable(map.data,
-                                                              feature.id = F, row.numbers = F,
-                                                              zcol = names(map.data)[1:20])) %>%
-        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+        leaflet::addPolylines(color = ~ pal(get(col.keep)),
+                             weight = 2,
+                             opacity = 1,
+                             layerId = map.data$shape_ID,
+                             popup = leafpop::popupTable(map.data %>%
+                                                           sf::st_set_geometry(NULL) %>%
+                                                           dplyr::rename_with(stringr::str_replace,
+                                                                              pattern = "P_",
+                                                                              replacement = "") %>%
+                                                           dplyr::rename_with(stringr::str_replace,
+                                                                              pattern = paste0("_",geography),
+                                                                              replacement = ""),
+                                                         feature.id = F,
+                                                         row.numbers = F)) %>%
+        leaflet::addLegend(pal = pal, values = ~get(col.keep),
                            title = col.keep, position = "bottomright")
-    }
-
-    # Save me
-    if (save_option == T) {
-      ifelse(!dir.exists(file.path(directory,"EJmaps")),
-             dir.create(file.path(directory,"EJmaps")), FALSE)
-
-      htmlwidgets::saveWidget(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
-                                                        start = 7)[i]]],
-                 file= paste0(directory,'/EJmaps/',indic_option,
-                              '_',geog.ind,'_map_',
-                              stringr::str_sub(names(input_data$EJ.facil.data),
-                                               start = 7)[i],'.html'))
-      mapview::mapshot(EJ.maps[[stringr::str_sub(names(input_data$EJ.facil.data),
-                                                 start = 7)[i]]],
-              file = paste0(directory,'/EJmaps/',indic_option,
-                            '_',geog.ind,'_map_',
-                            stringr::str_sub(names(input_data$EJ.facil.data),
-                                             start = 7)[i],".png"))
+    } else {
+      #Map for non-point objects
+      map.list[[i]] <- leaflet::leaflet(data = map.data) %>%
+        leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) %>%
+        leaflet::fitBounds(lng1 = min(sf::st_coordinates(map.data)[,1]),
+                           lat1 = min(sf::st_coordinates(map.data)[,2]),
+                           lng2 = max(sf::st_coordinates(map.data)[,1]),
+                           lat2 = max(sf::st_coordinates(map.data)[,2])) %>%
+        leaflet::addPolygons(color = ~ pal(get(col.keep)),
+                             weight = 2,
+                             opacity = 1,
+                             fillOpacity = 0.5,
+                             fillColor = ~ pal(get(col.keep)),
+                             layerId = map.data$shape_ID,
+                             popup = leafpop::popupTable(map.data %>%
+                                                           sf::st_set_geometry(NULL) %>%
+                                                           dplyr::rename_with(stringr::str_replace,
+                                                                              pattern = "P_",
+                                                                              replacement = "") %>%
+                                                           dplyr::rename_with(stringr::str_replace,
+                                                                              pattern = paste0("_",geography),
+                                                                              replacement = ""),
+                                                         feature.id = F,
+                                                         row.numbers = F)) %>%
+        leaflet::addLegend(pal = pal, values = ~get(col.keep),
+                           title = col.keep, position = "bottomright")
     }
   }
 
-  return(EJ.maps)
+  return(map.list)
 }

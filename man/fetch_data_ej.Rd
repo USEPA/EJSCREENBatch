@@ -4,18 +4,18 @@
 \alias{fetch_data_ej}
 \title{Fetch data from EJSCREEN}
 \usage{
-fetch_data_ej(state_filter)
+fetch_data_ej(year = NULL, state_filter = NULL)
 }
 \arguments{
-\item{state_filter}{Users may restrict screening to a particular state in the
-contiguous US. If so, users can specify a state. Default is to conduct
-screening for the entire contiguous US.}
+\item{year}{Users may select EJSCREEN data vintage from any year in 2020-2023.}
+
+\item{state_filter}{User-selected state abbreviation (e.g. "AR") can restrict screening to a single state. Default is to screen entire US.}
 }
 \value{
-
+sf data.frame containing EJSCREEN block group data
 }
 \description{
 This function looks for data from EJSCREEN. First checks if from EJSCREEN is
-in working directory. If not, it creates a directory and downloads most recent
+in package directory. If not, it creates a directory and downloads most recent
 data.
 }
