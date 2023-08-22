@@ -38,7 +38,7 @@ To access the latest version of the package, simply install from the EPA's Githu
 ```{r, eval = F}
 # Import EJSCREENbatch package 
 library(devtools)
-install_github(repo = "USEPA/EJSCREENbatch@feb23_development")
+install_github(repo = "USEPA/EJSCREENbatch")
 ```
 
 Next load the package (and others essential to this vignette):
@@ -51,9 +51,7 @@ library(DT)
 
 Users should note that when the package is installed and certain functions are called, EJSCREEN and ACS data are downloaded and saved to the package's library folder. For users that are hyper-conscious of local disk space, making a default EJfunction() call using the most recent releases of EJSCREEN/ACS data will locally save files that are roughly 1GB in size. For users who intend to perform screening analyses using older or multiple vintages of the EJSCREEN/ACS data, more or less disk space may be required.
 
-After installation, load the package and set a project-appropriate working directory. You will also need to download a local copy of a dasymetric population density raster. This package is currently built to use [NASA's Socioeconomic Data and Application Center (SEDAC) 1km x 1km raster](https://sedac.ciesin.columbia.edu/data/set/usgrid-summary-file1-2010). An easy-to-download version of this raster is currently available [here](https://adamtheising.github.io/Papers/uspop10.zip). For the more inquisitive, direct download access to NASA's socioeconomic raster products requires creation of a (free) user account; we do suggest exploring the many offerings they have.
 
-Lastly: as of v2.0 you must point the package's EJfunction() towards the filepath where this population raster is stored locally. We suggest denoting an object (e.g. *raster.path* in the code block above) with the filepath housing the SEDAC raster.^[Other note: higher resolution (e.g. 30m by 30m) US population density rasters have been produced by various research groups, including U.S. EPA's Office of Research and Development, USGS, and Facebook. These more granular rasters could be downloaded in lieu of the SEDAC raster, but standard accuracy versus computation time and feasibility trade-offs apply. A longer-term project for us is the incorporation of a higher-resolution raster without prohibitively high computation times. In the meanwhile, our functions currently look for and use a raster file named 'uspop10.tif' in the user-indicated filepath, so interested users should name alternative rasters using this convention.]
 
 # Input data requirements
 
@@ -72,7 +70,7 @@ One important technical item: location inputs must be fed into package functions
 
 For an illustrative sense of the geographies that will be screened, we map our location inputs below. In the next section, we draw spatial buffers around our locations to extract demographic and environmental data from EJSCREEN's national database.
 
-```{r, warning = F, message = F, cache = T}
+```{r, warning = F, message = F}
 # Visualize locations of MPP facilities:
 library(ggplot2)
 ggplot() + 
@@ -97,7 +95,7 @@ The function's primary role is the return of data.frames containing raw or summa
 
 We begin by running a simple, EJ screening call on our set of location coordinates. EJfunction() accepts an *sf* data.frame as its data input.^[For users interested in providing a list of COMIDs as an input, an intermediate step is necessary; see section below on using EJWaterReturnCatchmentBuffers().]
 
-```{r, include = F, warning = F, message = F, cache = T}
+```{r, include = F, warning = F, message = F}
 # A simple application of EJfunction()
 my.EJ.data <-  EJfunction(mpp, buffer = 1, raster = T)
 ```
@@ -153,7 +151,9 @@ DT::datatable(
 
 ### Location of Interest screening data
 
-Second, the location-level summaries are returned as *EJ.loi.data*. The LOI-level information here is analogous to the report returned from EJSCREEN's online point-and-click mapper interface. Here, rather than compiling results for a single location, the data is returned in a tidy data.frame format for a batch of locations. Each location is uniquely identified by the  The data.frame includes national and state percentiles, as well as the population-weighted raw values for each EJSCREEN indicator and key demographic variables from the ACS. Here, we explore the summary return for each of the MPP facilities.
+Second, the location-level summaries are returned as *EJ.loi.data*. The LOI-level information here is analogous to the report returned from EJSCREEN's online point-and-click mapper interface. Here, rather than compiling results for a single location, the data is returned in a tidy data.frame format for a batch of locations. 
+
+Each location is uniquely identified by the variable *shape_ID*.The data.frame includes national and state percentiles, as well as the population-weighted raw values for each EJSCREEN indicator and key demographic variables from the ACS. Here, we explore the summary return for each of the MPP facilities.
 
 ```{r, echo = F}
 DT::datatable(
@@ -226,7 +226,7 @@ The returned list from EJWaterReturnCatchmentBuffers() contains 2 items: *flowli
 
 To illustrate the returned output, the flowlines for MPP facilities in the Great Lakes Region are mapped in the code block below:
 
-```{r, warning = F, message = F, cache = T}
+```{r, warning = F, message = F}
 ggplot() + 
   geom_map(data = map_data('state') %>% 
              dplyr::filter(region %in% c('illinois','indiana','michigan',
@@ -248,7 +248,7 @@ The dark blue points on the map represent the original coordinates in the MPP da
 
 With this sf data.frame of flowline geometries (*mpp.flowlines$flowline_geoms*) in hand, it is now straightforward to call EJfunction() and return the environmental and demographic screening data for buffered areas 25 miles downstream of the MPP outfalls:
 
-```{r, include = F, warning = F, message = F, cache = T}
+```{r, include = F, warning = F, message = F}
 # Run but don't display in vignette.
 my.EJ.data.flowlines <- EJfunction(mpp.flowlines$flowline_geoms, buffer = 1, raster = T)
 ```
@@ -296,17 +296,19 @@ Please note that this map visualization is a simple starting point for a regulat
 
 Finally, the EJSCREENbatch package has a canned function that allows users to make direct calls to the EJSCREEN API using an sf data.frame and numeric distance (in miles) as inputs. This function loops through API calls, LOI-by-LOI, mirroring the batch ethos used in EJfunction().
 
-The function, EJSCREENBufferAPI(), will return a data.frame containing the full "firehose" of variables provided by EJSCREEN. This includes all the standard EJ environmental and demographic indicators, as well as CBG-level indicators about health disparities, climate change burden, critical service gaps, and a richer set of demographic information. See the [EJSCREEN map descriptions](https://www.epa.gov/ejscreen/ejscreen-map-descriptions) for more details.
-
 ```{r, eval = F}
 my.EJ.data.api <- EJSCREENBufferAPI(input_data = mpp.flowlines$flowline_geoms,
                                     dist = 1)
-names(my.EJ.data.api)
 ```
 
-```{r, warning = F, message = F, echo = F}
+```{r, warning = F, message = F, include = F}
 my.EJ.data.api <- EJSCREENBufferAPI(input_data = mpp.flowlines$flowline_geoms,
                                     dist = 1)
+```
+
+The function, EJSCREENBufferAPI(), will return a data.frame containing the full "firehose" of variables provided by EJSCREEN. This includes all the standard EJ environmental and demographic indicators, as well as CBG-level indicators about health disparities, climate change burden, critical service gaps, and a richer set of demographic information. Over 500 variables are returned by the API; see the [EJSCREEN map descriptions](https://www.epa.gov/ejscreen/ejscreen-map-descriptions) for more details.
+
+```{r}
 names(my.EJ.data.api)
 ```
 
