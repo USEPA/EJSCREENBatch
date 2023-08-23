@@ -152,12 +152,12 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
     db <- sf::st_read(dsn = paste0(folder,"/",unzippedname),
                       layer = sf::st_layers(dsn = paste0(folder,"/",unzippedname))[[1]]) %>%
       filter_state(state_filter=state) %>%
-      dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
+      dplyr::rename_at(dplyr::vars(starts_with("P_")), ~ paste0(., '_state'))
   } else {
     db <- data.table::fread(paste0(folder,"/",unzippedname), colClasses = 'character') %>%
       dplyr::select(ID, dplyr::starts_with("P_")) %>%
-      dplyr::rename_at(vars(-ID), ~ paste0(., '_US')) %>%
-      dplyr::mutate_at(vars(-ID), as.numeric)
+      dplyr::rename_at(dplyr::vars(-ID), ~ paste0(., '_US')) %>%
+      dplyr::mutate_at(dplyr::vars(-ID), as.numeric)
   }
 
   return(db)

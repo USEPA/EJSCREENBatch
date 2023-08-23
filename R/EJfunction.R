@@ -36,7 +36,8 @@ EJfunction <- function(LOI_data,
 
   # Create internal function facility ID (in case user doesn't)
   LOI_data <- LOI_data %>%
-    tibble::rowid_to_column("shape_ID")
+    tibble::rowid_to_column("shape_ID") %>%
+    sf::st_transform(crs = 4326)
 
   # Determine most common geometry type in the input sf dataframe
   facil.geom.type <- unique(as.character(sf::st_geometry_type(LOI_data)))
