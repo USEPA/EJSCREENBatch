@@ -1,21 +1,17 @@
-#' EJ Maps
+#' Produces an interactive map that displays all facilities.
 #'
-#' Produces an interactive map that displays all facilities. Facility names (user
-#' defined) are displayed for each facility. Use national or state percentiles (default: US).
-#' Map is based on initial buffer distance in input data.
-#'
-#' @param input_data
-#' @param indic_option 'total', 'environmental','demographic'. Default is 'total'.
-#' @param geography 'state' or 'US'. Default is 'US'.
+#' @param input_data Required. Screening object returned from an EJFunction() call.
+#' @param indic_option EJSCREEN indicators to display? Options are 'total','environmental','demographic'. Default is 'total'.
+#' @param geography National or state percentiles used in map? Options are 'state' or 'US' (default).
 #' @param threshold Percentile threshold for map coloring. Default is 80.
 #' @param facil_name Column name in LOI input data denoting LOI name. String only.
 #'
-#' @return
+#' @return A list containing leaflet map object(s).
 #' @export
 #'
 #' @examples
 #' maps <- EJMaps(input_data = z, geography = 'US', save.option = F)
-EJMaps <- function(input_data, indic_option = NULL, geography = NULL, 
+EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
                    threshold = 80, facil_name = NULL){
 
   ## 3 possible color schemes: by env., demo. or total above 80th
@@ -24,25 +20,25 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
   } else if(!(indic_option %in% c('total', 'environmental','demographic'))){
     stop("Indicator option not supported. Please specify one of the types:
          total, environmental, demographic")
-  } 
-  
+  }
+
   ## Use percentile at national or state level?
   if(is.null(geography)){
     geography <- 'US' #default
   } else if(!(geography %in% c('US', 'state'))){
     stop('Accepted geographies are "US" and "state".')
   }
-  
+
   ## Pull list of demographic variables
   demVarList <- names(input_data$EJ.loi.data[[1]]
-                      )[names(input_data$EJ.loi.data[[1]]) %in% 
-                          c('PEOPCOLORPCT', 'MINORPCT', 'LOWINCPCT', 'LINGISOPCT', 
+                      )[names(input_data$EJ.loi.data[[1]]) %in%
+                          c('PEOPCOLORPCT', 'MINORPCT', 'LOWINCPCT', 'LINGISOPCT',
                             'UNEMPPCT', 'UNDER5PCT', 'LESSHSPCT', 'OVER64PCT', 'LIFEEXPPCT')]
   envVarList <- names(input_data$EJ.loi.data[[1]]
-                      )[names(input_data$EJ.loi.data[[1]]) %in% 
-                          c('PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'RSEI_AIR', 'PTRAF', 
+                      )[names(input_data$EJ.loi.data[[1]]) %in%
+                          c('PM25', 'OZONE', 'DSLPM', 'CANCER', 'RESP', 'RSEI_AIR', 'PTRAF',
                             'PNPL', 'PRMP', 'PRE1960PCT', 'PTSDF', 'PWDIS', 'UST')]
-  
+
   if (is.null(facil_name)) {
     LOIList <- 'shape_ID'
   } else if (facil_name %in% names(input_data$EJ.loi.data[[1]])) {
@@ -50,7 +46,7 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
   } else {
     stop('facil_name is not a valid column name in input_data.')
   }
-  
+
   map.list <- vector(mode = 'list', length = length(input_data$EJ.loi.data))
   for (i in 1:length(input_data$EJ.loi.data)){
     local.dta <- input_data$EJ.loi.data[[i]] %>%
@@ -74,7 +70,7 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
       map.data <- local.dta %>%
         dplyr::select(c(dplyr::all_of(LOIList), paste0("P_",demVarList,"_",geography)),
                       dplyr::starts_with('Dem. indicators'))
-      
+
       col.keep <- map.data %>%
         dplyr::select(dplyr::starts_with('Dem. indicators')) %>%
         sf::st_drop_geometry() %>%
@@ -83,7 +79,7 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
       map.data <- local.dta %>%
         dplyr::select(c(dplyr::all_of(LOIList), paste0("P_",envVarList,"_",geography)),
                       dplyr::starts_with('Env. indicators'))
-      
+
       col.keep <- map.data %>%
         dplyr::select(dplyr::starts_with('Env. indicators')) %>%
         sf::st_drop_geometry() %>%
@@ -93,18 +89,18 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
         dplyr::select(c(dplyr::all_of(LOIList), paste0("P_",demVarList,"_",geography),
                         paste0("P_",envVarList,"_",geography)),
                       dplyr::starts_with('Total indicators'))
-      
+
       col.keep <- map.data %>%
         dplyr::select(dplyr::starts_with('Total indicators')) %>%
         sf::st_drop_geometry() %>%
         names()
     }
-    
+
     #Color palette for the map.
     pal <- leaflet::colorNumeric(
-      palette = 'Reds', # NOTE: brewer.pal can't go over 11 :(
+      palette = 'Reds',
       domain = map.data[[col.keep]])
-  
+
     # Hacky -- fix later. Look at first geom_type in data
     if (sf::st_geometry_type(map.data)[1] == 'POINT'){
       #Map for point objects
@@ -126,9 +122,9 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
                                                                 dplyr::rename_with(stringr::str_replace,
                                                                                    pattern = paste0("_",geography),
                                                                                    replacement = ""),
-                                                              feature.id = F, 
+                                                              feature.id = F,
                                                               row.numbers = F)) %>%
-        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+        leaflet::addLegend(pal = pal, values = ~get(col.keep),
                            title = col.keep, position = "bottomright")
     } else if (sf::st_geometry_type(map.data)[1] %in% c('LINESTRING','MULTILINESTRING')) {
       #Map for non-point objects
@@ -150,9 +146,9 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
                                                            dplyr::rename_with(stringr::str_replace,
                                                                               pattern = paste0("_",geography),
                                                                               replacement = ""),
-                                                         feature.id = F, 
+                                                         feature.id = F,
                                                          row.numbers = F)) %>%
-        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+        leaflet::addLegend(pal = pal, values = ~get(col.keep),
                            title = col.keep, position = "bottomright")
     } else {
       #Map for non-point objects
@@ -176,12 +172,12 @@ EJMaps <- function(input_data, indic_option = NULL, geography = NULL,
                                                            dplyr::rename_with(stringr::str_replace,
                                                                               pattern = paste0("_",geography),
                                                                               replacement = ""),
-                                                         feature.id = F, 
+                                                         feature.id = F,
                                                          row.numbers = F)) %>%
-        leaflet::addLegend(pal = pal, values = ~get(col.keep), 
+        leaflet::addLegend(pal = pal, values = ~get(col.keep),
                            title = col.keep, position = "bottomright")
     }
   }
-  
+
   return(map.list)
 }

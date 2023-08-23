@@ -3,22 +3,22 @@
 #' This function looks for data from EJSCREEN. First checks if from EJSCREEN is
 #' in package directory. If not, it creates a directory and downloads most recent
 #' data.
-#' @param year Users may use EJSCREEN data from any year from 2020-2023.
-#' @param state_filter Users may restrict screening to a particular state in the
-#' contiguous US. If so, users can specify a state. Default is to conduct
-#' screening for the entire contiguous US.
 #'
-#' @return
+#' @param year Users may select EJSCREEN data vintage from any year in 2020-2023.
+#' @param state_filter User-selected state abbreviation (e.g. "AR") can restrict screening to a single state. Default is to screen entire US.
+#'
+#' @return sf data.frame containing EJSCREEN block group data
 #' @export
+#'
 #' @examples
 fetch_data_ej <- function(year = NULL, state_filter = NULL){
   #first check if data folder exists
   ifelse(!dir.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                            "/EJSCREEN data")), 
+                            "/EJSCREEN data")),
          dir.create(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                            "/EJSCREEN data")), FALSE)
-  
-  
+
+
   #edited function to download gdb
   options(download.file.method="libcurl")
 
@@ -38,7 +38,7 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
         dplyr::filter(!(ST_ABBREV %in% c("GU","MP","VI","AS")))
     }
   }
-  
+
   # If year is set to null, check most FTP for up-to-date year.
   # Then see if that current file exists in package directory.
   # If so, below use current file rather than re-downloading
@@ -61,12 +61,12 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
 
   #Block group level data and state percentiles
   #*# ICF: The if statement needed to be adjusted to accommodate different file names across different EJSCREEN dataset vintages.
-  if(!(file.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1], 
+  if(!(file.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                         "/EJSCREEN data/EJSCREEN_",year,"_StatePctile.gdb")))){
     #If data not downloaded, download most recent data
     gdb_stpctile <- ejscreen_download(
       folder = paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                      "/EJSCREEN data"), 
+                      "/EJSCREEN data"),
       yr = year,
       file="StatePctile", state=state_filter)
   } else {
@@ -75,18 +75,18 @@ fetch_data_ej <- function(year = NULL, state_filter = NULL){
     ##newer data, user should remove existing data from local directory.
     gdbname <- paste0("EJSCREEN_", year, "_StatePctile.gdb")
     gdb_stpctile <- sf::st_read(dsn = paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                                             "/EJSCREEN data/",gdbname), 
+                                             "/EJSCREEN data/",gdbname),
                                 layer = sf::st_layers(dsn = paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                                                               "/EJSCREEN data/",gdbname))[[1]]) %>%
       filter_state(state_filter) %>%
-      rename_at(dplyr::vars(dplyr::starts_with("P_")), ~ paste0(., '_state'))
+      dplyr::rename_at(dplyr::vars(dplyr::starts_with("P_")), ~ paste0(., '_state'))
   }
 
   #national percentiles
-  if(!(file.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1], 
+  if(!(file.exists(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                           "/EJSCREEN data/EJSCREEN_",year,"_USPR.csv")))){
     csv_cbg <- ejscreen_download(folder=paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                                                      "/EJSCREEN data"), 
+                                                      "/EJSCREEN data"),
                                  yr = year,
                                  file="CBG_Data")
   } else {

@@ -2,24 +2,33 @@
 % Please edit documentation in R/EJMaps.R
 \name{EJMaps}
 \alias{EJMaps}
-\title{EJ Maps}
+\title{Produces an interactive map that displays all facilities.}
 \usage{
-EJMaps(input_data, indic_option = NULL, perc_geog = NULL, save_option = F)
+EJMaps(
+  input_data,
+  indic_option = NULL,
+  geography = NULL,
+  threshold = 80,
+  facil_name = NULL
+)
 }
 \arguments{
-\item{indic_option}{Options are 'total', 'environmental','demographic'. 'total' is default.}
+\item{input_data}{Required. Screening object returned from an EJFunction() call.}
 
-\item{perc_geog}{Options are 'US' or 'state'.}
+\item{indic_option}{EJSCREEN indicators to display? Options are 'total','environmental','demographic'. Default is 'total'.}
 
-\item{save_option}{}
+\item{geography}{National or state percentiles used in map? Options are 'state' or 'US' (default).}
+
+\item{threshold}{Percentile threshold for map coloring. Default is 80.}
+
+\item{facil_name}{Column name in LOI input data denoting LOI name. String only.}
 }
 \value{
-
+A list containing leaflet map object(s).
 }
 \description{
-Produces an interactive map that displays all facilities. Facility names (user
-defined) are displayed for each facility. Use national or state percentiles (default: US)
+Produces an interactive map that displays all facilities.
 }
 \examples{
-maps <- EJMaps(input_data = z, perc_geog = 'US', save.option = F)
+maps <- EJMaps(input_data = z, geography = 'US', save.option = F)
 }

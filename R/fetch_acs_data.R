@@ -1,18 +1,18 @@
-#' Fetch data from ACS
+#' Support function to extract data from ACS
 #'
 #' This function looks for demographic data from ACS. First checks if this data is
 #' in working directory. If not, it creates a directory and downloads most recent
 #' data.
+#'
 #' @param year Year of ACS data desired by user.
 #' @param state_filter Users may restrict screening to a particular state in the
 #' contiguous US. If so, users can specify a state. Default is to conduct
 #' screening for the entire contiguous US.
 #'
-#' @return
+#' @return data.frame of national ACS demographic data at block group resolution.
 #' @export
 #'
 #' @examples
-
 fetch_acs_data <- function(year, state_filter = NULL){
 
   # Create directory if needed.
@@ -21,7 +21,7 @@ fetch_acs_data <- function(year, state_filter = NULL){
          dir.create(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
                            "/ACS_data")), FALSE)
 
-  yr_input = year  
+  yr_input = year
 
   # Function to extract relevant CBG dataframe
   parallel.api <- function(st){
@@ -60,7 +60,7 @@ fetch_acs_data <- function(year, state_filter = NULL){
 
     # Loop (in parallel) thru each county/state pair, calling census API
     future::plan("multisession", workers = (parallel::detectCores()-2))
-    cbg.list <- furrr::future_pmap(list(state.list), parallel.api, 
+    cbg.list <- furrr::future_pmap(list(state.list), parallel.api,
                                    .options = furrr::furrr_options(seed = NULL))
     future::plan('sequential')
 
@@ -77,15 +77,16 @@ fetch_acs_data <- function(year, state_filter = NULL){
                     frac_pacisl = pop_pacisl/pop_total,
                     frac_hisp = pop_hisp/pop_total,
                     frac_pov99 = (pov50+pov99)/pop_total,
-                    frac_pov199 = (pov50+pov99+pov124+pov149+pov184+pov199) / 
+                    frac_pov199 = (pov50+pov99+pov124+pov149+pov184+pov199) /
                       pov_total,
                     pop_total)]
     rm(convert.cols, cbg.list, cbg.together)
 
     # Write file for future use
-    data.table::fwrite(acs.cbg.data, 
+    data.table::fwrite(acs.cbg.data,
            paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],
-                  '/ACS_data/acs_',yr_input,'_ejstats.csv'))
+                  '/ACS_data/acs_',yr_input,'_ejstats.csv'),
+           scipen = 50)
 
   } else {
     acs.cbg.data <- data.table::fread(paste0(paste0(.libPaths(),'/EJSCREENbatch')[1],

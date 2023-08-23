@@ -1,6 +1,15 @@
-
-
-EJSCREENBufferBlocks <- function(dta_year, buff_dta, data.tog, ejvarlist){
+#' Method for using census blocks for buffering in EJ proximity analysis.
+#'
+#' @param dta_year The data vintage year specified by user
+#' @param buff_dta An sf data.frame containing the (buffered) LOIs
+#' @param ejscreen_bgs_data EJSCREEN data in sf data.frame format.
+#' @param ejvarlist Meta-data relevant to running the screening analysis
+#'
+#' @return A list containing 2 sublists: (1) a LOI-buffer-level screening summary, and (2) a CBG-level screening summary for all block groups within affected communities.
+#' @export
+#'
+#' @examples
+EJSCREENBufferBlocks <- function(dta_year, buff_dta, ejscreen_bgs_data, ejvarlist){
   # Bring in Census Block centroids
   if ("block.data" %in% ls(envir = .GlobalEnv)){
     data <- get('block.data', env = .GlobalEnv)
@@ -13,7 +22,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, data.tog, ejvarlist){
   message('Performing spatial intersections.')
   #intersect buffer area with CBG-level EJSCREEN data
   area.intersection <- buff_dta %>%
-    sf::st_join(data.tog,
+    sf::st_join(ejscreen_bgs_data,
                 join=sf::st_intersects)
 
   #filter Cblock list down only to relevant based on intersected CBGs
@@ -78,7 +87,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, data.tog, ejvarlist){
   temp_intersect <- loi_clean %>%
     dplyr::select(dplyr::any_of(c('shape_ID','ST_ABB',colsToKeep))) %>%
     dplyr::mutate(dplyr::across(colsToKeep[-length(colsToKeep)],
-                                list(~round(ecdf(data.tog %>%
+                                list(~round(ecdf(ejscreen_bgs_data %>%
                                                    sf::st_drop_geometry() %>%
                                                    as.data.frame() %>%
                                                    dplyr::select(cur_column()) %>%
@@ -94,7 +103,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, data.tog, ejvarlist){
       dplyr::filter(ST_ABB==x) %>%
       dplyr::filter(!is.na(shape_ID))  %>%
       dplyr::mutate(dplyr::across(colsToKeep[-length(colsToKeep)],
-                                  list(~round(ecdf(na.omit(data.tog %>%
+                                  list(~round(ecdf(na.omit(ejscreen_bgs_data %>%
                                                              sf::st_drop_geometry() %>%
                                                              as.data.frame() %>%
                                                              dplyr::filter(ST_ABBREV==x) %>%
@@ -147,7 +156,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, data.tog, ejvarlist){
   temp_all <- all_together %>%
     dplyr::mutate(dplyr::across(c('med_inc','frac_white', 'frac_black','frac_amerind',
                                   'frac_asian','frac_pacisl','frac_hisp','frac_pov99','frac_pov199'),
-                                list(~round(ecdf(data.tog %>%
+                                list(~round(ecdf(ejscreen_bgs_data %>%
                                                    sf::st_drop_geometry() %>%
                                                    as.data.frame() %>%
                                                    dplyr::select(cur_column()) %>%
@@ -163,7 +172,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, data.tog, ejvarlist){
       dplyr::filter(ST_ABBREV==x) %>%
       dplyr::mutate(across(c('med_inc','frac_white', 'frac_black','frac_amerind',
                              'frac_asian','frac_pacisl','frac_hisp','frac_pov99','frac_pov199'),
-                           list(~round(ecdf(na.omit(data.tog %>%
+                           list(~round(ecdf(na.omit(ejscreen_bgs_data %>%
                                                       sf::st_drop_geometry() %>%
                                                       as.data.frame() %>%
                                                       dplyr::filter(ST_ABBREV==x) %>%

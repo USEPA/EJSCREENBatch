@@ -1,6 +1,6 @@
-#' EJSCREEN data download
+#' Support function for EJSCREEN data download
 #'
-#' Downloads most recent data from EJSCREEN. Code for this function was borrowed
+#' Downloads most data from EJSCREEN ftp. Code for this function was adapted
 #' from Mark Corrales' ejscreen function on github at ejanalysis/ejscreen.
 #'
 #' @param folder
@@ -12,8 +12,9 @@
 #' @param cutoff
 #' @param state
 #'
-#' @return
+#' @return EJSCREEN in data.frame/sf format.
 #' @export
+#'
 #' @examples
 ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurlbase = "https://gaftp.epa.gov/EJSCREEN/",
                                      state=NULL, justreadname = NULL, addflag = FALSE, cutoff = 80)
@@ -115,10 +116,10 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
       }
       return(NULL)
     }
-    
+
     justdownload(mypathfileRemote = file.path(ftpurl, zipname),
                  mypathfileLocal = file.path(folder, paste0(unzippedname,'.zip')))
-    
+
     if (zipname == "") {
       cat("\n")
     } else {
@@ -128,7 +129,7 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
                          sep = "")
       }
       cat("Attempting to unzip dataset \n")
-      utils::unzip(file.path(folder, paste0(unzippedname,'.zip')), 
+      utils::unzip(file.path(folder, paste0(unzippedname,'.zip')),
                    exdir=folder)
       file.rename(from = gsub('.zip','',file.path(folder,zipname)),
                   to = file.path(folder, unzippedname))
@@ -148,7 +149,7 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
     }
 
   if(file=="StatePctile"){
-    db <- sf::st_read(dsn = paste0(folder,"/",unzippedname), 
+    db <- sf::st_read(dsn = paste0(folder,"/",unzippedname),
                       layer = sf::st_layers(dsn = paste0(folder,"/",unzippedname))[[1]]) %>%
       filter_state(state_filter=state) %>%
       dplyr::rename_at(vars(starts_with("P_")), ~ paste0(., '_state'))
