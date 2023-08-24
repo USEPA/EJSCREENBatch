@@ -51,6 +51,11 @@ library(sf)
 library(DT)
 ```
 
+```{r, include = F, warning = F, message = F}
+library(httr)
+httr::set_config(config(ssl_verifypeer = FALSE))
+```
+
 Users should note that when the package is installed and certain functions are called, EJSCREEN and ACS data are downloaded and saved to the package's library folder. For users that are hyper-conscious of local disk space, making a default EJfunction() call using the most recent releases of EJSCREEN/ACS data will locally save files that are roughly 1GB in size. For users who intend to perform screening analyses using older or multiple vintages of the EJSCREEN/ACS data, more or less disk space may be required.
 
 
