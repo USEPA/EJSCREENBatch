@@ -179,6 +179,5 @@ EJfunction <- function(LOI_data,
                       get, envir = environment(), simplify=F, USE.NAMES=T)
   return.me <- return.me[unlist(lapply(return.me,class))!="function"]
 
-  # Label
   return(return.me)
 }
