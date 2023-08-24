@@ -51,14 +51,14 @@ two buffering methods and can accept multiple buffer distances at a
 time. The user can chose to output summary plots and tables in addition
 to the returned raw dataframe. Additional documentation and a
 demonstration on how to leverage the package’s functional are available
-in the vignette directory.
+in the vignette directory or [here](https://usepa.github.io/EJSCREENBatch/articles/EJSCREENbatch.html).
 
 <figure>
 <img
 src="https://user-images.githubusercontent.com/82970621/147955630-cb93385e-45f9-4de9-9a7d-0c0622f1af08.jpg"
 alt="EJSCREENbatch_overview_single_slide" />
 <figcaption
-aria-hidden="true">EJSCREENbatch_overview_single_slide</figcaption>
+aria-hidden="true">EJSCREENbatch overview</figcaption>
 </figure>
 
 ## EPA Disclaimer
