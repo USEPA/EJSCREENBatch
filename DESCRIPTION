@@ -14,4 +14,4 @@ Imports:
   data.table, doFuture, doRNG, dplyr, DT, exactextractr, foreach, furrr, future, httr, jsonlite, leaflet, leafpop, nhdplusTools, parallel, purrr, sf, terra, tibble, tidycensus, tidyr
 LazyData: true
 RoxygenNote: 7.2.3
-URL: https://usepa.github.io/EJSCREENBatch/
+
