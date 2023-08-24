@@ -74,7 +74,7 @@ For an illustrative sense of the geographies that will be screened, we map our l
 
 ```{r, warning = F, message = F}
 # Visualize locations of MPP facilities:
-library(ggplot2)
+library(ggplot2); library(maps)
 ggplot2::ggplot() + 
   ggplot2::geom_map(data = ggplot2::map_data('state') %>% 
              dplyr::filter(region %in% c('illinois','indiana','michigan',
