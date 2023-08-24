@@ -53,7 +53,13 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
         stop("folder for that year not found on FTP site")
       }
     }
-    ftpurl <- paste(ftpurlbase, yr, sep = "")
+
+    if (yr == 2023) {
+      ftpurl <- paste(ftpurlbase, yr, '/2.21_August_UseMe', sep = "")
+    } else {
+      ftpurl <- paste(ftpurlbase, yr, sep = "")
+    }
+
     zipunzippednames <- function(yr) {
       if (yr >= 2019 & yr < 2022) {
         if(file == "StatePctile"){
