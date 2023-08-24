@@ -11,7 +11,7 @@ fetch_ejvars <- function(year = NULL){
     latestavailableyear <- function(mypath){
       calendaryear <- as.numeric(format(Sys.time(), "%Y"))
       yrschecked <- 2015:calendaryear
-      temp1 <-  lapply(paste0("https://gaftp.epa.gov/EJSCREEN/",
+      temp1 <-  lapply(paste0("http://gaftp.epa.gov/EJSCREEN/",
                               yrschecked, "/", sep = ""), httr::GET,
                        config = httr::config(connecttimeout = 20))
       temp2 <- sapply(temp1, "[[", 2)
