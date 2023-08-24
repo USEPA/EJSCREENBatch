@@ -44,8 +44,10 @@ install_github(repo = "USEPA/EJSCREENbatch")
 Next load the package (and others essential to this vignette):
 ```{r, warning = F, message = F}
 library(EJSCREENbatch)
-library(tidyverse)
+library(dplyr)
+library(tibble)
 library(data.table)
+library(sf)
 library(DT)
 ```
 
