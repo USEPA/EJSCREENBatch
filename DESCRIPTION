@@ -11,7 +11,7 @@ Description: This package is an R wrapper for use of EPA's EJSCREEN data, create
 License: MIT
 Encoding: UTF-8
 Imports:
-  data.table, doFuture, doRNG, dplyr, DT, exactextractr, foreach, furrr, future, httr, jsonlite, leaflet, leafpop, nhdplusTools, parallel, purrr, sf, terra, tibble, tidycensus, tidyr
+  data.table, doFuture, doRNG, dplyr, DT, exactextractr, foreach, furrr, future, ggplot2, httr, jsonlite, leaflet, leafpop, maps, nhdplusTools, parallel, purrr, sf, terra, tibble, tidycensus, tidyr
 LazyData: true
 RoxygenNote: 7.2.3
 URL: https://usepa.github.io/EJSCREENBatch/
