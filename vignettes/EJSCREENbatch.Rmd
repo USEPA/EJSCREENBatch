@@ -75,16 +75,16 @@ For an illustrative sense of the geographies that will be screened, we map our l
 ```{r, warning = F, message = F}
 # Visualize locations of MPP facilities:
 library(ggplot2)
-ggplot() + 
-  geom_map(data = map_data('state') %>% 
+ggplot2::ggplot() + 
+  ggplot2::geom_map(data = ggplot2::map_data('state') %>% 
              dplyr::filter(region %in% c('illinois','indiana','michigan',
                                          'ohio','wisconsin')),
-           map = map_data('state') %>% 
+           map = ggplot2::map_data('state') %>% 
              dplyr::filter(region %in% c('illinois','indiana','michigan',
                                          'ohio','wisconsin')),
            aes(x = long, y = lat, map_id = region),
            color = 'black',fill = NA) +
-  geom_sf(data = mpp, color = 'red') +
+  ggplot2::geom_sf(data = mpp, color = 'red') +
   theme_minimal()
 ```
 
@@ -136,7 +136,7 @@ These data may be of interest to users for two reasons. (1) For users who want t
 ```{r, echo = F}
 DT::datatable(
   my.EJ.data$EJ.cbg.data[[1]] %>%
-    as_tibble() %>%
+    tibble::as_tibble() %>%
     dplyr::filter(STATE_NAME == "Wisconsin"),
   class = 'cell-border stripe',
   #filter = 'top',
@@ -230,15 +230,15 @@ To illustrate the returned output, the flowlines for MPP facilities in the Great
 
 ```{r, warning = F, message = F}
 ggplot() + 
-  geom_map(data = map_data('state') %>% 
+  ggplot2::geom_map(data = ggplot2::map_data('state') %>% 
              dplyr::filter(region %in% c('illinois','indiana','michigan',
                                          'ohio','wisconsin')), 
-           map = map_data('state') %>% 
+           map = ggplot2::map_data('state') %>% 
              dplyr::filter(region %in% c('illinois','indiana','michigan',
                                          'ohio','wisconsin')),
            aes(x = long, y = lat, map_id = region),
            color = 'black',fill = NA) +
-  geom_sf(data = mpp.flowlines$flowline_geoms,
+  ggplot2::geom_sf(data = mpp.flowlines$flowline_geoms,
           color = 'blue',
           size = 3) +
   geom_sf(data = mpp,
