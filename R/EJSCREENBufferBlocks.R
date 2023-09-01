@@ -10,6 +10,7 @@
 #'
 #' @examples
 EJSCREENBufferBlocks <- function(dta_year, buff_dta, ejscreen_bgs_data, ejvarlist){
+
   # Bring in Census Block centroids
   if ("block.data" %in% ls(envir = .GlobalEnv)){
     data <- get('block.data', env = .GlobalEnv)
@@ -96,6 +97,8 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, ejscreen_bgs_data, ejvarlis
                                             ,0)),
                                 .names="P_{.col}_US"))
 
+  temp_intersect[,3:63][temp_intersect$POP_sum == 0] <- 0
+
   #state percentiles
   states <- na.omit(unique(temp_intersect$ST_ABB))
   LOI_list <- lapply(states, function(x){
@@ -115,7 +118,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, ejscreen_bgs_data, ejvarlis
   })
 
   #clear some memory
-  rm(states, temp_intersect, loi_clean,area_together, area_cb_intersect)
+ rm(states, temp_intersect, loi_clean,area_together, area_cb_intersect)
 
 
   ####################################
@@ -147,7 +150,7 @@ EJSCREENBufferBlocks <- function(dta_year, buff_dta, ejscreen_bgs_data, ejvarlis
     dplyr::mutate(POP_sum = round(POP_inbuffer*ACSTOTPOP)) %>%
     dplyr::select(-c('POP_inbuffer','ACSTOTPOP')) %>%
     dplyr::filter(POP_sum > 0) %>%
-    as.data.table()
+    data.table::as.data.table()
 
   #calculate percentiles using the raw data distributions
   message('Computing CBG-level percentiles...')
