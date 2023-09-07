@@ -9,6 +9,7 @@
 #' @export
 #'
 #' @examples
+
 EJSCREENBufferBlocks <- function(dta_year, buff_dta, ejscreen_bgs_data, ejvarlist){
 
   # Bring in Census Block centroids
