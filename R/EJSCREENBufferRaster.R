@@ -87,7 +87,8 @@ EJSCREENBufferRaster <- function(ejscreen_bgs_data, facility_buff, ejvarlist, ye
     by = shape_ID
   ][, lapply(.SD, weighted.mean, w=fraction*ACSTOTPOP, na.rm = T),
     by = list(shape_ID, ST_ABB),
-    .SDcols = colsToKeep]
+    .SDcols = colsToKeep
+    ][, lapply(.SD, function(x) replace(x, is.nan(x), NA))]
 
   #calculate percentiles using the raw data distributions
   message('Computing LOI-level percentiles...')
@@ -112,14 +113,15 @@ EJSCREENBufferRaster <- function(ejscreen_bgs_data, facility_buff, ejvarlist, ye
       dplyr::filter(ST_ABB==x) %>%
       dplyr::filter(!is.na(shape_ID))  %>%
       dplyr::mutate(dplyr::across(colsToKeep[-length(colsToKeep)],
-                                  list(~round(ecdf(na.omit(ejscreen_bgs_data %>%
-                                                             sf::st_drop_geometry() %>%
-                                                             as.data.frame() %>%
-                                                             dplyr::filter(ST_ABBREV==x) %>%
-                                                             dplyr::select(cur_column())) %>%
-                                                     unlist() %>%
-                                                     as.numeric())(.)*100
-                                              ,0)),
+                                  list(~tryCatch(round(ecdf(na.omit(ejscreen_bgs_data %>%
+                                                                      sf::st_drop_geometry() %>%
+                                                                      as.data.frame() %>%
+                                                                      dplyr::filter(ST_ABBREV==x) %>%
+                                                                      dplyr::select(cur_column())) %>%
+                                                              unlist() %>%
+                                                              as.numeric())(.)*100
+                                                       ,0),
+                                                 error = function(err) return(NA))),
                                   .names="P_{.col}_state"))
   })
 
