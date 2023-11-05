@@ -55,7 +55,7 @@ ejscreen_download <- function (folder = "EJSCREEN data", file, yr = NULL, ftpurl
     }
 
     if (yr == 2023) {
-      ftpurl <- paste(ftpurlbase, yr, '/2.22_October_UseMe', sep = "")
+      ftpurl <- paste(ftpurlbase, yr, '/2.22_September_UseMe', sep = "")
     } else {
       ftpurl <- paste(ftpurlbase, yr, sep = "")
     }
